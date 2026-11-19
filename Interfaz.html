@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STOCK — Anything. Anywhere. Anytime. For Anyone.</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans & Inter (pesos 500, 700, 800, 900) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@500;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '"Inter"', 'sans-serif'],
+            display: ['"Plus Jakarta Sans"', '"Inter"', 'sans-serif'],
+          },
+          colors: {
+            matteBase: '#121316',
+            matteTop: '#1c1f26',
+            matteDeep: '#0d0e11',
+            stockCyan: '#0095E8',
+            stockTeal: '#3BB2D0',
+            stockSage: '#B5C8A8',
+            stockPeach: '#F6C58E',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* ==========================================================================
+       1. IDENTIDAD VISUAL: FONDO CARBÓN MATE (#121316), GRANO SVG Y DEGRADADO
+       ========================================================================== */
+    :root {
+      --bg-base: #121316;
+      --grad-stock: linear-gradient(90deg, #0095E8 0%, #3BB2D0 42%, #B5C8A8 72%, #F6C58E 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: #F5F6F8;
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      background-image:
+        radial-gradient(circle at 22% 18%, rgba(0, 149, 232, 0.09) 0%, transparent 45%),
+        radial-gradient(circle at 82% 24%, rgba(246, 197, 142, 0.07) 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 0%, #1c1f26 0%, #121316 58%, #0d0e11 100%);
+    }
+
+    /* Superposición sutil de grano mate en SVG */
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0.045;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='stockGrain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23stockGrain)'/%3E%3C/svg%3E");
+    }
+
+    /* Degradado horizontal insignia de STOCK */
+    .text-stock-gradient {
+      background: var(--grad-stock);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .bg-stock-gradient {
+      background: var(--grad-stock);
+    }
+
+    .btn-stock-primary {
+      background: var(--grad-stock);
+      color: #0d0e11;
+      font-weight: 800;
+      transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, filter 0.25s ease;
+    }
+    .btn-stock-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px -8px rgba(0, 149, 232, 0.45), 0 10px 24px -8px rgba(246, 197, 142, 0.35);
+      filter: brightness(1.05);
+    }
+    .btn-stock-primary:active {
+      transform: translateY(0);
+    }
+
+    /* ==========================================================================
+       2. ANIMACIONES DE ENTRADA ESCALONADA (HERO) Y FLOTACIÓN CONTINUA
+       ========================================================================== */
+    @keyframes fadeUpStagger {
+      0% {
+        opacity: 0;
+        transform: translateY(22px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .stagger-1 { animation: fadeUpStagger 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both; }
+    .stagger-2 { animation: fadeUpStagger 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.16s both; }
+    .stagger-3 { animation: fadeUpStagger 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.27s both; }
+    .stagger-4 { animation: fadeUpStagger 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.38s both; }
+    .stagger-5 { animation: fadeUpStagger 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.48s both; }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-11px);
+      }
+    }
+
+    .animate-float {
+      animation: float 5.2s ease-in-out infinite;
+    }
+
+    .animate-float-slow {
+      animation: float 4.4s ease-in-out infinite;
+    }
+
+    @keyframes logoBreathe {
+      0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 8px 22px rgba(0, 149, 232, 0.28));
+      }
+      50% {
+        transform: scale(1.05);
+        filter: drop-shadow(0 14px 32px rgba(246, 197, 142, 0.38));
+      }
+    }
+
+    .animate-logo-breathe {
+      animation: logoBreathe 3.6s ease-in-out infinite;
+    }
+
+    @keyframes qrScanLine {
+      0%, 100% {
+        top: 12%;
+        opacity: 0.4;
+      }
+      50% {
+        top: 84%;
+        opacity: 1;
+      }
+    }
+
+    .qr-scan-beam {
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: var(--grad-stock);
+      box-shadow: 0 0 10px #0095E8, 0 0 16px #F6C58E;
+      border-radius: 9999px;
+      animation: qrScanLine 2.6s ease-in-out infinite;
+    }
+
+    /* ==========================================================================
+       3. MOCKUP REALISTA DE IPHONE PRO CON INCLINACIÓN 3D SUAVE
+       ========================================================================== */
+    .phone-stage {
+      perspective: 1200px;
+    }
+
+    .iphone-chassis {
+      background: linear-gradient(145deg, #434750 0%, #1d2026 28%, #30343d 68%, #14161a 100%);
+      border-radius: 54px;
+      padding: 11px;
+      box-shadow:
+        0 38px 85px -16px rgba(0, 0, 0, 0.92),
+        inset 0 0 2px 1.5px rgba(255, 255, 255, 0.24),
+        0 0 55px -14px rgba(0, 149, 232, 0.24);
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.22s ease-out, box-shadow 0.3s ease;
+    }
+
+    .iphone-screen {
+      background: radial-gradient(circle at 50% 38%, #20242c 0%, #14161a 70%, #0e0f12 100%);
+      border-radius: 44px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    }
+
+    .iphone-glare {
+      background: linear-gradient(118deg, rgba(255, 255, 255, 0.065) 0%, rgba(255, 255, 255, 0.01) 42%, transparent 43%);
+      pointer-events: none;
+    }
+
+    /* Scrollbar sutil interna del iPhone */
+    .phone-scroll::-webkit-scrollbar {
+      width: 3.5px;
+    }
+    .phone-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .phone-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.16);
+      border-radius: 9999px;
+    }
+
+    /* ==========================================================================
+       4. TARJETAS PROMOCIONALES DE 3 COLUMNAS (#pilares)
+       ========================================================================== */
+    .pillar-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      min-height: 590px;
+      transition:
+        transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.45s ease,
+        border-color 0.45s ease;
+    }
+
+    @media (min-width: 1024px) {
+      .pillar-card {
+        min-height: 650px;
+      }
+    }
+
+    .pillar-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(59, 178, 208, 0.45);
+      box-shadow:
+        0 28px 60px -15px rgba(0, 0, 0, 0.85),
+        0 0 38px -10px rgba(0, 149, 232, 0.25),
+        0 0 38px -12px rgba(246, 197, 142, 0.2);
+    }
+
+    .pillar-bg {
+      transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .pillar-card:hover .pillar-bg {
+      transform: scale(1.06);
+    }
+
+    .pillar-headline {
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.03;
+      text-transform: uppercase;
+      color: #FFFFFF;
+      text-shadow: 0 6px 24px rgba(0, 0, 0, 0.92);
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-stockCyan selection:text-white">
+
+  <!-- Capa global de grano mate -->
+  <div class="noise-overlay" aria-hidden="true"></div>
+
+  <!-- Definiciones SVG Maestras: Degradado Horizontal STOCK & Isotipo Caja + Manzana -->
+  <svg width="0" height="0" class="hidden" aria-hidden="true">
+    <defs>
+      <!-- Degradado horizontal exacto de STOCK -->
+      <linearGradient id="stockBrandGrad" x1="0%" y1="50%" x2="100%" y2="50%">
+        <stop offset="0%" stop-color="#0095E8" />
+        <stop offset="42%" stop-color="#3BB2D0" />
+        <stop offset="72%" stop-color="#B5C8A8" />
+        <stop offset="100%" stop-color="#F6C58E" />
+      </linearGradient>
+
+      <!-- Relleno translúcido para caras frontales de la caja -->
+      <linearGradient id="stockBoxFill" x1="0%" y1="25%" x2="100%" y2="75%">
+        <stop offset="0%" stop-color="#0095E8" stop-opacity="0.52" />
+        <stop offset="50%" stop-color="#3BB2D0" stop-opacity="0.2" />
+        <stop offset="100%" stop-color="#F6C58E" stop-opacity="0.52" />
+      </linearGradient>
+
+      <filter id="stockGlowShadow" x="-25%" y="-25%" width="150%" height="150%">
+        <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.6" />
+      </filter>
+
+      <!-- Símbolo SVG a medida: Caja abierta isométrica con solapas desplegadas y manzana con hoja -->
+      <symbol id="stock-box-icon" viewBox="0 0 140 132">
+        <g filter="url(#stockGlowShadow)">
+          <!-- Solapas superiores traseras abiertas -->
+          <polygon points="34,54 57,44 47,34 25,44"
+                   fill="#17191E" stroke="url(#stockBrandGrad)" stroke-width="4.6" stroke-linejoin="round" stroke-linecap="round" />
+          <polygon points="106,54 83,44 93,34 115,44"
+                   fill="#17191E" stroke="url(#stockBrandGrad)" stroke-width="4.6" stroke-linejoin="round" stroke-linecap="round" />
+
+          <!-- Interior oscuro de la caja -->
+          <polygon points="34,54 70,39 106,54 70,70" fill="#121316" />
+
+          <!-- Manzana estilizada con tallo y hoja en el interior -->
+          <g>
+            <!-- Hoja derecha -->
+            <path d="M 71 33 C 72 22, 81 17, 87 18 C 87 25, 80 32, 71 33 Z"
+                  fill="url(#stockBrandGrad)" stroke="url(#stockBrandGrad)" stroke-width="2" stroke-linejoin="round" />
+            <!-- Tallo curvo -->
+            <path d="M 70 35 C 69 29, 66 25, 62 23"
+                  fill="none" stroke="url(#stockBrandGrad)" stroke-width="4.4" stroke-linecap="round" />
+            <!-- Cuerpo de la manzana -->
+            <path d="M 50 58 C 48 45, 57 35, 66 37 C 68.5 37.6, 71.5 37.6, 74 37 C 83 35, 92 45, 90 58 L 70 68 Z"
+                  fill="#16181D" stroke="url(#stockBrandGrad)" stroke-width="4.8" stroke-linejoin="round" stroke-linecap="round" />
+            <!-- Destello curvo en la manzana -->
+            <path d="M 56.5 51 C 56 46, 59 42.5, 62.5 41.8"
+                  fill="none" stroke="url(#stockBrandGrad)" stroke-width="3.6" stroke-linecap="round" />
+          </g>
+
+          <!-- Paneles frontales isométricos -->
+          <polygon points="34,54 70,70 70,118 34,99"
+                   fill="url(#stockBoxFill)" stroke="url(#stockBrandGrad)" stroke-width="4.8" stroke-linejoin="round" />
+          <polygon points="70,70 106,54 106,99 70,118"
+                   fill="url(#stockBoxFill)" stroke="url(#stockBrandGrad)" stroke-width="4.8" stroke-linejoin="round" />
+
+          <!-- Solapas frontales desplegadas -->
+          <polygon points="34,54 70,70 59,87 22,71"
+                   fill="#181A20" stroke="url(#stockBrandGrad)" stroke-width="4.8" stroke-linejoin="round" />
+          <polygon points="70,70 106,54 118,71 81,87"
+                   fill="#181A20" stroke="url(#stockBrandGrad)" stroke-width="4.8" stroke-linejoin="round" />
+        </g>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- ==========================================================================
+       2. BARRA DE NAVEGACIÓN SUPERIOR FIJA Y TRANSLÚCIDA
+       ========================================================================== -->
+  <header
+    class="sticky top-0 z-40 border-b border-white/[0.07] bg-[#121316]/75"
+    style="backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);"
+  >
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
+      <!-- Izquierda: Isotipo SVG + Texto STOCK en degradado -->
+      <a href="#inicio" class="group flex items-center gap-2.5 focus:outline-none">
+        <svg class="h-9 w-9 transition-transform duration-300 group-hover:scale-105" aria-hidden="true">
+          <use href="#stock-box-icon" />
+        </svg>
+        <span class="text-xl font-black tracking-tight text-stock-gradient sm:text-2xl">
+          STOCK
+        </span>
+      </a>
+
+      <!-- Centro: Enlaces suaves -->
+      <nav class="hidden items-center gap-9 md:flex" aria-label="Navegación principal">
+        <a href="#inicio" id="navHome" class="text-sm font-medium text-zinc-300 transition hover:text-white">Inicio</a>
+        <a href="#pilares" id="navPillars" class="text-sm font-medium text-zinc-300 transition hover:text-white">Pilares</a>
+        <a href="#vista-app" id="navApp" class="text-sm font-medium text-zinc-300 transition hover:text-white">Vista App</a>
+      </nav>
+
+      <!-- Derecha: Selector animado EN / ES -->
+      <div class="flex items-center">
+        <button
+          id="langToggleBtn"
+          type="button"
+          aria-label="Cambiar idioma entre Inglés y Español"
+          class="relative flex items-center rounded-full border border-white/15 bg-white/[0.04] p-1 text-xs font-extrabold tracking-wider transition hover:border-stockTeal/50"
+        >
+          <span
+            id="langActivePill"
+            class="absolute left-1 top-1 bottom-1 w-[36px] rounded-full bg-stock-gradient transition-transform duration-300 ease-out"
+          ></span>
+          <span id="langLabelEn" class="relative z-10 w-[36px] py-1 text-center text-matteDeep transition-colors duration-300">EN</span>
+          <span id="langLabelEs" class="relative z-10 w-[36px] py-1 text-center text-zinc-300 transition-colors duration-300">ES</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       3. SECCIÓN HERO ASIMÉTRICA + IPHONE PRO INTERACTIVO
+       ========================================================================== -->
+  <main>
+    <section id="inicio" class="relative overflow-hidden pt-10 pb-20 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-28">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-8">
+
+          <!-- Columna Izquierda: Título Gigante STOCK + Lema Apilado + Accesos Rápidos -->
+          <div class="text-left lg:col-span-7">
+            <!-- Título Gigante Degradado STOCK -->
+            <h1 class="stagger-1 text-6xl font-black tracking-tight text-stock-gradient drop-shadow-[0_12px_28px_rgba(0,0,0,0.7)] sm:text-7xl md:text-8xl xl:text-[6.8rem] xl:leading-[0.94]">
+              STOCK
+            </h1>
+
+            <!-- Lema Apilado en Blanco Nítido y Alto Impacto -->
+            <div
+              id="heroTagline"
+              class="stagger-2 mt-3 space-y-0.5 text-3xl font-extrabold uppercase leading-[1.06] tracking-tight text-white drop-shadow-[0_6px_22px_rgba(0,0,0,0.8)] sm:text-5xl md:text-[3.45rem]"
+            >
+              <p>ANYTHING.</p>
+              <p>ANYWHERE.</p>
+              <p>ANYTIME.</p>
+              <p>FOR ANYONE.</p>
+            </div>
+
+            <!-- Subtítulo descriptivo -->
+            <p id="heroSubcopy" class="stagger-3 mt-6 max-w-xl text-base font-medium leading-relaxed text-zinc-300/90 sm:text-lg">
+              Controla tu inventario en tiempo real desde cualquier lugar, impulsa los negocios de tu barrio y reemplaza el papel con comprobantes digitales instantáneos.
+            </p>
+
+            <!-- Botones sutiles de acceso rápido para cambiar la pantalla del iPhone -->
+            <div class="stagger-4 mt-8 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onclick="jumpToPhoneTab('inventory')"
+                class="btn-stock-primary inline-flex items-center gap-2 rounded-full px-6 py-3 text-xs sm:text-sm"
+              >
+                <span id="btnQuickInventory">Inventario en Vivo</span>
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </button>
+
+              <button
+                type="button"
+                onclick="jumpToPhoneTab('search')"
+                class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-5 py-3 text-xs font-bold text-zinc-200 backdrop-blur-md transition hover:border-stockCyan/50 hover:bg-white/[0.08] sm:text-sm"
+              >
+                <span id="btnQuickLocal">Comercios Locales</span>
+              </button>
+
+              <button
+                type="button"
+                onclick="jumpToPhoneTab('profile')"
+                class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-5 py-3 text-xs font-bold text-zinc-200 backdrop-blur-md transition hover:border-stockPeach/50 hover:bg-white/[0.08] sm:text-sm"
+              >
+                <span id="btnQuickQr">Pase QR Sin Papel</span>
+              </button>
+            </div>
+
+            <!-- Indicador sutil hacia pilares -->
+            <div class="stagger-5 mt-10 flex items-center gap-4 border-t border-white/10 pt-5 text-xs text-zinc-400">
+              <a href="#pilares" class="inline-flex items-center gap-2 font-semibold text-zinc-300 transition hover:text-white">
+                <span class="h-2 w-2 rounded-full bg-stockCyan animate-pulse"></span>
+                <span id="heroScrollLink">Descubre así funciona STOCK</span>
+                <span>&darr;</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Columna Derecha: Mockup Realista e Interactivo de iPhone Pro -->
+          <div id="vista-app" class="flex flex-col items-center justify-center lg:col-span-5">
+            <div id="phoneStage" class="phone-stage relative mx-auto w-full max-w-[332px] sm:max-w-[352px] animate-float">
+              <!-- Resplandor ambiental detrás del chasis -->
+              <div class="absolute -inset-6 -z-10 rounded-full bg-gradient-to-tr from-stockCyan/25 via-transparent to-stockPeach/25 blur-2xl"></div>
+
+              <!-- Marco de Titanio Oscuro iPhone Pro -->
+              <div id="iphoneChassis" class="iphone-chassis">
+                <!-- Botones laterales físicos -->
+                <div class="absolute -left-[3px] top-28 h-8 w-[3px] rounded-l bg-zinc-500/75"></div>
+                <div class="absolute -left-[3px] top-40 h-12 w-[3px] rounded-l bg-zinc-500/75"></div>
+                <div class="absolute -left-[3px] top-56 h-12 w-[3px] rounded-l bg-zinc-500/75"></div>
+                <div class="absolute -right-[3px] top-44 h-16 w-[3px] rounded-r bg-zinc-500/75"></div>
+
+                <!-- Pantalla Interna -->
+                <div class="iphone-screen flex h-[646px] flex-col justify-between">
+                  <div class="iphone-glare absolute inset-0 z-20"></div>
+
+                  <!-- Barra de Estado 9:41 + Dynamic Island Interactiva -->
+                  <div class="relative z-10 flex items-center justify-between px-6 pt-3.5 pb-2 text-[11px] font-bold text-white">
+                    <span>9:41</span>
+
+                    <!-- Dynamic Island -->
+                    <div
+                      id="dynamicIsland"
+                      class="flex h-6 w-24 items-center justify-center gap-1.5 rounded-full bg-black px-2.5 text-[10px] font-bold text-stockCyan shadow-inner transition-all duration-300"
+                    >
+                      <span id="dynamicIslandDot" class="hidden h-1.5 w-1.5 rounded-full bg-stockCyan animate-ping"></span>
+                      <span id="dynamicIslandText" class="truncate opacity-0 transition-opacity duration-200">STOCK</span>
+                    </div>
+
+                    <!-- Señal, Wi-Fi, Batería -->
+                    <div class="flex items-center gap-1.5 text-white">
+                      <svg class="h-3 w-3.5" viewBox="0 0 16 12" fill="currentColor">
+                        <rect x="1" y="8" width="2.2" height="4" rx="0.6" />
+                        <rect x="4.6" y="6" width="2.2" height="6" rx="0.6" />
+                        <rect x="8.2" y="3.5" width="2.2" height="8.5" rx="0.6" />
+                        <rect x="11.8" y="1" width="2.2" height="11" rx="0.6" />
+                      </svg>
+                      <svg class="h-3 w-3.5" viewBox="0 0 16 12" fill="currentColor">
+                        <path d="M8 9.6a1.4 1.4 0 100 2.8 1.4 1.4 0 000-2.8zm-3.6-2.2a5.2 5.2 0 017.2 0l1.1-1.2a6.8 6.8 0 00-9.4 0l1.1 1.2zm-2.5-2.6a8.8 8.8 0 0112.2 0l1.1-1.2a10.4 10.4 0 00-14.4 0l1.1 1.2z" />
+                      </svg>
+                      <div class="h-2.5 w-5 rounded-[3px] border border-white/60 p-[1px]">
+                        <div class="h-full w-4/5 rounded-[1.5px] bg-white"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- CONTENIDO DE LAS 4 PESTAÑAS DENTRO DE LA PANTALLA DEL IPHONE -->
+                  <div class="relative z-10 flex-1 overflow-y-auto phone-scroll px-4 py-2">
+
+                    <!-- PESTAÑA 1: INICIO / SPLASH -->
+                    <div id="phoneTab-home" class="flex h-full flex-col justify-between py-2">
+                      <div class="flex items-center justify-between">
+                        <span class="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-bold text-zinc-300">
+                          &bull; En Línea
+                        </span>
+                        <span id="splashPaperBadge" class="text-[10px] font-bold text-stockPeach">
+                          1,428 sin papel
+                        </span>
+                      </div>
+
+                      <!-- Emblema Grande STOCK con Animación de Respiración/Brillo -->
+                      <div class="my-auto flex flex-col items-center text-center select-none">
+                        <div class="animate-logo-breathe flex flex-col items-center">
+                          <svg class="h-36 w-36" aria-hidden="true">
+                            <use href="#stock-box-icon" />
+                          </svg>
+                          <span class="mt-1 text-4xl font-black tracking-tight text-stock-gradient">
+                            STOCK
+                          </span>
+                        </div>
+
+                        <!-- Resumen Rápido -->
+                        <div class="mt-5 grid w-full grid-cols-2 gap-2.5">
+                          <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 text-center">
+                            <p id="splashTotalUnits" class="text-lg font-black text-white">53</p>
+                            <p class="text-[10px] font-medium text-zinc-400">Unidades activas</p>
+                          </div>
+                          <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 text-center">
+                            <p id="splashStoresCount" class="text-lg font-black text-stockTeal">4</p>
+                            <p class="text-[10px] font-medium text-zinc-400">Locales cercanos</p>
+                          </div>
+                        </div>
+
+                        <!-- Botón para entrar al Inventario -->
+                        <button
+                          type="button"
+                          onclick="switchPhoneTab('inventory')"
+                          class="btn-stock-primary mt-4 w-full rounded-2xl py-3 text-xs tracking-wide"
+                        >
+                          Entrar al Inventario &rarr;
+                        </button>
+                      </div>
+
+                      <p class="text-center text-[10px] font-medium text-zinc-500">
+                        Navega con los 4 iconos inferiores
+                      </p>
+                    </div>
+
+                    <!-- PESTAÑA 2: BUSCAR / COMERCIOS LOCALES -->
+                    <div id="phoneTab-search" class="hidden space-y-3 py-1">
+                      <div>
+                        <h3 class="text-base font-black text-white">Comercios Locales</h3>
+                        <p class="text-[11px] text-zinc-400">Productos frescos disponibles para reservar sin papel</p>
+                      </div>
+
+                      <!-- Buscador funcional dentro del teléfono -->
+                      <div class="relative">
+                        <svg class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                        </svg>
+                        <input
+                          id="phoneStoreSearch"
+                          type="text"
+                          placeholder="Buscar panadería, huerta, café..."
+                          class="w-full rounded-xl border border-white/10 bg-white/[0.06] py-2 pl-8 pr-3 text-xs text-white placeholder-zinc-500 focus:border-stockCyan focus:outline-none"
+                        />
+                      </div>
+
+                      <!-- Tarjetas interactivas de comercios locales -->
+                      <div id="phoneStoresList" class="space-y-2.5"></div>
+                    </div>
+
+                    <!-- PESTAÑA 3: CAJA / INVENTARIO EN VIVO -->
+                    <div id="phoneTab-inventory" class="hidden space-y-3 py-1">
+                      <div class="flex items-center justify-between">
+                        <div>
+                          <h3 class="text-base font-black text-white">Inventario Vivo</h3>
+                          <p class="text-[11px] text-zinc-400">Control instantáneo con + y -</p>
+                        </div>
+                        <span id="phoneLowStockBadge" class="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-300">
+                          1 Bajo
+                        </span>
+                      </div>
+
+                      <!-- Lista interactiva de existencias -->
+                      <div id="phoneInventoryList" class="space-y-2"></div>
+
+                      <!-- Botón rápido para sumar un artículo -->
+                      <button
+                        type="button"
+                        onclick="quickAddPhoneItem()"
+                        class="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-stockCyan/50 bg-stockCyan/10 py-2.5 text-xs font-extrabold text-stockCyan transition hover:bg-stockCyan/20"
+                      >
+                        <span>+ Sumar Artículo Rápido</span>
+                      </button>
+                    </div>
+
+                    <!-- PESTAÑA 4: PERFIL / COMPROBANTE DIGITAL SIN PAPEL -->
+                    <div id="phoneTab-profile" class="hidden space-y-3 py-1">
+                      <div class="flex items-center justify-between">
+                        <div>
+                          <h3 class="text-base font-black text-white">Pase Digital QR</h3>
+                          <p class="text-[11px] text-zinc-400">Comprobante 100% libre de papel</p>
+                        </div>
+                        <span class="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-extrabold text-emerald-300">
+                          Verificado
+                        </span>
+                      </div>
+
+                      <!-- Pase Digital QR Animado -->
+                      <div class="rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.06] to-black/30 p-3.5 text-center">
+                        <div class="relative mx-auto flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl border border-stockCyan/40 bg-[#101215] p-2.5">
+                          <div class="qr-scan-beam"></div>
+                          <!-- QR Vectorial -->
+                          <svg class="h-full w-full text-white" viewBox="0 0 36 36" fill="currentColor">
+                            <rect x="2" y="2" width="10" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                            <rect x="5" y="5" width="4" height="4"/>
+                            <rect x="24" y="2" width="10" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                            <rect x="27" y="5" width="4" height="4"/>
+                            <rect x="2" y="24" width="10" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                            <rect x="5" y="27" width="4" height="4"/>
+                            <rect x="16" y="4" width="4" height="4"/>
+                            <rect x="16" y="12" width="4" height="8"/>
+                            <rect x="4" y="16" width="8" height="4"/>
+                            <rect x="24" y="16" width="10" height="4"/>
+                            <rect x="16" y="24" width="6" height="4"/>
+                            <rect x="26" y="24" width="8" height="10"/>
+                          </svg>
+                        </div>
+                        <p id="qrPassCode" class="mt-2.5 text-xs font-black tracking-wider text-stock-gradient">
+                          TICKET #STK-9041
+                        </p>
+                        <p id="qrPassDetail" class="mt-0.5 text-[10px] text-zinc-300">
+                          Panadería La Espiga &bull; Reserva Digital Activa
+                        </p>
+                      </div>
+
+                      <!-- Contador de tickets de papel ahorrados y estado -->
+                      <div class="space-y-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-xs">
+                        <div class="flex items-center justify-between">
+                          <span class="text-zinc-400">Tickets de papel ahorrados</span>
+                          <span id="profilePaperCounter" class="font-black text-stockPeach">1,428</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                          <span class="text-zinc-400">Estado de cuenta</span>
+                          <span class="font-bold text-white">Comercio &amp; Cliente Local</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                          <span class="text-zinc-400">Emisión térmica</span>
+                          <span class="font-bold text-emerald-400">0 g papel</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Barra de Navegación Inferior de 4 Iconos (Inicio, Buscar, Caja/Inventario, Perfil) -->
+                  <div class="relative z-10 border-t border-white/10 bg-[#111215]/95 px-4 pt-2 pb-2 backdrop-blur-md">
+                    <div class="grid grid-cols-4 items-center text-center">
+                      <!-- 1. Inicio -->
+                      <button
+                        type="button"
+                        data-tab="home"
+                        onclick="switchPhoneTab('home')"
+                        class="phone-nav-btn relative flex flex-col items-center justify-center py-1 text-stockCyan transition"
+                        aria-label="Inicio"
+                      >
+                        <span class="tab-indicator absolute -top-2 h-[2.5px] w-7 rounded-full bg-stockCyan"></span>
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
+                          <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
+                        </svg>
+                      </button>
+
+                      <!-- 2. Buscar -->
+                      <button
+                        type="button"
+                        data-tab="search"
+                        onclick="switchPhoneTab('search')"
+                        class="phone-nav-btn relative flex flex-col items-center justify-center py-1 text-zinc-400 transition hover:text-zinc-200"
+                        aria-label="Buscar Comercios Locales"
+                      >
+                        <span class="tab-indicator absolute -top-2 hidden h-[2.5px] w-7 rounded-full bg-stockCyan"></span>
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                        </svg>
+                      </button>
+
+                      <!-- 3. Caja / Inventario -->
+                      <button
+                        type="button"
+                        data-tab="inventory"
+                        onclick="switchPhoneTab('inventory')"
+                        class="phone-nav-btn relative flex flex-col items-center justify-center py-1 text-zinc-400 transition hover:text-zinc-200"
+                        aria-label="Caja e Inventario"
+                      >
+                        <span class="tab-indicator absolute -top-2 hidden h-[2.5px] w-7 rounded-full bg-stockCyan"></span>
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                        </svg>
+                      </button>
+
+                      <!-- 4. Perfil -->
+                      <button
+                        type="button"
+                        data-tab="profile"
+                        onclick="switchPhoneTab('profile')"
+                        class="phone-nav-btn relative flex flex-col items-center justify-center py-1 text-zinc-400 transition hover:text-zinc-200"
+                        aria-label="Perfil y Comprobante QR"
+                      >
+                        <span class="tab-indicator absolute -top-2 hidden h-[2.5px] w-7 rounded-full bg-stockCyan"></span>
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    <!-- Home Indicator iOS -->
+                    <div class="mx-auto mt-2.5 h-1 w-28 rounded-full bg-white/80"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         4. SECCIÓN DE 3 COLUMNAS PROMOCIONALES (#pilares - 'Así funciona STOCK')
+         ========================================================================== -->
+    <section id="pilares" class="relative py-20 sm:py-28">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <!-- Encabezado centrado -->
+        <div class="mx-auto mb-14 max-w-2xl text-center">
+          <h2 id="pillarsTitle" class="text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
+            Así funciona <span class="text-stock-gradient">STOCK</span>
+          </h2>
+          <p id="pillarsSubtitle" class="mt-3.5 text-sm font-medium text-zinc-400 sm:text-base">
+            Explora cómo STOCK transforma el control de inventario y el comercio local.
+          </p>
+        </div>
+
+        <!-- Cuadrícula de 3 Tarjetas Verticales de Altura Completa -->
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-3 lg:gap-8">
+
+          <!-- TARJETA 1: 'SENCILLO CON' arriba, 'STOCK' abajo -->
+          <article class="pillar-card group bg-[#181411] flex flex-col justify-between p-6 sm:p-8">
+            <!-- Fondo atmosférico de almacén/estanterías + mano sosteniendo iPhone con STOCK -->
+            <div class="pillar-bg absolute inset-0 z-0">
+              <div class="absolute inset-0 bg-gradient-to-b from-[#2e2218] via-[#1c1612] to-[#110f0d]"></div>
+              <svg class="h-full w-full" viewBox="0 0 420 720" preserveAspectRatio="xMidYMid slice">
+                <defs>
+                  <radialGradient id="warehouseAmbient" cx="50%" cy="46%" r="58%">
+                    <stop offset="0%" stop-color="#d49560" stop-opacity="0.34" />
+                    <stop offset="100%" stop-color="#110f0d" stop-opacity="0.96" />
+                  </radialGradient>
+                </defs>
+                <rect width="420" height="720" fill="url(#warehouseAmbient)" />
+
+                <!-- Estanterías y cajas de almacén desenfocadas -->
+                <g fill="#5f422c" opacity="0.45">
+                  <rect x="14" y="135" width="110" height="74" rx="6" />
+                  <rect x="24" y="228" width="95" height="84" rx="6" />
+                  <rect x="10" y="330" width="116" height="92" rx="6" />
+                  <rect x="296" y="145" width="110" height="78" rx="6" />
+                  <rect x="290" y="242" width="116" height="90" rx="6" />
+                  <rect x="302" y="350" width="102" height="92" rx="6" />
+                </g>
+
+                <!-- Ilustración SVG de mano sosteniendo el teléfono -->
+                <g transform="translate(88, 175)">
+                  <path d="M 10 545 L 38 355 C 44 315, 65 295, 92 290 L 185 290 C 206 290, 216 310, 210 335 L 185 435 L 130 545 Z"
+                        fill="#9f6e54" opacity="0.92" />
+                  <rect x="44" y="170" width="32" height="22" rx="11" fill="#b47e62" />
+                  <rect x="41" y="200" width="34" height="22" rx="11" fill="#ab7559" />
+                  <rect x="44" y="230" width="32" height="22" rx="11" fill="#9f6b50" />
+                  <path d="M 192 210 C 216 220, 224 248, 206 276 L 186 266 Z" fill="#b47e62" />
+                </g>
+              </svg>
+
+              <!-- iPhone central con la pantalla de STOCK -->
+              <div class="absolute inset-0 flex items-center justify-center pb-14">
+                <div class="w-40 rounded-[28px] border-2 border-zinc-400/50 bg-[#14161A] p-3.5 shadow-[0_24px_48px_rgba(0,0,0,0.88)]">
+                  <div class="mx-auto mb-2.5 h-2 w-11 rounded-full bg-black"></div>
+                  <div class="flex flex-col items-center py-4">
+                    <svg class="h-16 w-16"><use href="#stock-box-icon" /></svg>
+                    <span class="mt-1 text-base font-black text-stock-gradient">STOCK</span>
+                  </div>
+                  <div class="mt-2 flex justify-around border-t border-white/10 pt-2">
+                    <span class="h-1.5 w-1.5 rounded-full bg-stockCyan"></span>
+                    <span class="h-1.5 w-1.5 rounded-full bg-zinc-600"></span>
+                    <span class="h-1.5 w-1.5 rounded-full bg-zinc-600"></span>
+                    <span class="h-1.5 w-1.5 rounded-full bg-zinc-600"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="absolute inset-0 bg-gradient-to-b from-black/65 via-black/15 to-black/85"></div>
+            </div>
+
+            <!-- Título Superior -->
+            <div class="relative z-10 text-center pt-1">
+              <h3 id="card1Top" class="pillar-headline text-3xl sm:text-4xl">
+                SENCILLO<br />CON
+              </h3>
+            </div>
+
+            <!-- Título Inferior + Caja Descriptiva Translúcida + Enlace Interactivo -->
+            <div class="relative z-10 text-center">
+              <p class="pillar-headline text-4xl sm:text-5xl">STOCK</p>
+              <div class="mt-4 rounded-2xl border border-white/15 bg-black/70 p-4 text-left backdrop-blur-md">
+                <p id="card1Desc" class="text-xs font-medium leading-relaxed text-zinc-200">
+                  Escanea, actualiza y consulta existencias en segundos desde tu bolsillo, sin hojas de cálculo complejas ni capacitación técnica.
+                </p>
+                <button
+                  type="button"
+                  onclick="jumpToPhoneTab('inventory')"
+                  id="card1Link"
+                  class="mt-3 inline-flex items-center gap-1 text-xs font-extrabold text-stockCyan transition hover:underline"
+                >
+                  Probar inventario en el iPhone &rarr;
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- TARJETA 2: 'APOYA NEGOCIOS LOCALES CON' arriba, 'STOCK' abajo -->
+          <article class="pillar-card group bg-[#1b140f] flex flex-col justify-between p-6 sm:p-8">
+            <!-- Fondo cálido amaderado de cafetería/tienda local -->
+            <div class="pillar-bg absolute inset-0 z-0">
+              <div class="absolute inset-0 bg-gradient-to-b from-[#2e1f15] via-[#21160f] to-[#120d0a]"></div>
+              <svg class="h-full w-full opacity-80" viewBox="0 0 420 720" preserveAspectRatio="xMidYMid slice">
+                <defs>
+                  <radialGradient id="cafeWarmRadial" cx="28%" cy="35%" r="65%">
+                    <stop offset="0%" stop-color="#f6c58e" stop-opacity="0.34" />
+                    <stop offset="100%" stop-color="#120d0a" stop-opacity="0.96" />
+                  </radialGradient>
+                </defs>
+                <rect width="420" height="720" fill="url(#cafeWarmRadial)" />
+                <rect x="20" y="65" width="95" height="210" rx="6" fill="#f6c58e" opacity="0.14" />
+                <!-- Mesa y sillas de madera rústica -->
+                <polygon points="85,405 210,360 335,405 210,460" fill="#754829" opacity="0.8" />
+                <rect x="202" y="445" width="16" height="175" fill="#492b17" opacity="0.9" />
+                <polygon points="105,435 170,465 170,595 105,560" fill="#5e371e" opacity="0.7" />
+                <polygon points="315,435 250,465 250,595 315,560" fill="#5e371e" opacity="0.7" />
+              </svg>
+              <div class="absolute inset-0 bg-gradient-to-b from-black/65 via-transparent to-black/85"></div>
+            </div>
+
+            <!-- Título Superior -->
+            <div class="relative z-10 text-center pt-1">
+              <h3 id="card2Top" class="pillar-headline text-2xl sm:text-[1.9rem]">
+                APOYA<br />NEGOCIOS<br />LOCALES CON
+              </h3>
+            </div>
+
+            <!-- Emblema Grande y Luminoso de STOCK Flotando en el Centro -->
+            <div class="relative z-10 my-auto flex justify-center">
+              <div class="animate-float-slow">
+                <svg class="h-36 w-36 transition-transform duration-500 group-hover:scale-110 sm:h-40 sm:w-40" aria-hidden="true">
+                  <use href="#stock-box-icon" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Título Inferior + Caja Descriptiva + Enlace -->
+            <div class="relative z-10 text-center">
+              <p class="pillar-headline text-4xl sm:text-5xl">STOCK</p>
+              <div class="mt-4 rounded-2xl border border-white/15 bg-black/70 p-4 text-left backdrop-blur-md">
+                <p id="card2Desc" class="text-xs font-medium leading-relaxed text-zinc-200">
+                  Da visibilidad inmediata a panaderías, cafeterías y tiendas de barrio para que los vecinos descubran productos frescos disponibles hoy.
+                </p>
+                <button
+                  type="button"
+                  onclick="jumpToPhoneTab('search')"
+                  id="card2Link"
+                  class="mt-3 inline-flex items-center gap-1 text-xs font-extrabold text-stockPeach transition hover:underline"
+                >
+                  Explorar modo cliente local &rarr;
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- TARJETA 3: 'STOCK' arriba, 'SIMPLIFICA' abajo -->
+          <article class="pillar-card group bg-[#141518] flex flex-col justify-between p-6 sm:p-8">
+            <!-- Fondo oscuro de escritorio con impresora térmica expidiendo rollo largo de ticket -->
+            <div class="pillar-bg absolute inset-0 z-0">
+              <div class="absolute inset-0 bg-gradient-to-b from-[#1b1d22] via-[#141518] to-[#0d0e11]"></div>
+              <svg class="h-full w-full opacity-85" viewBox="0 0 420 720" preserveAspectRatio="xMidYMid slice">
+                <!-- Superficie de escritorio minimalista -->
+                <polygon points="0,255 175,185 420,235 420,320 0,280" fill="#6b7078" opacity="0.54" />
+                <rect x="48" y="280" width="15" height="270" fill="#090a0c" />
+                <!-- Impresora térmica oscura -->
+                <rect x="275" y="160" width="92" height="66" rx="11" fill="#23262d" stroke="#3c404a" stroke-width="2" />
+                <!-- Rollo largo de ticket de papel -->
+                <path d="M 318 168 C 308 250, 272 360, 280 485 C 286 565, 218 605, 172 570 C 130 540, 162 490, 232 502 C 310 514, 362 560, 315 605 C 268 645, 152 628, 136 576"
+                      fill="none" stroke="#e5e7eb" stroke-width="26" stroke-linecap="round" opacity="0.82" />
+                <path d="M 318 168 C 308 250, 272 360, 280 485"
+                      fill="none" stroke="#9ca3af" stroke-width="2" stroke-dasharray="4 6" opacity="0.65" />
+              </svg>
+              <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/85"></div>
+            </div>
+
+            <!-- Título Superior -->
+            <div class="relative z-10 text-center pt-1">
+              <h3 class="pillar-headline text-4xl sm:text-5xl">
+                STOCK
+              </h3>
+            </div>
+
+            <!-- Emblema Grande y Luminoso de STOCK Flotando en el Centro -->
+            <div class="relative z-10 my-auto flex justify-center">
+              <div class="animate-float">
+                <svg class="h-36 w-36 transition-transform duration-500 group-hover:scale-110 sm:h-40 sm:w-40" aria-hidden="true">
+                  <use href="#stock-box-icon" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Título Inferior + Caja Descriptiva + Enlace -->
+            <div class="relative z-10 text-center">
+              <p id="card3Bottom" class="pillar-headline text-3xl sm:text-4xl">SIMPLIFICA</p>
+              <div class="mt-4 rounded-2xl border border-white/15 bg-black/70 p-4 text-left backdrop-blur-md">
+                <p id="card3Desc" class="text-xs font-medium leading-relaxed text-zinc-200">
+                  Reemplaza rollos interminables de tickets y registros manuales con comprobantes digitales instantáneos y conteo automatizado.
+                </p>
+                <button
+                  type="button"
+                  onclick="jumpToPhoneTab('profile')"
+                  id="card3Link"
+                  class="mt-3 inline-flex items-center gap-1 text-xs font-extrabold text-stockTeal transition hover:underline"
+                >
+                  Gestionar sin papel ahora &rarr;
+                </button>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==========================================================================
+       5. FOOTER MINIMALISTA (SIN SIMULADOR EXTERNO NI TABLAS FUERA DEL TELÉFONO)
+       ========================================================================== -->
+  <footer class="border-t border-white/[0.08] bg-[#0d0e11] py-12">
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-6 lg:px-8">
+      <a href="#inicio" class="group flex items-center gap-2.5 focus:outline-none">
+        <svg class="h-8 w-8 transition-transform duration-300 group-hover:scale-105" aria-hidden="true">
+          <use href="#stock-box-icon" />
+        </svg>
+        <span class="text-lg font-black tracking-tight text-stock-gradient">
+          STOCK
+        </span>
+      </a>
+
+      <p id="footerRights" class="text-xs font-medium text-zinc-500">
+        &copy; 2026 STOCK. Todos los derechos reservados.
+      </p>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
+       6. JAVASCRIPT PURO (INTERACTIVIDAD IPHONE, INCLINACIÓN 3D, IDIOMA EN/ES)
+       ========================================================================== -->
+  <script>
+    const state = {
+      lang: 'EN',
+      paperSaved: 1428,
+      activeOrderCode: 'TICKET #STK-9041',
+      activeOrderStore: 'Panadería La Espiga • Reserva Digital Activa',
+      items: [
+        { id: 1, name: 'Hogaza Masa Madre', store: 'Panadería La Espiga', distance: '350 m', stock: 12 },
+        { id: 2, name: 'Manzanas Orgánicas (1 kg)', store: 'Huerta Valle Verde', distance: '600 m', stock: 18 },
+        { id: 3, name: 'Café Tostado Medio', store: 'Tostaduría Sierra Madre', distance: '850 m', stock: 14 },
+        { id: 4, name: 'Miel Pura Silvestre', store: 'Abarrotes Don Pepe', distance: '1.1 km', stock: 4 },
+        { id: 5, name: 'Croissants Mantequilla', store: 'Panadería La Espiga', distance: '350 m', stock: 5 }
+      ],
+      quickAddPool: [
+        { name: 'Jugo Verde Prensado', store: 'Huerta Valle Verde', distance: '600 m', stock: 9 },
+        { name: 'Pan de Centeno Artesanal', store: 'Panadería La Espiga', distance: '350 m', stock: 7 },
+        { name: 'Cold Brew Botella 1L', store: 'Tostaduría Sierra Madre', distance: '850 m', stock: 11 }
+      ],
+      quickAddIndex: 0
+    };
+
+    /* --------------------------------------------------------------------------
+       A. DYNAMIC ISLAND INTERACTIVA
+       -------------------------------------------------------------------------- */
+    function triggerDynamicIsland(message) {
+      const island = document.getElementById('dynamicIsland');
+      const text = document.getElementById('dynamicIslandText');
+      const dot = document.getElementById('dynamicIslandDot');
+      if (!island || !text) return;
+
+      text.textContent = message;
+      island.classList.remove('w-24');
+      island.classList.add('w-44');
+      dot.classList.remove('hidden');
+      text.classList.remove('opacity-0');
+
+      clearTimeout(window._islandTimeout);
+      window._islandTimeout = setTimeout(() => {
+        text.classList.add('opacity-0');
+        dot.classList.add('hidden');
+        island.classList.remove('w-44');
+        island.classList.add('w-24');
+      }, 2100);
+    }
+
+    /* --------------------------------------------------------------------------
+       B. CAMBIO DE PESTAÑAS DENTRO DEL IPHONE + SALTO SUAVE DESDE PILARES/HERO
+       -------------------------------------------------------------------------- */
+    function switchPhoneTab(tabName) {
+      const tabs = ['home', 'search', 'inventory', 'profile'];
+      const labels = {
+        home: 'Inicio STOCK',
+        search: 'Comercios Locales',
+        inventory: 'Inventario Vivo',
+        profile: 'Pase QR Digital'
+      };
+
+      tabs.forEach((t) => {
+        const view = document.getElementById(`phoneTab-${t}`);
+        if (view) {
+          view.classList.toggle('hidden', t !== tabName);
+        }
+      });
+
+      document.querySelectorAll('.phone-nav-btn').forEach((btn) => {
+        const isCurrent = btn.dataset.tab === tabName;
+        const indicator = btn.querySelector('.tab-indicator');
+        if (isCurrent) {
+          btn.classList.remove('text-zinc-400');
+          btn.classList.add('text-stockCyan');
+          if (indicator) indicator.classList.remove('hidden');
+        } else {
+          btn.classList.add('text-zinc-400');
+          btn.classList.remove('text-stockCyan');
+          if (indicator) indicator.classList.add('hidden');
+        }
+      });
+
+      triggerDynamicIsland(labels[tabName] || 'STOCK');
+    }
+
+    function jumpToPhoneTab(tabName) {
+      const phoneTarget = document.getElementById('vista-app');
+      if (phoneTarget) {
+        phoneTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      setTimeout(() => {
+        switchPhoneTab(tabName);
+      }, 260);
+    }
+
+    /* --------------------------------------------------------------------------
+       C. RENDERIZADO DE INVENTARIO VIVO Y COMERCIOS LOCALES EN EL IPHONE
+       -------------------------------------------------------------------------- */
+    function updateAllPhoneCounters() {
+      const totalUnits = state.items.reduce((acc, item) => acc + item.stock, 0);
+      const lowCount = state.items.filter((item) => item.stock <= 5).length;
+
+      const splashTotal = document.getElementById('splashTotalUnits');
+      const splashPaper = document.getElementById('splashPaperBadge');
+      const lowBadge = document.getElementById('phoneLowStockBadge');
+      const profileCounter = document.getElementById('profilePaperCounter');
+      const qrCodeEl = document.getElementById('qrPassCode');
+      const qrDetailEl = document.getElementById('qrPassDetail');
+
+      if (splashTotal) splashTotal.textContent = totalUnits;
+      if (splashPaper) splashPaper.textContent = `${state.paperSaved.toLocaleString('es-MX')} sin papel`;
+      if (lowBadge) {
+        lowBadge.textContent = `${lowCount} ${lowCount === 1 ? 'Bajo' : 'Bajos'}`;
+        lowBadge.className = lowCount > 0
+          ? 'rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-300'
+          : 'rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-300';
+      }
+      if (profileCounter) profileCounter.textContent = state.paperSaved.toLocaleString('es-MX');
+      if (qrCodeEl) qrCodeEl.textContent = state.activeOrderCode;
+      if (qrDetailEl) qrDetailEl.textContent = state.activeOrderStore;
+    }
+
+    function renderPhoneInventory() {
+      const list = document.getElementById('phoneInventoryList');
+      if (!list) return;
+
+      list.innerHTML = state.items
+        .map((item) => {
+          const isLow = item.stock <= 5;
+          return `
+            <div class="flex items-center justify-between rounded-xl border ${isLow ? 'border-amber-500/35 bg-amber-500/[0.06]' : 'border-white/10 bg-white/[0.035]'} px-3 py-2.5">
+              <div class="min-w-0 pr-2">
+                <div class="flex items-center gap-1.5">
+                  <p class="truncate text-xs font-bold text-white">${item.name}</p>
+                  ${isLow ? '<span class="shrink-0 rounded bg-amber-500/25 px-1.5 py-0.2 text-[9px] font-extrabold text-amber-300">Bajo</span>' : ''}
+                </div>
+                <p class="truncate text-[10px] text-zinc-400">${item.store}</p>
+              </div>
+
+              <div class="flex shrink-0 items-center gap-1.5">
+                <button
+                  type="button"
+                  onclick="adjustItemStock(${item.id}, -1)"
+                  aria-label="Restar unidad a ${item.name}"
+                  class="flex h-6 w-6 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-xs font-black text-zinc-200 transition hover:border-stockPeach hover:text-stockPeach"
+                >
+                  -
+                </button>
+                <span class="w-6 text-center text-xs font-black ${isLow ? 'text-amber-300' : 'text-white'}">${item.stock}</span>
+                <button
+                  type="button"
+                  onclick="adjustItemStock(${item.id}, 1)"
+                  aria-label="Sumar unidad a ${item.name}"
+                  class="flex h-6 w-6 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-xs font-black text-zinc-200 transition hover:border-stockCyan hover:text-stockCyan"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    function adjustItemStock(id, delta) {
+      const item = state.items.find((i) => i.id === id);
+      if (!item) return;
+
+      if (delta < 0 && item.stock === 0) {
+        triggerDynamicIsland('Sin existencias');
+        return;
+      }
+
+      item.stock += delta;
+      if (delta < 0) {
+        state.paperSaved += 1;
+        triggerDynamicIsland(`-1 ${item.name}`);
+      } else {
+        triggerDynamicIsland(`+1 ${item.name}`);
+      }
+
+      renderPhoneInventory();
+      renderPhoneStores(document.getElementById('phoneStoreSearch')?.value || '');
+      updateAllPhoneCounters();
+    }
+
+    function quickAddPhoneItem() {
+      const template = state.quickAddPool[state.quickAddIndex % state.quickAddPool.length];
+      state.quickAddIndex += 1;
+
+      const newId = Date.now();
+      state.items.unshift({
+        id: newId,
+        name: template.name,
+        store: template.store,
+        distance: template.distance,
+        stock: template.stock
+      });
+
+      renderPhoneInventory();
+      renderPhoneStores(document.getElementById('phoneStoreSearch')?.value || '');
+      updateAllPhoneCounters();
+      triggerDynamicIsland(`+ ${template.name}`);
+    }
+
+    function renderPhoneStores(query = '') {
+      const container = document.getElementById('phoneStoresList');
+      if (!container) return;
+
+      const q = query.trim().toLowerCase();
+      const filtered = state.items.filter(
+        (item) =>
+          item.store.toLowerCase().includes(q) ||
+          item.name.toLowerCase().includes(q)
+      );
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center text-xs text-zinc-400">
+            No se encontraron comercios con "${query}".
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered
+        .map(
+          (item) => `
+          <div class="rounded-xl border border-white/10 bg-white/[0.035] p-3">
+            <div class="flex items-center justify-between">
+              <p class="text-xs font-extrabold text-white">${item.store}</p>
+              <span class="text-[10px] font-bold text-stockCyan">${item.distance}</span>
+            </div>
+            <p class="mt-0.5 text-[11px] text-zinc-300">${item.name}</p>
+            <div class="mt-2 flex items-center justify-between">
+              <span class="text-[10px] font-semibold ${item.stock > 0 ? 'text-emerald-400' : 'text-zinc-500'}">
+                ${item.stock > 0 ? `Disp: ${item.stock} uds` : 'Agotado hoy'}
+              </span>
+              <button
+                type="button"
+                onclick="reservePaperlessItem(${item.id})"
+                ${item.stock === 0 ? 'disabled' : ''}
+                class="rounded-lg px-2.5 py-1 text-[10px] font-extrabold transition ${
+                  item.stock > 0
+                    ? 'btn-stock-primary'
+                    : 'cursor-not-allowed bg-white/5 text-zinc-500'
+                }"
+              >
+                Reservar sin papel
+              </button>
+            </div>
+          </div>
+        `
+        )
+        .join('');
+    }
+
+    function reservePaperlessItem(id) {
+      const item = state.items.find((i) => i.id === id);
+      if (!item || item.stock <= 0) return;
+
+      item.stock -= 1;
+      state.paperSaved += 1;
+      const randomNum = Math.floor(1000 + Math.random() * 8999);
+      state.activeOrderCode = `TICKET #STK-${randomNum}`;
+      state.activeOrderStore = `${item.store} • ${item.name}`;
+
+      renderPhoneInventory();
+      renderPhoneStores(document.getElementById('phoneStoreSearch')?.value || '');
+      updateAllPhoneCounters();
+      triggerDynamicIsland('Pase QR Generado ✓');
+    }
+
+    /* --------------------------------------------------------------------------
+       D. INCLINACIÓN 3D SUAVE DEL IPHONE PRO AL MOVER EL CURSOR
+       -------------------------------------------------------------------------- */
+    function initPhoneTilt() {
+      const stage = document.getElementById('phoneStage');
+      const chassis = document.getElementById('iphoneChassis');
+      if (!stage || !chassis) return;
+
+      stage.addEventListener('mousemove', (e) => {
+        const rect = stage.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        const rotateY = x * 16;
+        const rotateX = -y * 14;
+        chassis.style.transform = `rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
+      });
+
+      stage.addEventListener('mouseleave', () => {
+        chassis.style.transform = 'rotateX(0deg) rotateY(0deg)';
+      });
+    }
+
+    /* --------------------------------------------------------------------------
+       E. SELECTOR ANIMADO DE IDIOMA EN / ES
+       -------------------------------------------------------------------------- */
+    document.getElementById('langToggleBtn').addEventListener('click', () => {
+      const pill = document.getElementById('langActivePill');
+      const labelEn = document.getElementById('langLabelEn');
+      const labelEs = document.getElementById('langLabelEs');
+
+      if (state.lang === 'EN') {
+        state.lang = 'ES';
+        pill.style.transform = 'translateX(36px)';
+        labelEn.classList.replace('text-matteDeep', 'text-zinc-300');
+        labelEs.classList.replace('text-zinc-300', 'text-matteDeep');
+
+        document.getElementById('heroTagline').innerHTML = `
+          <p>LO QUE SEA.</p>
+          <p>DONDE SEA.</p>
+          <p>CUANDO SEA.</p>
+          <p>PARA TODOS.</p>
+        `;
+        document.getElementById('heroSubcopy').textContent =
+          'Controla tu inventario en tiempo real desde cualquier lugar, impulsa los negocios de tu barrio y reemplaza el papel con comprobantes digitales instantáneos.';
+        document.getElementById('navHome').textContent = 'Inicio';
+        document.getElementById('navPillars').textContent = 'Pilares';
+        document.getElementById('navApp').textContent = 'Vista App';
+        document.getElementById('btnQuickInventory').textContent = 'Inventario en Vivo';
+        document.getElementById('btnQuickLocal').textContent = 'Comercios Locales';
+        document.getElementById('btnQuickQr').textContent = 'Pase QR Sin Papel';
+        document.getElementById('heroScrollLink').textContent = 'Descubre así funciona STOCK';
+        document.getElementById('pillarsSubtitle').textContent =
+          'Explora cómo STOCK transforma el control de inventario y el comercio local.';
+        document.getElementById('footerRights').innerHTML = '&copy; 2026 STOCK. Todos los derechos reservados.';
+        triggerDynamicIsland('Idioma: Español');
+      } else {
+        state.lang = 'EN';
+        pill.style.transform = 'translateX(0px)';
+        labelEs.classList.replace('text-matteDeep', 'text-zinc-300');
+        labelEn.classList.replace('text-zinc-300', 'text-matteDeep');
+
+        document.getElementById('heroTagline').innerHTML = `
+          <p>ANYTHING.</p>
+          <p>ANYWHERE.</p>
+          <p>ANYTIME.</p>
+          <p>FOR ANYONE.</p>
+        `;
+        document.getElementById('heroSubcopy').textContent =
+          'Control your inventory in real time from anywhere, empower neighborhood businesses, and replace paper receipts with instant digital passes.';
+        document.getElementById('navHome').textContent = 'Home';
+        document.getElementById('navPillars').textContent = 'Pillars';
+        document.getElementById('navApp').textContent = 'App View';
+        document.getElementById('btnQuickInventory').textContent = 'Live Inventory';
+        document.getElementById('btnQuickLocal').textContent = 'Local Shops';
+        document.getElementById('btnQuickQr').textContent = 'Paperless QR Pass';
+        document.getElementById('heroScrollLink').textContent = 'Discover how STOCK works';
+        document.getElementById('pillarsSubtitle').textContent =
+          'Explore how STOCK transforms inventory control and local commerce.';
+        document.getElementById('footerRights').innerHTML = '&copy; 2026 STOCK. All rights reserved.';
+        triggerDynamicIsland('Language: English');
+      }
+    });
+
+    /* --------------------------------------------------------------------------
+       F. INICIALIZACIÓN AL CARGAR EL DOM
+       -------------------------------------------------------------------------- */
+    window.addEventListener('DOMContentLoaded', () => {
+      renderPhoneInventory();
+      renderPhoneStores();
+      updateAllPhoneCounters();
+      initPhoneTilt();
+
+      const searchInput = document.getElementById('phoneStoreSearch');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          renderPhoneStores(e.target.value);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
