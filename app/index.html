@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Surtí · Inventario por voz</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header>
+    <h1>🛒 Surtí</h1>
+    <p>Tu inventario, con tu voz</p>
+  </header>
+
+  <main>
+    <!-- Asistente de voz -->
+    <section class="asistente">
+      <button id="btnMic" class="mic" aria-label="Hablar">🎙️</button>
+      <p id="estadoMic" class="ayuda">Toca y habla: “Vendí 3 Cocas” · “Llegaron 10 kilos de frijol” · “¿Qué se me está acabando?”</p>
+
+      <form id="formTexto" class="texto">
+        <input id="inputTexto" type="text" placeholder="…o escríbelo aquí" autocomplete="off">
+        <button type="submit">Enviar</button>
+      </form>
+
+      <div id="chat" class="chat"></div>
+    </section>
+
+    <!-- Alertas -->
+    <section>
+      <h2>⚠️ Se está acabando</h2>
+      <div id="alertas" class="alertas"></div>
+    </section>
+
+    <!-- Inventario -->
+    <section>
+      <h2>📦 Inventario</h2>
+      <div id="inventario" class="inventario"></div>
+    </section>
+
+    <!-- Historial -->
+    <section>
+      <h2>🕑 Últimos movimientos</h2>
+      <ul id="movimientos" class="movimientos"></ul>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

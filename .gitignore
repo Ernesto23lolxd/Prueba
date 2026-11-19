@@ -1,0 +1,3 @@
+backend/.env
+backend/inventario.db
+__pycache__/
