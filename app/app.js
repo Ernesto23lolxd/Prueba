@@ -80,7 +80,7 @@ async function manejarRespuesta(r) {
   agregarMensaje("bot", data.respuesta, detalle);
   hablar(data.respuesta);
   ultimosCambios = new Set((data.acciones || []).map((a) => a.producto));
-  pintarInventario(data.inventario);
+  await cargarInventario();
   cargarMovimientos();
 }
 
@@ -112,7 +112,7 @@ function tarjetaProducto(p) {
     <span class="punto"></span>
     <span class="nombre"></span>
     <span class="cant">${p.cantidad} ${p.unidad}</span>
-    <span class="min">mín ${p.minimo}</span>`;
+    <span class="min">${p.se_acaba_texto ? `se acaba ${p.se_acaba_texto}` : `mín ${p.minimo}`}</span>`;
   div.querySelector(".nombre").textContent = p.nombre;
   return div;
 }
@@ -129,7 +129,7 @@ function pintarInventario(productos) {
 }
 
 async function cargarInventario() {
-  const r = await fetch(`${API}/api/inventario`);
+  const r = await fetch(`${API}/api/prediccion`); // inventario + cuándo se acaba cada producto
   pintarInventario(await r.json());
 }
 

@@ -10,10 +10,12 @@ Abrir: http://localhost:8000
 """
 import difflib
 import json
+import math
 import os
+import random
 import sqlite3
 import unicodedata
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -48,16 +50,33 @@ def db():
 
 
 PRODUCTOS_DEMO = [
-    # nombre, unidad, cantidad, minimo, precio, categoria
-    ("Coca-Cola 600 ml", "pieza", 24, 12, 22, "Bebidas"),
-    ("Sabritas sal 45 g", "pieza", 15, 10, 20, "Botanas"),
-    ("Huevo", "kg", 4, 3, 48, "Básicos"),
-    ("Frijol pinto", "kg", 12, 5, 32, "Granel"),
-    ("Arroz", "kg", 8, 5, 28, "Granel"),
-    ("Leche Lala 1 L", "pieza", 6, 8, 29, "Lácteos"),
-    ("Pan Bimbo grande", "pieza", 3, 4, 52, "Panadería"),
-    ("Tortillas", "kg", 5, 3, 24, "Básicos"),
+    # nombre, unidad, cantidad actual, minimo, precio, categoria, venta diaria promedio (para el historial)
+    ("Coca-Cola 600 ml", "pieza", 30, 12, 22, "Bebidas", 14),
+    ("Coca-Cola 2.5 L", "pieza", 10, 4, 48, "Bebidas", 3),
+    ("Agua Ciel 1 L", "pieza", 20, 8, 15, "Bebidas", 5),
+    ("Sabritas sal 45 g", "pieza", 18, 10, 20, "Botanas", 6),
+    ("Galletas Marías", "pieza", 12, 6, 18, "Botanas", 1.5),
+    ("Huevo", "kg", 6, 3, 48, "Básicos", 2.5),
+    ("Tortillas", "kg", 10, 4, 24, "Básicos", 6),
+    ("Leche Lala 1 L", "pieza", 8, 8, 29, "Lácteos", 5),
+    ("Pan Bimbo grande", "pieza", 4, 4, 52, "Panadería", 2),
+    ("Jamón de pavo", "kg", 1.5, 0.5, 160, "Salchichonería", 0.4),
+    ("Frijol pinto", "kg", 15, 5, 32, "Granel", 1.5),
+    ("Arroz", "kg", 9, 4, 28, "Granel", 1),
+    ("Azúcar", "kg", 7, 3, 30, "Granel", 0.8),
+    ("Aceite 1-2-3 1 L", "pieza", 6, 3, 45, "Abarrotes", 0.7),
+    ("Maruchan", "pieza", 24, 10, 15, "Abarrotes", 4),
+    ("Atún Dolores", "pieza", 9, 5, 26, "Abarrotes", 1),
+    ("Café Nescafé 42 g", "pieza", 5, 2, 42, "Abarrotes", 0.3),
+    ("Ate de membrillo", "pieza", 5, 2, 35, "Dulces", 0.3),
+    ("Papel higiénico 4 rollos", "pieza", 8, 4, 38, "Limpieza", 0.6),
+    ("Jabón Zote", "pieza", 10, 4, 22, "Limpieza", 0.5),
 ]
+
+# Las tienditas venden más en fin de semana (lunes=0 ... domingo=6)
+FACTOR_DIA = {0: 0.9, 1: 0.85, 2: 0.9, 3: 0.95, 4: 1.15, 5: 1.4, 6: 1.3}
+DIAS_SEMANA = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+DIAS_HISTORIAL = 14
 
 
 def init_db(reset: bool = False):
@@ -86,12 +105,37 @@ def init_db(reset: bool = False):
         """
     )
     if con.execute("SELECT COUNT(*) FROM productos").fetchone()[0] == 0:
-        con.executemany(
-            "INSERT INTO productos (nombre, unidad, cantidad, minimo, precio, categoria) VALUES (?,?,?,?,?,?)",
-            PRODUCTOS_DEMO,
-        )
+        cargar_demo(con)
     con.commit()
     con.close()
+
+
+def cargar_demo(con):
+    """Productos de una tiendita de Durango + 2 semanas de ventas simuladas (siempre las mismas)."""
+    rnd = random.Random(2026)
+    hoy = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    for nombre, unidad, cantidad, minimo, precio, categoria, diaria in PRODUCTOS_DEMO:
+        con.execute(
+            "INSERT INTO productos (nombre, unidad, cantidad, minimo, precio, categoria) VALUES (?,?,?,?,?,?)",
+            (nombre, unidad, cantidad, minimo, precio, categoria),
+        )
+        pid = con.execute("SELECT last_insert_rowid()").fetchone()[0]
+        for atras in range(DIAS_HISTORIAL, 0, -1):
+            dia = hoy - timedelta(days=atras)
+            total = diaria * FACTOR_DIA[dia.weekday()] * rnd.uniform(0.75, 1.25)
+            # Se vende en "pasos": piezas enteras o cuartos de kilo. Redondeo aleatorio para respetar el promedio.
+            paso = 0.25 if unidad == "kg" else 1
+            pasos = total / paso
+            pasos = int(pasos) + (1 if rnd.random() < pasos - int(pasos) else 0)
+            while pasos > 0:
+                bloque = min(pasos, rnd.randint(1, 4 if unidad == "kg" else 3))
+                pasos -= bloque
+                cant = bloque * paso
+                momento = dia + timedelta(hours=rnd.randint(8, 21), minutes=rnd.randint(0, 59))
+                con.execute(
+                    "INSERT INTO movimientos (producto_id, tipo, cantidad, fecha, texto_original) VALUES (?,?,?,?,?)",
+                    (pid, "venta", cant, momento.isoformat(timespec="seconds"), "(historial de demo)"),
+                )
 
 
 init_db()
@@ -112,6 +156,91 @@ def listar_productos():
     filas = con.execute("SELECT * FROM productos ORDER BY nombre").fetchall()
     con.close()
     return [{**dict(f), "estado": estado(f)} for f in filas]
+
+
+def _redondear_compra(cant: float, unidad: str) -> float:
+    if cant <= 0:
+        return 0
+    return math.ceil(cant * 2) / 2 if unidad == "kg" else math.ceil(cant)
+
+
+def _cuando(dias: int, fecha: datetime) -> str:
+    if dias == 0:
+        return "hoy"
+    if dias == 1:
+        return "mañana"
+    if dias < 7:
+        return f"el {DIAS_SEMANA[fecha.weekday()]}"
+    return f"en {dias} días"
+
+
+def calcular_prediccion() -> list:
+    """Para cada producto: cuánto se vende al día, cuándo se acaba y cuánto conviene comprar.
+
+    Método (explicable a los jueces): promedio de ventas de los últimos 14 días, ajustado
+    porque en fin de semana se vende más. Se simula día por día hasta que se acaba.
+    """
+    ahora = datetime.now()
+    desde = (ahora - timedelta(days=DIAS_HISTORIAL)).isoformat(timespec="seconds")
+    con = db()
+    ventas = con.execute(
+        "SELECT producto_id, SUM(cantidad) AS total, MIN(fecha) AS primera FROM movimientos "
+        "WHERE tipo='venta' AND fecha >= ? GROUP BY producto_id",
+        (desde,),
+    ).fetchall()
+    con.close()
+    por_producto = {v["producto_id"]: v for v in ventas}
+
+    # Qué parte del día de hoy queda (la tienda abre de 8:00 a 22:00)
+    resto_hoy = min(1.0, max(0.0, (22 - (ahora.hour + ahora.minute / 60)) / 14))
+
+    resultado = []
+    for p in listar_productos():
+        v = por_producto.get(p["id"])
+        if not v or not v["total"]:
+            resultado.append({**p, "venta_diaria": 0, "dias_restantes": None, "se_acaba": None,
+                              "se_acaba_texto": "sin ventas recientes", "comprar": 0, "urgencia": "baja"})
+            continue
+        dias_obs = (ahora - datetime.fromisoformat(v["primera"])).total_seconds() / 86400
+        promedio = v["total"] / min(DIAS_HISTORIAL, max(1.0, dias_obs))
+
+        restante = p["cantidad"]
+        dias = None
+        consumo_hoy = promedio * FACTOR_DIA[ahora.weekday()] * resto_hoy
+        if restante <= consumo_hoy:
+            dias = 0
+        else:
+            restante -= consumo_hoy
+            for d in range(1, 61):
+                consumo = promedio * FACTOR_DIA[(ahora + timedelta(days=d)).weekday()]
+                if restante <= consumo:
+                    dias = d
+                    break
+                restante -= consumo
+
+        semana = sum(promedio * FACTOR_DIA[(ahora + timedelta(days=d)).weekday()] for d in range(1, 8))
+        comprar = _redondear_compra(semana + p["minimo"] - p["cantidad"], p["unidad"])
+        fecha_fin = ahora + timedelta(days=dias) if dias is not None else None
+        if p["estado"] in ("bajo", "agotado") or (dias is not None and dias <= 1):
+            urgencia = "alta"
+        elif dias is not None and dias <= 3:
+            urgencia = "media"
+        else:
+            urgencia = "baja"
+
+        resultado.append({
+            **p,
+            "venta_diaria": round(promedio, 2),
+            "dias_restantes": dias,
+            "se_acaba": fecha_fin.date().isoformat() if fecha_fin else None,
+            "se_acaba_texto": _cuando(dias, fecha_fin) if dias is not None else "en más de 2 meses",
+            "comprar": comprar,
+            "urgencia": urgencia,
+        })
+
+    orden = {"alta": 0, "media": 1, "baja": 2}
+    resultado.sort(key=lambda r: (orden[r["urgencia"]], r["dias_restantes"] if r["dias_restantes"] is not None else 999))
+    return resultado
 
 
 def normalizar(texto: str) -> str:
@@ -231,6 +360,12 @@ Reglas:
 - Si dice cajas/paquetes y no sabes cuántas piezas trae, pregunta en "respuesta" y no inventes la acción.
 - Para cambiar precio usa tipo "precio" y pon el precio nuevo en "precio".
 - NO hagas sumas ni multiplicaciones tú: usa el VALOR TOTAL y los valores ya calculados del inventario.
+- "¿Cuándo se me acaba X?" -> usa la columna "se acaba" y "vende ~/día" (ej. "se te acaba el sábado, vendes como 2.5 kilos al día").
+- "¿Qué tengo que comprar?" / "¿qué surto?" -> usa la LISTA DE COMPRAS SUGERIDA y SIEMPRE di la cantidad de cada uno
+  (ej. "compra 40 leches, 39 kilos de tortilla y 17 panes"). Menciona máximo 5 productos.
+- La respuesta se va a escuchar: redondea los números como habla la gente ("como 15 al día", "casi 3 kilos"),
+  nunca digas decimales como 2.68 o 15.09.
+- Al confirmar una venta, si ese producto se acaba hoy o mañana según la predicción, avísale.
 - "respuesta": frase corta, amable y hablada (se leerá en voz alta), en español de México. Confirma lo que hiciste
   y, si algún producto queda en o bajo su mínimo, avísale. Para consultas, responde con los datos del inventario.
 - "transcripcion": lo que entendiste que dijo el usuario.
@@ -242,16 +377,22 @@ Formato EXACTO:
 
 def texto_inventario() -> str:
     """Inventario para la IA, con los cálculos ya hechos (la IA no debe sumar)."""
-    prods = listar_productos()
+    prods = calcular_prediccion()
     lineas = [
         f"- {p['nombre']} | {p['unidad']} | {p['cantidad']:g} | {p['minimo']:g} | {p['precio']} "
-        f"| valor ${(p['cantidad'] * (p['precio'] or 0)):,.2f} | estado: {p['estado']}"
+        f"| valor ${(p['cantidad'] * (p['precio'] or 0)):,.2f} | estado: {p['estado']} "
+        f"| vende ~{p['venta_diaria']:g}/día | se acaba: {p['se_acaba_texto']} | sugerido comprar: {p['comprar']:g}"
         for p in prods
     ]
     total = sum(p["cantidad"] * (p["precio"] or 0) for p in prods)
     bajos = [p["nombre"] for p in prods if p["estado"] in ("bajo", "agotado")]
-    lineas.append(f"\nVALOR TOTAL DEL INVENTARIO (ya calculado): ${total:,.2f}")
+    compras = [f"{p['comprar']:g} {p['unidad']} de {p['nombre']}" for p in prods
+               if p["urgencia"] in ("alta", "media") and p["comprar"] > 0]
+    ahora = datetime.now()
+    lineas.append(f"\nHOY ES {DIAS_SEMANA[ahora.weekday()].upper()} {ahora:%d/%m/%Y} {ahora:%H:%M}")
+    lineas.append(f"VALOR TOTAL DEL INVENTARIO (ya calculado): ${total:,.2f}")
     lineas.append(f"PRODUCTOS EN O BAJO SU MÍNIMO: {', '.join(bajos) or 'ninguno'}")
+    lineas.append(f"LISTA DE COMPRAS SUGERIDA (urgentes, para cubrir 1 semana): {'; '.join(compras) or 'nada urgente'}")
     return "\n".join(lineas)
 
 
@@ -323,6 +464,12 @@ def texto(body: Texto):
 @app.get("/api/inventario")
 def inventario():
     return listar_productos()
+
+
+@app.get("/api/prediccion")
+def prediccion():
+    """Por producto: venta diaria, días restantes, cuándo se acaba, cuánto comprar y urgencia."""
+    return calcular_prediccion()
 
 
 @app.get("/api/alertas")
