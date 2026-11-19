@@ -1,5 +1,5 @@
 """
-Prueba completa de Surtí (correr con el servidor encendido):
+Prueba completa de STOCK (correr con el servidor encendido):
 
     cd backend
     python prueba_completa.py                # contra http://localhost:8000
@@ -227,7 +227,7 @@ def _():
 
 
 # ------------------------------------------------------------------ Reporte
-print(f"\nPrueba completa de Surtí contra {BASE}\n")
+print(f"\nPrueba completa de STOCK contra {BASE}\n")
 for ok, nombre, detalle in resultados:
     print(f"{'✅' if ok else '❌'} {nombre}\n     {detalle}")
 fallas = sum(not ok for ok, *_ in resultados)

@@ -1,3 +1,4 @@
 backend/.env
 backend/inventario.db
 __pycache__/
+privado/

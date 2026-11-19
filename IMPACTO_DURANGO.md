@@ -1,4 +1,4 @@
-# Surtí — Impacto en Durango (datos para el pitch)
+# STOCK — Impacto en Durango (datos para el pitch)
 
 ## Cifras oficiales (INEGI, Censos Económicos 2024, datos de 2023)
 - **64,613** unidades económicas privadas en el estado; **95.1 % son micronegocios** (≤10 personas) → **≈ 61,400 micronegocios**.
@@ -21,7 +21,7 @@
 > "En Durango hay más de 61 mil micronegocios. 2 de cada 3 no usan internet, y de los que sí, solo 1 de cada 100 usa IA.
 > Más de un tercio de los negocios cerró en la pandemia, más que el promedio nacional.
 > Una tienda que no sabe qué se le acaba pierde ventas (estante vacío) o dinero (producto caducado).
-> Surtí le da a la tiendita de la esquina inventario con IA desde su celular y un estante inteligente de ~300 pesos."
+> STOCK le da a la tiendita de la esquina inventario con IA desde el celular que ya tiene: le habla, y STOCK le dice qué surtir y qué NO volver a pedir."
 
 ## Fuentes
 - INEGI, Comunicado 15/25, Censos Económicos 2024 — Durango: https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2025/ce/CE_2024_RO_Dgo.pdf

@@ -1,47 +1,49 @@
-# 🛒 Surtí — Inventario por voz
+# 📦 STOCK — Inventario por voz para tu tienda
 
-El dueño del negocio le habla al celular ("vendí 3 Cocas", "llegaron 10 kilos de frijol",
-"¿qué se me está acabando?") y Surtí actualiza el inventario, responde en voz alta y avisa
-en una pantallita de mostrador (ESP32) cuando algo se está acabando.
+El dueño de la tiendita le habla al celular ("vendí 3 Cocas", "llegaron 10 kilos de frijol",
+"¿qué surto y qué no?") y STOCK actualiza el inventario, responde en voz alta, predice qué se
+va a acabar, avisa qué NO volver a pedir (dinero congelado) y arma el pedido por WhatsApp.
+También lee la foto del ticket del proveedor y trae el inventario desde el Excel que ya tienen.
 
 ## Estructura
 ```
-backend/   Python + FastAPI + SQLite + Gemini   (Braulio)
-app/       HTML + CSS + JavaScript puro          (Sebas y Ernesto)
-esp32/     Arduino: OLED + semáforo de LEDs      (Jorge)
+backend/   Python + FastAPI + SQLite + Gemini (IA)
+app/       inicio.html (portada) · index.html (la app) · clasico.html (respaldo)
+demo/      Excel/CSV y audios de ejemplo para probar
 ```
 
-## Correr el backend
+## Correr
 ```powershell
 cd backend
 pip install -r requirements.txt
-$env:GEMINI_API_KEY="TU_CLAVE"
+# la clave va en backend/.env  ->  GEMINI_API_KEY=AIza...   (NO se sube a GitHub)
 python -m uvicorn main:app --host 0.0.0.0 --port 8000
-# (sin --reload: con OneDrive no detecta los cambios; si cambias el código, Ctrl+C y vuelve a correrlo)
+# (sin --reload: con OneDrive no detecta cambios; si cambias el código, Ctrl+C y vuelve a correrlo)
 ```
-Abrir **http://localhost:8000** en la laptop.
+- Portada: **http://localhost:8000/**
+- App: **http://localhost:8000/app**
+
+## Probar todo
+```powershell
+cd backend
+python prueba_completa.py
+```
 
 ## ⚠️ Micrófono en el celular
-El navegador solo deja usar el micrófono en **localhost** o con **HTTPS**.
-Para probar en el celular, usa un túnel HTTPS (en otra terminal):
-```powershell
-npx localtunnel --port 8000      # o: cloudflared tunnel --url http://localhost:8000
-```
-y abre en el celular la URL https que te da.
+El navegador solo deja usar el micrófono en **localhost** o con **HTTPS**. Para el celular usa un túnel:
+`npx localtunnel --port 8000` o `cloudflared tunnel --url http://localhost:8000`.
 
 ## Endpoints
 | Método | Ruta | Para qué |
 |---|---|---|
 | POST | /api/voz | Audio (campo `audio`) → IA → acciones en el inventario |
-| POST | /api/texto | `{"texto": "..."}` → igual que voz (respaldo) |
-| GET | /api/inventario | Lista de productos con su estado (ok / atencion / bajo / agotado) |
-| GET | /api/alertas | Solo los que se están acabando |
+| POST | /api/texto | `{"texto": "..."}` → igual que voz |
+| POST | /api/foto | Imagen (`imagen`) + `modo` = ticket / anaquel |
+| POST | /api/importar | Excel/CSV (`archivo`) + `confirmar` = false (vista previa) / true |
+| POST | /api/ajuste-rapido | `{"producto_id": 1, "delta": -1}` botones − / + |
+| GET | /api/tablero | Todo lo de la pantalla: predicción, KPIs, lista y movimientos |
+| GET | /api/prediccion | Cuándo se acaba cada producto y cuánto comprar |
+| GET | /api/lista-compras | Pedido agrupado por proveedor + enlaces de WhatsApp |
+| GET | /api/resumen | Valor del inventario, efectivo a apartar, dinero congelado |
 | GET | /api/movimientos | Historial |
-| GET | /api/esp32 | Resumen corto para la OLED |
 | POST | /api/reset | Reinicia los datos de demo |
-
-## ESP32
-1. Arduino IDE → Gestor de tarjetas → "esp32 by Espressif" → placa "ESP32 Dev Module".
-2. Bibliotecas: Adafruit SSD1306, Adafruit GFX, ArduinoJson.
-3. En `esp32/inventario_voz/inventario_voz.ino` cambia WiFi y la IP de la laptop (`ipconfig`).
-4. La laptop y el ESP32 deben estar en el **mismo hotspot**.

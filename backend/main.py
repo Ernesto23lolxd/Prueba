@@ -41,7 +41,7 @@ if _env.exists():
 DB_PATH = BASE_DIR / "inventario.db"
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
-app = FastAPI(title="Inventario por voz")
+app = FastAPI(title="STOCK — Inventario por voz")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
@@ -354,7 +354,7 @@ def aplicar_acciones(acciones: list, texto_original: str) -> list:
 
 
 # ---------------------------------------------------------------- Gemini
-PROMPT = """Eres "Surtí", el asistente de inventario por voz de una tiendita en Durango, México.
+PROMPT = """Eres "STOCK", el asistente de inventario por voz de una tiendita en Durango, México.
 El dueño te habla de forma natural (puede usar modismos, diminutivos o errores).
 Tu trabajo: entender qué quiere hacer con su inventario y devolver SOLO un JSON.
 
@@ -555,7 +555,7 @@ def armar_lista_compras(todas: bool = False) -> dict:
     por_proveedor, lineas = [], ["🛒 *Pedido de surtido*", fecha, ""]
     for proveedor in sorted(grupos):
         lista_p = grupos[proveedor]
-        msg_p = "\n".join([f"🛒 *Pedido — {proveedor}*", fecha, "", *map(linea, lista_p), "", "Enviado con Surtí 🤖"])
+        msg_p = "\n".join([f"🛒 *Pedido — {proveedor}*", fecha, "", *map(linea, lista_p), "", "Enviado con STOCK 📦"])
         por_proveedor.append({
             "proveedor": proveedor,
             "items": lista_p,
@@ -563,7 +563,7 @@ def armar_lista_compras(todas: bool = False) -> dict:
             "whatsapp_url": "https://wa.me/?text=" + quote(msg_p),
         })
         lineas += [f"*{proveedor}:*", *map(linea, lista_p), ""]
-    lineas.append("Enviado con Surtí 🤖")
+    lineas.append("Enviado con STOCK 📦")
     mensaje = "\n".join(lineas)
     return {
         "items": items,
@@ -766,24 +766,6 @@ def movimientos(limite: int = 30):
     ).fetchall()
     con.close()
     return [dict(f) for f in filas]
-
-
-@app.get("/api/esp32")
-def esp32():
-    """Respuesta compacta para la pantalla OLED del ESP32."""
-    prods = listar_productos()
-    criticos = [p for p in prods if p["estado"] in ("bajo", "agotado")]
-    atencion = [p for p in prods if p["estado"] == "atencion"]
-    nivel = "rojo" if criticos else ("amarillo" if atencion else "verde")
-    lineas = [f"{p['nombre'][:13]} {p['cantidad']:g}" for p in criticos[:4]]
-    ultimo = movimientos(1)
-    return {
-        "nivel": nivel,
-        "criticos": len(criticos),
-        "lineas": lineas,
-        "ultimo": (f"{ultimo[0]['tipo']}: {ultimo[0]['nombre'][:12]}" if ultimo else ""),
-        "ultimo_id": ultimo[0]["id"] if ultimo else 0,
-    }
 
 
 @app.post("/api/reset")
