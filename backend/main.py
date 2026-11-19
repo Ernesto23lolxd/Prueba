@@ -70,10 +70,10 @@ PRODUCTOS_DEMO = [
     ("Aceite 1-2-3 1 L", "pieza", 6, 3, 45, "Abarrotes", 0.7),
     ("Maruchan", "pieza", 24, 10, 15, "Abarrotes", 4),
     ("Atún Dolores", "pieza", 9, 5, 26, "Abarrotes", 1),
-    ("Café Nescafé 42 g", "pieza", 5, 2, 42, "Abarrotes", 0.3),
-    ("Ate de membrillo", "pieza", 5, 2, 35, "Dulces", 0.3),
+    ("Café Nescafé 42 g", "pieza", 8, 2, 42, "Abarrotes", 0.25),
+    ("Ate de membrillo", "pieza", 9, 2, 35, "Dulces", 0.2),
     ("Papel higiénico 4 rollos", "pieza", 8, 4, 38, "Limpieza", 0.6),
-    ("Jabón Zote", "pieza", 10, 4, 22, "Limpieza", 0.5),
+    ("Jabón Zote", "pieza", 14, 4, 22, "Limpieza", 0.35),
 ]
 
 # Las tienditas venden más en fin de semana (lunes=0 ... domingo=6)
@@ -207,9 +207,12 @@ def calcular_prediccion() -> list:
     resultado = []
     for p in listar_productos():
         v = por_producto.get(p["id"])
+        valor = round(p["cantidad"] * (p["precio"] or 0), 2)
         if not v or not v["total"]:
+            urg = "alta" if p["estado"] in ("bajo", "agotado") else "baja"
             resultado.append({**p, "venta_diaria": 0, "dias_restantes": None, "se_acaba": None,
-                              "se_acaba_texto": "sin ventas recientes", "comprar": 0, "urgencia": "baja"})
+                              "se_acaba_texto": "sin ventas recientes", "comprar": 0, "urgencia": urg,
+                              "valor_actual": valor, "baja_rotacion": p["cantidad"] > p["minimo"] and valor > 0})
             continue
         dias_obs = (ahora - datetime.fromisoformat(v["primera"])).total_seconds() / 86400
         promedio = v["total"] / min(DIAS_HISTORIAL, max(1.0, dias_obs))
@@ -247,6 +250,9 @@ def calcular_prediccion() -> list:
             "se_acaba_texto": _cuando(dias, fecha_fin) if dias is not None else "en más de 2 meses",
             "comprar": comprar,
             "urgencia": urgencia,
+            "valor_actual": valor,
+            # Dinero congelado: alcanza para 2+ semanas y hay más del mínimo -> no conviene resurtir
+            "baja_rotacion": (dias is None or dias >= 14) and p["cantidad"] > p["minimo"],
         })
 
     orden = {"alta": 0, "media": 1, "baja": 2}
@@ -299,7 +305,8 @@ def aplicar_acciones(acciones: list, texto_original: str) -> list:
                     "INSERT INTO movimientos (producto_id, tipo, cantidad, fecha, texto_original) VALUES (?,?,?,?,?)",
                     (pid, "alta", cantidad, ahora, texto_original),
                 )
-                resultados.append({"producto": nombre, "tipo": "alta", "cantidad": cantidad, "ok": True})
+                resultados.append({"producto": nombre, "tipo": "alta", "cantidad": cantidad,
+                                   "unidad": a.get("unidad") or "pieza", "ok": True})
             else:
                 resultados.append({"producto": nombre, "tipo": tipo, "ok": False,
                                    "error": "No encontré ese producto en el inventario"})
@@ -381,6 +388,12 @@ Reglas:
 - La respuesta se va a escuchar: redondea los números como habla la gente ("como 15 al día", "casi 3 kilos"),
   nunca digas decimales como 2.68 o 15.09.
 - Al confirmar una venta, si ese producto se acaba hoy o mañana según la predicción, avísale.
+- "¿Qué surto y qué NO?" / "¿qué no debo pedir?" -> di lo urgente con cantidades, cuánto EFECTIVO APARTAR, y advierte
+  qué productos de BAJA ROTACIÓN no conviene comprarle al preventista (tienen dinero congelado).
+- Si recibes una FOTO de ticket o nota de proveedor: cada producto que llegó es una acción "entrada"
+  (usa el nombre del inventario si ya existe; si no existe, ponlo tal cual y se dará de alta). En "respuesta" resume qué sumaste.
+- Si recibes una FOTO de anaquel: cuenta las piezas visibles de productos del inventario y regístralas como "ajuste".
+- Si la imagen no se entiende, no inventes acciones: pide otra foto más clara.
 - "respuesta": frase corta, amable y hablada (se leerá en voz alta), en español de México. Confirma lo que hiciste
   y, si algún producto queda en o bajo su mínimo, avísale. Para consultas, responde con los datos del inventario.
 - "transcripcion": lo que entendiste que dijo el usuario.
@@ -397,8 +410,12 @@ def texto_inventario() -> str:
         f"- {p['nombre']} | {p['unidad']} | {p['cantidad']:g} | {p['minimo']:g} | {p['precio']} "
         f"| valor ${(p['cantidad'] * (p['precio'] or 0)):,.2f} | estado: {p['estado']} "
         f"| vende ~{p['venta_diaria']:g}/día | se acaba: {p['se_acaba_texto']} | sugerido comprar: {p['comprar']:g}"
+        f"{' | BAJA ROTACIÓN (NO RESURTIR)' if p['baja_rotacion'] else ''}"
         for p in prods
     ]
+    lentos = [f"{p['nombre']} (${p['valor_actual']:,.0f} congelados)" for p in prods if p["baja_rotacion"]]
+    urgentes = [p for p in prods if p["comprar"] > 0 and p["urgencia"] in ("alta", "media")]
+    apartar = sum(p["comprar"] * (p["precio"] or 0) for p in urgentes)
     total = sum(p["cantidad"] * (p["precio"] or 0) for p in prods)
     bajos = [p["nombre"] for p in prods if p["estado"] in ("bajo", "agotado")]
     compras = [f"{p['comprar']:g} {p['unidad']} de {p['nombre']}" for p in prods
@@ -407,11 +424,22 @@ def texto_inventario() -> str:
     lineas.append(f"\nHOY ES {DIAS_SEMANA[ahora.weekday()].upper()} {ahora:%d/%m/%Y} {ahora:%H:%M}")
     lineas.append(f"VALOR TOTAL DEL INVENTARIO (ya calculado): ${total:,.2f}")
     lineas.append(f"PRODUCTOS EN O BAJO SU MÍNIMO: {', '.join(bajos) or 'ninguno'}")
+    lineas.append(f"EFECTIVO A APARTAR PARA SURTIDO URGENTE (ya calculado): ${apartar:,.0f}")
+    lineas.append(f"BAJA ROTACIÓN / DINERO CONGELADO (NO PEDIR): {', '.join(lentos) or 'ninguno'}")
     lineas.append(f"LISTA DE COMPRAS SUGERIDA (urgentes; perecederos para pocos días, lo demás para 1 semana): {'; '.join(compras) or 'nada urgente'}")
     return "\n".join(lineas)
 
 
-def preguntar_a_gemini(texto: str | None = None, audio: bytes | None = None, mime: str | None = None) -> dict:
+INSTRUCCION_FOTO = {
+    "ticket": "Esta imagen es un ticket o nota de proveedor: lo que aparece LLEGÓ a la tienda. "
+              "Cada producto es una acción 'entrada' con su cantidad. En 'transcripcion' resume el ticket.",
+    "anaquel": "Esta imagen es un anaquel o refrigerador de la tienda: cuenta las piezas visibles de productos "
+               "del inventario y regístralas como 'ajuste'. En 'transcripcion' di qué contaste.",
+}
+
+
+def preguntar_a_gemini(texto: str | None = None, audio: bytes | None = None, mime: str | None = None,
+                       imagen: bytes | None = None, modo_foto: str = "ticket") -> dict:
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise HTTPException(500, "Falta la variable de entorno GEMINI_API_KEY")
@@ -423,6 +451,9 @@ def preguntar_a_gemini(texto: str | None = None, audio: bytes | None = None, mim
     if audio:
         partes.append(types.Part.from_bytes(data=audio, mime_type=mime or "audio/webm"))
         partes.append("Interpreta el audio anterior.")
+    if imagen:
+        partes.append(types.Part.from_bytes(data=imagen, mime_type=mime or "image/jpeg"))
+        partes.append(INSTRUCCION_FOTO.get(modo_foto, INSTRUCCION_FOTO["ticket"]))
     if texto:
         partes.append(f'El usuario escribió: "{texto}"')
 
@@ -514,18 +545,104 @@ def armar_lista_compras(todas: bool = False) -> dict:
         for p in calcular_prediccion()
         if p["comprar"] > 0 and (todas or p["urgencia"] in ("alta", "media"))
     ]
-    lineas = ["🛒 *Pedido de surtido*", f"📅 {datetime.now():%d/%m/%Y}", ""]
+    fecha = f"📅 {datetime.now():%d/%m/%Y}"
+    linea = lambda i: f"• {i['cantidad']:g} {'kg' if i['unidad'] == 'kg' else 'pzas'} — {i['nombre']}"  # noqa: E731
+
+    # Agrupado por categoría (cada categoría suele tener su propio proveedor: Coca, Bimbo, Lala, tortillería...)
+    grupos: dict[str, list] = {}
     for i in items:
-        unidad = "kg" if i["unidad"] == "kg" else "pzas"
-        lineas.append(f"• {i['cantidad']:g} {unidad} — {i['nombre']}")
-    lineas += ["", "Enviado con Surtí 🤖"]
+        grupos.setdefault(i["categoria"] or "General", []).append(i)
+    por_proveedor, lineas = [], ["🛒 *Pedido de surtido*", fecha, ""]
+    for proveedor in sorted(grupos):
+        lista_p = grupos[proveedor]
+        msg_p = "\n".join([f"🛒 *Pedido — {proveedor}*", fecha, "", *map(linea, lista_p), "", "Enviado con Surtí 🤖"])
+        por_proveedor.append({
+            "proveedor": proveedor,
+            "items": lista_p,
+            "subtotal_estimado": round(sum(i["costo_estimado"] for i in lista_p), 2),
+            "whatsapp_url": "https://wa.me/?text=" + quote(msg_p),
+        })
+        lineas += [f"*{proveedor}:*", *map(linea, lista_p), ""]
+    lineas.append("Enviado con Surtí 🤖")
     mensaje = "\n".join(lineas)
     return {
         "items": items,
+        "por_proveedor": por_proveedor,
         "total_estimado": round(sum(i["costo_estimado"] for i in items), 2),
         "mensaje": mensaje,
         "whatsapp_url": "https://wa.me/?text=" + quote(mensaje),
     }
+
+
+def calcular_resumen(pred: list | None = None, lista: dict | None = None) -> dict:
+    """KPIs de dinero para el tablero: valor, efectivo a apartar y capital congelado."""
+    pred = pred if pred is not None else calcular_prediccion()
+    lista = lista if lista is not None else armar_lista_compras(False)
+    lentos = [p for p in pred if p["baja_rotacion"]]
+    criticos = [p for p in pred if p["estado"] in ("bajo", "agotado")]
+    return {
+        "valor_inventario": round(sum(p["valor_actual"] for p in pred), 2),
+        "efectivo_apartar": lista["total_estimado"],
+        "capital_congelado": round(sum(p["valor_actual"] for p in lentos), 2),
+        "productos_criticos": len(criticos),
+        "productos_lentos": len(lentos),
+        "urgentes_lista": len(lista["items"]),
+        "salud_porcentaje": round((len(pred) - len(criticos)) / max(1, len(pred)) * 100),
+        "no_pedir": lentos,
+    }
+
+
+@app.get("/api/resumen")
+def resumen():
+    return calcular_resumen()
+
+
+@app.get("/api/tablero")
+def tablero(todas: bool = False, limite_movimientos: int = 15):
+    """Todo lo que pinta la pantalla principal en una sola llamada."""
+    pred = calcular_prediccion()
+    urgentes = armar_lista_compras(False)
+    return {
+        "prediccion": pred,
+        "resumen": calcular_resumen(pred, urgentes),
+        "lista": armar_lista_compras(True) if todas else urgentes,
+        "movimientos": movimientos(limite_movimientos),
+    }
+
+
+@app.post("/api/foto")
+async def foto(imagen: UploadFile = File(...), modo: str = Form("ticket")):
+    """Foto de ticket de proveedor (suma lo que llegó) o de anaquel (ajusta lo que se ve)."""
+    datos = await imagen.read()
+    if not datos:
+        raise HTTPException(400, "Imagen vacía")
+    if len(datos) > 15 * 1024 * 1024:
+        raise HTTPException(400, "La foto es muy pesada (máx. 15 MB)")
+    mime = (imagen.content_type or "image/jpeg").split(";")[0]
+    modo = modo if modo in INSTRUCCION_FOTO else "ticket"
+    ia = preguntar_a_gemini(imagen=datos, mime=mime, modo_foto=modo)
+    return procesar(ia, f"(foto de {modo})")
+
+
+class AjusteRapido(BaseModel):
+    producto_id: int
+    delta: float
+
+
+@app.post("/api/ajuste-rapido")
+def ajuste_rapido(body: AjusteRapido):
+    """Botones − / + del inventario: − registra una venta, + una entrada. Sin IA."""
+    con = db()
+    p = con.execute("SELECT * FROM productos WHERE id=?", (body.producto_id,)).fetchone()
+    con.close()
+    if not p:
+        raise HTTPException(404, "Producto no encontrado")
+    tipo = "venta" if body.delta < 0 else "entrada"
+    resultado = aplicar_acciones([{"tipo": tipo, "producto": p["nombre"], "cantidad": abs(body.delta)}],
+                                 "(ajuste rápido)")
+    if resultado and not resultado[0]["ok"]:
+        raise HTTPException(400, resultado[0]["error"])
+    return {"acciones": resultado}
 
 
 @app.get("/api/lista-compras")
@@ -683,3 +800,9 @@ app.mount("/static", StaticFiles(directory=APP_DIR), name="static")
 @app.get("/")
 def index():
     return FileResponse(APP_DIR / "index.html")
+
+
+@app.get("/clasico")
+def clasico():
+    """Interfaz anterior (respaldo)."""
+    return FileResponse(APP_DIR / "clasico.html")

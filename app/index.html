@@ -1,70 +1,881 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-MX">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Surtí · Inventario por voz</title>
-  <link rel="stylesheet" href="/static/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Surtí · Inventario inteligente por voz y foto</title>
+  <!-- Fuente Inter para legibilidad limpia en móvil y escritorio -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+          colors: {
+            fondo: '#f6f4ef',
+            primario: '#0f766e',
+            primarioOscuro: '#115e59',
+            ok: '#16a34a',
+            atencion: '#d97706',
+            bajo: '#dc2626',
+            congelado: '#0284c7',
+            whatsapp: '#25d366',
+          }
+        }
+      }
+    };
+  </script>
 </head>
-<body>
-  <header>
-    <h1>🛒 Surtí</h1>
-    <p>Tu inventario, con tu voz</p>
+<body class="bg-fondo text-[#1f2328] font-sans antialiased min-h-screen pb-10">
+
+  <!-- Barra superior de navegación y controles globales -->
+  <header class="bg-primario text-white shadow-sm sticky top-0 z-30">
+    <div class="max-w-[820px] mx-auto px-4 py-3.5 flex items-center justify-between gap-3">
+      <div class="min-w-0">
+        <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight leading-tight flex items-center gap-2">
+          <span>🛒 Surtí</span>
+        </h1>
+        <p class="text-xs sm:text-sm text-teal-100 truncate">Tu copiloto de inventario por voz y foto</p>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button id="btnVozOut" type="button"
+          class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-white/15 hover:bg-white/25 active:scale-95 border border-white/30 transition cursor-pointer"
+          title="Activar o silenciar respuestas habladas">
+          🔊 Voz
+        </button>
+        <button id="btnReset" type="button"
+          class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-white/15 hover:bg-white/25 active:scale-95 border border-white/30 transition cursor-pointer"
+          title="Reiniciar datos iniciales de demo">
+          ↺ Demo
+        </button>
+      </div>
+    </div>
   </header>
 
-  <main>
-    <!-- Asistente de voz -->
-    <section class="asistente">
-      <button id="btnMic" class="mic" aria-label="Hablar">🎙️</button>
-      <p id="estadoMic" class="ayuda">Toca y habla: “Vendí 3 Cocas” · “Llegaron 10 kilos de frijol” · “¿Qué se me está acabando?”</p>
+  <!-- Toast discreto de notificaciones (sin alert/confirm) -->
+  <div id="toastContainer" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[420px] pointer-events-none flex flex-col gap-2"></div>
 
-      <form id="formTexto" class="texto">
-        <input id="inputTexto" type="text" placeholder="…o escríbelo aquí" autocomplete="off">
-        <button type="submit">Enviar</button>
+  <!-- Contenedor principal mobile-first -->
+  <main class="max-w-[820px] mx-auto px-3 sm:px-4 pt-4 space-y-4">
+
+    <!-- 1. Tarjeta de 3 KPIs financieros -->
+    <section aria-label="Indicadores financieros" class="bg-white rounded-[14px] p-3.5 sm:p-4 shadow-sm border border-[#e5e7eb]">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+        <!-- Valor total del inventario -->
+        <div class="rounded-xl p-3 bg-slate-50 border border-slate-200 text-center">
+          <span class="block text-xs font-medium text-slate-500">Valor inventario</span>
+          <strong id="kpiValor" class="block text-xl sm:text-2xl font-extrabold text-[#1f2328] tabular-nums mt-0.5">$0</strong>
+          <span id="kpiSalud" class="block text-[11px] text-slate-500 mt-0.5">Salud de stock: 100%</span>
+        </div>
+        <!-- Efectivo a apartar para surtido -->
+        <div class="rounded-xl p-3 bg-amber-50 border border-amber-200 text-center">
+          <span class="block text-xs font-medium text-amber-800">Apartar p/ surtido</span>
+          <strong id="kpiApartar" class="block text-xl sm:text-2xl font-extrabold text-amber-700 tabular-nums mt-0.5">$0</strong>
+          <span id="kpiUrgentes" class="block text-[11px] text-amber-700/80 mt-0.5">0 productos urgentes</span>
+        </div>
+        <!-- Capital congelado -->
+        <div class="rounded-xl p-3 bg-red-50 border border-red-200 text-center">
+          <span class="block text-xs font-medium text-red-800">Capital congelado</span>
+          <strong id="kpiCongelado" class="block text-xl sm:text-2xl font-extrabold text-bajo tabular-nums mt-0.5">$0</strong>
+          <span id="kpiLentos" class="block text-[11px] text-red-700/80 mt-0.5">0 productos lentos</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Asistente Multimodal (Voz + Cámara + Simulador + Texto) -->
+    <section aria-label="Asistente multimodal" class="bg-white rounded-[14px] p-4 sm:p-5 shadow-sm border border-[#e5e7eb]">
+      <div class="flex flex-col items-center text-center">
+        <!-- Botón circular de micrófono -->
+        <div class="relative flex items-center justify-center">
+          <span id="micHalo" class="hidden absolute inline-flex h-full w-full rounded-full bg-bajo opacity-40 animate-ping"></span>
+          <button id="btnMic" type="button" aria-label="Grabar audio de voz"
+            class="relative z-10 w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-primario hover:bg-primarioOscuro active:scale-95 text-white text-4xl sm:text-5xl shadow-md flex items-center justify-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+            🎙️
+          </button>
+        </div>
+
+        <!-- Estado del asistente -->
+        <p id="estadoMic" class="text-xs sm:text-sm text-[#6b7280] mt-3 max-w-lg leading-relaxed">
+          Toca el micrófono y di: “Vendí 3 Cocas” · “Llegaron 10 kilos de frijol” · “¿Qué surto y qué no?”
+        </p>
+
+        <!-- Botones de cámara y simulador de ticket -->
+        <div class="flex flex-wrap items-center justify-center gap-2 mt-3.5">
+          <label for="inputTicket"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-primario bg-teal-50 hover:bg-teal-100 text-primario font-semibold text-xs sm:text-sm cursor-pointer transition active:scale-95">
+            <span>🧾</span><span>Foto ticket</span>
+            <input id="inputTicket" type="file" accept="image/*" capture="environment" class="hidden">
+          </label>
+          <label for="inputAnaquel"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-primario bg-teal-50 hover:bg-teal-100 text-primario font-semibold text-xs sm:text-sm cursor-pointer transition active:scale-95">
+            <span>📸</span><span>Foto anaquel</span>
+            <input id="inputAnaquel" type="file" accept="image/*" capture="environment" class="hidden">
+          </label>
+          <button id="btnSimularTicket" type="button"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium text-xs sm:text-sm cursor-pointer transition active:scale-95">
+            <span>✨</span><span>Simular ticket demo</span>
+          </button>
+        </div>
+
+        <!-- Chips de atajos rápidos -->
+        <div class="flex flex-wrap items-center justify-center gap-1.5 mt-3.5">
+          <button type="button" data-q="¿Qué tengo que surtir hoy y qué NO debo pedir?"
+            class="atajo px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-teal-50 hover:text-primario border border-slate-200 hover:border-primario/40 transition cursor-pointer">
+            ¿Qué surto y qué no?
+          </button>
+          <button type="button" data-q="Vendí 4 leches y 2 panes Bimbo"
+            class="atajo px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-teal-50 hover:text-primario border border-slate-200 hover:border-primario/40 transition cursor-pointer">
+            Vendí 4 leches y 2 panes Bimbo
+          </button>
+          <button type="button" data-q="Llegaron 10 kilos de frijol"
+            class="atajo px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-teal-50 hover:text-primario border border-slate-200 hover:border-primario/40 transition cursor-pointer">
+            Llegaron 10 kilos de frijol
+          </button>
+          <button type="button" data-q="Mándame la lista de compras por WhatsApp"
+            class="atajo px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-teal-50 hover:text-primario border border-slate-200 hover:border-primario/40 transition cursor-pointer">
+            Lista por WhatsApp
+          </button>
+        </div>
+      </div>
+
+      <!-- Formulario de respaldo por texto -->
+      <form id="formTexto" class="flex gap-2 mt-4">
+        <input id="inputTexto" type="text" autocomplete="off"
+          placeholder="…o escríbelo aquí (ej. me quedan 2 aceites)"
+          class="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl border border-[#e5e7eb] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primario/40 focus:border-primario">
+        <button id="btnEnviarTexto" type="submit"
+          class="px-4 sm:px-5 py-2.5 rounded-xl bg-primario hover:bg-primarioOscuro active:scale-95 text-white font-semibold text-sm sm:text-base transition cursor-pointer disabled:opacity-50">
+          Enviar
+        </button>
       </form>
 
-      <div id="chat" class="chat"></div>
+      <!-- Historial de conversación -->
+      <div id="chat" class="mt-4 flex flex-col gap-2.5"></div>
     </section>
 
-    <!-- Alertas -->
-    <section>
-      <h2>⚠️ Se está acabando</h2>
-      <div id="alertas" class="alertas"></div>
+    <!-- 3. Sección: Se está acabando -->
+    <section aria-label="Productos bajos o agotados" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+      <div class="flex items-center justify-between gap-2 mb-2.5">
+        <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">⚠️ Se está acabando</h2>
+        <span id="badgeAlertas" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-100 text-bajo">0 críticos</span>
+      </div>
+      <div id="alertas" class="grid gap-2"></div>
     </section>
 
-    <!-- Lista de compras -->
-    <section>
-      <h2>🛍️ Lista de compras</h2>
-      <p class="ayuda">Lo urgente, calculado con tus ventas (lo perecedero para pocos días, lo demás para una semana).</p>
-      <ul id="listaCompras" class="lista"></ul>
-      <p id="totalCompras" class="total"></p>
-      <a id="btnWhatsapp" class="whatsapp" target="_blank" rel="noopener">📲 Enviar por WhatsApp</a>
+    <!-- 4. Sección: Dinero congelado (Escudo anti-preventista) -->
+    <section aria-label="Capital congelado" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+      <div class="flex items-center justify-between gap-2 mb-1">
+        <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">🧊 Dinero congelado (no resurtir)</h2>
+        <span id="badgeLentos" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-100 text-congelado">0 lentos</span>
+      </div>
+      <p class="text-xs sm:text-sm text-[#6b7280] mb-3">
+        Productos con baja rotación y stock para más de 2 semanas. Si llega el preventista con promoción, evita comprar más hasta moverlos.
+      </p>
+      <div id="noPedir" class="grid gap-2"></div>
     </section>
 
-    <!-- Inventario -->
-    <section>
-      <h2>📦 Inventario</h2>
-      <div id="inventario" class="inventario"></div>
+    <!-- 5. Sección: Lista de surtido agrupada por proveedor -->
+    <section aria-label="Lista de compras por proveedor" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+        <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">🛍️ Lista de surtido por proveedor</h2>
+        <label class="inline-flex items-center gap-1.5 text-xs text-[#6b7280] cursor-pointer select-none">
+          <input id="chkTodasCompras" type="checkbox" class="rounded accent-primario">
+          <span>Ver sugerencias no urgentes</span>
+        </label>
+      </div>
+      <p class="text-xs sm:text-sm text-[#6b7280] mb-3">
+        Calculada con tus ventas diarias y factor de fin de semana (perecederos para 1–4 días, abarrotes para 1 semana).
+      </p>
+      <div id="listaProveedores" class="grid gap-2.5"></div>
+      <p id="totalCompras" class="text-sm sm:text-base font-bold text-right text-[#1f2328] mt-3"></p>
+      <a id="btnWhatsapp" href="#" target="_blank" rel="noopener noreferrer"
+        class="mt-2.5 flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-whatsapp hover:brightness-95 active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-sm transition">
+        <span>📲 Enviar pedido completo por WhatsApp</span>
+      </a>
     </section>
 
-    <!-- Importar desde Excel -->
-    <section>
-      <h2>📥 Traer mi inventario desde Excel</h2>
-      <p class="ayuda">¿Ya tienes tu inventario en Excel? Súbelo y Surtí reconoce las columnas solo. No tienes que capturar nada.</p>
-      <label class="subir">
-        <input id="inputExcel" type="file" accept=".xlsx,.xlsm,.csv">
+    <!-- 6. Sección: Inventario completo con buscador y controles rápidos -->
+    <section aria-label="Inventario completo" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">📦 Inventario</h2>
+          <p class="text-xs text-[#6b7280]">Usa − / + para ajustar rápido o dicta por voz</p>
+        </div>
+        <input id="filtroInv" type="search" placeholder="Buscar producto o proveedor..."
+          class="w-full sm:w-64 px-3 py-2 rounded-xl border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-primario/40 focus:border-primario">
+      </div>
+      <div id="inventario" class="grid gap-2"></div>
+    </section>
+
+    <!-- 6b. Sección: Importar inventario desde Excel -->
+    <section aria-label="Importar inventario desde Excel" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+      <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">📥 Traer mi inventario desde Excel</h2>
+      <p class="text-xs sm:text-sm text-[#6b7280] mt-1 mb-3">
+        ¿Ya llevas tu inventario en Excel? Súbelo y Surtí reconoce tus columnas con IA. No tienes que capturar producto por producto.
+      </p>
+      <label for="inputExcel"
+        class="flex items-center justify-center gap-2 w-full py-4 px-4 rounded-xl border-2 border-dashed border-[#e5e7eb] hover:border-primario hover:bg-teal-50/40 text-sm font-semibold text-primario cursor-pointer transition">
         <span>📄 Elegir archivo (.xlsx o .csv)</span>
+        <input id="inputExcel" type="file" accept=".xlsx,.xlsm,.csv" class="hidden">
       </label>
-      <div id="vistaPrevia" class="vista-previa"></div>
+      <div id="vistaPrevia" class="mt-3"></div>
     </section>
 
-    <!-- Historial -->
-    <section>
-      <h2>🕑 Últimos movimientos</h2>
-      <ul id="movimientos" class="movimientos"></ul>
+    <!-- 7. Sección: Últimos movimientos -->
+    <section aria-label="Últimos movimientos" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+      <h2 class="text-base sm:text-lg font-bold text-[#1f2328] mb-2.5">🕑 Últimos movimientos</h2>
+      <ul id="movimientos" class="divide-y divide-[#e5e7eb] text-xs sm:text-sm"></ul>
     </section>
+
   </main>
 
-  <script src="/static/app.js"></script>
+  <script>
+    // =========================================================================
+    // Surtí · Interfaz de usuario (diseño de Ernesto y Sebas) conectada al backend.
+    // Toda la lógica (inventario, predicción, IA con Gemini) vive en el backend:
+    // la clave de Gemini NUNCA está en el navegador y los datos se guardan en la base.
+    // =========================================================================
+    const API = ""; // mismo servidor que sirve esta página
+
+    // Estado que viene del backend
+    let tablero = { prediccion: [], resumen: null, lista: null, movimientos: [] };
+    let vozActiva = true;
+    let grabando = false;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let speechRec = null;
+    let productosResaltados = new Set(); // por nombre de producto
+
+    const $ = (id) => document.getElementById(id);
+
+    // =========================================================================
+    // 1. UTILIDADES
+    // =========================================================================
+    function fmtDinero(n) {
+      return new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(n || 0);
+    }
+
+    function fmtNum(n) {
+      if (n === null || n === undefined || Number.isNaN(n)) return "0";
+      return Number(Number(n).toFixed(2)).toString();
+    }
+
+    function unidadCorta(u) {
+      return u === "kg" ? "kg" : "pzas";
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+    function normalizar(texto) {
+      return String(texto || "").toLowerCase().trim().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    }
+
+    function mostrarToast(texto, tipo = "info") {
+      const colores = { info: "bg-[#1f2328] text-white", ok: "bg-primario text-white", error: "bg-bajo text-white" };
+      const el = document.createElement("div");
+      el.className = `${colores[tipo] || colores.info} px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium shadow-lg text-center transition-opacity duration-300`;
+      el.textContent = texto;
+      $("toastContainer").appendChild(el);
+      setTimeout(() => {
+        el.classList.add("opacity-0");
+        setTimeout(() => el.remove(), 320);
+      }, 2800);
+    }
+
+    function hablar(texto) {
+      if (!vozActiva || !("speechSynthesis" in window) || !texto) return;
+      try {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(texto);
+        u.lang = "es-MX";
+        u.rate = 1.05;
+        window.speechSynthesis.speak(u);
+      } catch (_) { /* el navegador puede bloquear la voz */ }
+    }
+
+    // Llamada al backend con manejo de errores en lenguaje sencillo
+    async function api(ruta, opciones = {}) {
+      let res;
+      try {
+        res = await fetch(API + ruta, opciones);
+      } catch (_) {
+        throw new Error("No hay conexión con el servidor de Surtí. ¿Está encendido?");
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || `Error ${res.status}`);
+      return data;
+    }
+
+    function postJSON(ruta, cuerpo) {
+      return api(ruta, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) });
+    }
+
+    // =========================================================================
+    // 2. DATOS DEL TABLERO (inventario, predicción, KPIs, lista y movimientos)
+    // =========================================================================
+    async function cargarTablero() {
+      const todas = $("chkTodasCompras").checked;
+      try {
+        tablero = await api(`/api/tablero?todas=${todas}`);
+        renderizarTodo();
+      } catch (err) {
+        mostrarToast(err.message, "error");
+      }
+    }
+
+    async function reiniciarDemo(silencioso = false) {
+      try {
+        await api("/api/reset", { method: "POST" });
+        productosResaltados.clear();
+        $("chat").innerHTML = "";
+        agregarMensaje("bot", "¡Hola! Soy Surtí. Ya cargué los productos de tu tiendita en Durango. Dime qué vendiste, sube la foto de un ticket o pregúntame qué surtir hoy.");
+        await cargarTablero();
+        if (!silencioso) mostrarToast("Inventario de demo reiniciado", "ok");
+      } catch (err) {
+        mostrarToast(err.message, "error");
+      }
+    }
+
+    // =========================================================================
+    // 3. RESPUESTAS DE LA IA (texto, voz y fotos pasan por el backend)
+    // =========================================================================
+    function mostrarResultado(r, opcionesExtra = {}) {
+      agregarMensaje("usuario", r.transcripcion || opcionesExtra.textoOriginal || "", { imagenUrl: opcionesExtra.imagenUrl });
+      agregarMensaje("bot", r.respuesta || "Listo.", { acciones: r.acciones || [], whatsapp_url: r.whatsapp_url });
+      hablar(r.respuesta);
+      productosResaltados = new Set((r.acciones || []).filter((a) => a.ok).map((a) => a.producto));
+      if (productosResaltados.size) {
+        setTimeout(() => { productosResaltados.clear(); renderizarInventario(); }, 2200);
+      }
+      cargarTablero();
+    }
+
+    function setCargando(activo, mensaje) {
+      $("btnMic").disabled = activo;
+      $("btnEnviarTexto").disabled = activo;
+      $("btnSimularTicket").disabled = activo;
+      if (mensaje) $("estadoMic").textContent = mensaje;
+    }
+
+    async function enviarTexto(texto) {
+      const limpio = (texto || "").trim();
+      if (!limpio) return;
+      setCargando(true, "Analizando con Surtí (Gemini IA)...");
+      try {
+        const r = await postJSON("/api/texto", { texto: limpio });
+        mostrarResultado(r, { textoOriginal: limpio });
+      } catch (err) {
+        agregarMensaje("usuario", limpio);
+        agregarMensaje("error", err.message);
+      } finally {
+        setCargando(false, "Listo. Toca el micrófono, sube una foto o escribe.");
+      }
+    }
+
+    async function enviarAudio(blob) {
+      setCargando(true, "Escuchando y procesando tu voz con Gemini...");
+      try {
+        const datos = new FormData();
+        const ext = blob.type.includes("mp4") ? "m4a" : blob.type.includes("ogg") ? "ogg" : "webm";
+        datos.append("audio", blob, `voz.${ext}`);
+        const r = await api("/api/voz", { method: "POST", body: datos });
+        mostrarResultado(r, { textoOriginal: "(audio de voz)" });
+      } catch (err) {
+        agregarMensaje("error", `${err.message} Prueba con los atajos rápidos o escribe tu mensaje.`);
+      } finally {
+        setCargando(false, "Listo. Toca el micrófono, sube una foto o escribe.");
+      }
+    }
+
+    function leerComoDataUrl(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    async function enviarImagen(archivo, modo) {
+      if (!archivo) return;
+      setCargando(true, modo === "ticket" ? "Leyendo ticket de proveedor con Gemini..." : "Contando productos en anaquel con Gemini...");
+      try {
+        const dataUrl = await leerComoDataUrl(archivo);
+        const datos = new FormData();
+        datos.append("imagen", archivo, archivo.name || `${modo}.png`);
+        datos.append("modo", modo);
+        const r = await api("/api/foto", { method: "POST", body: datos });
+        mostrarResultado(r, { imagenUrl: dataUrl, textoOriginal: `Foto (${modo})` });
+      } catch (err) {
+        agregarMensaje("error", `No pude leer la foto: ${err.message}`);
+      } finally {
+        setCargando(false, "Listo. Toca el micrófono, sube una foto o escribe.");
+      }
+    }
+
+    // Genera un ticket de proveedor realista en un <canvas> y lo manda a leer con IA de verdad
+    function simularTicketDemo() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 420;
+      canvas.height = 500;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fdfcf7";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = "#d1d5db";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(10, 10, 400, 480);
+      ctx.fillStyle = "#111827";
+      ctx.font = "bold 20px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("DISTRIBUIDORA DURANGO", 210, 52);
+      ctx.font = "13px monospace";
+      ctx.fillText("NOTA DE REMISIÓN · SURTIDO", 210, 76);
+      ctx.fillText(`Fecha: ${new Date().toLocaleDateString("es-MX")}`, 210, 98);
+      ctx.fillText("----------------------------------", 210, 122);
+      ctx.textAlign = "left";
+      ctx.font = "bold 14px monospace";
+      ctx.fillText("CANT  PRODUCTO            IMPORTE", 32, 152);
+      ctx.font = "14px monospace";
+      ctx.fillText("----------------------------------", 32, 174);
+      ctx.font = "bold 16px monospace";
+      ctx.fillText("12    Leche Lala 1 L       $348.00", 32, 214);
+      ctx.fillText(" 6    Pan Bimbo grande     $312.00", 32, 254);
+      ctx.font = "14px monospace";
+      ctx.fillText("----------------------------------", 32, 300);
+      ctx.font = "bold 18px monospace";
+      ctx.fillText("TOTAL RECIBIDO:            $660.00", 32, 336);
+      ctx.font = "13px monospace";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#4b5563";
+      ctx.fillText("Entregado en tienda · Pago efectivo", 210, 396);
+      ctx.fillText("¡Gracias por su preferencia!", 210, 424);
+      canvas.toBlob((blob) => {
+        if (blob) enviarImagen(new File([blob], "ticket_demo.png", { type: "image/png" }), "ticket");
+      }, "image/png");
+    }
+
+    async function alternarGrabacion() {
+      if (!grabando) {
+        // 1) Grabación real: el audio va al backend y Gemini lo escucha
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mimeElegido = MediaRecorder.isTypeSupported("audio/webm")
+              ? "audio/webm"
+              : (MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "");
+            mediaRecorder = mimeElegido ? new MediaRecorder(stream, { mimeType: mimeElegido }) : new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
+            mediaRecorder.onstop = async () => {
+              stream.getTracks().forEach((t) => t.stop());
+              const tipoBlob = (mediaRecorder.mimeType || "audio/webm").split(";")[0];
+              const blob = new Blob(audioChunks, { type: tipoBlob });
+              if (blob.size < 200) {
+                setCargando(false, "Audio demasiado corto. Intenta de nuevo.");
+                return;
+              }
+              await enviarAudio(blob);
+            };
+            mediaRecorder.start();
+            grabando = true;
+            actualizarEstadoMicVisual(true);
+            return;
+          } catch (_) { /* sin permiso de micrófono: probamos el reconocimiento del navegador */ }
+        }
+
+        // 2) Respaldo: reconocimiento de voz del navegador (es-MX) y se manda como texto
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+          try {
+            speechRec = new SpeechRecognition();
+            speechRec.lang = "es-MX";
+            speechRec.interimResults = false;
+            speechRec.maxAlternatives = 1;
+            speechRec.onresult = (e) => {
+              grabando = false;
+              actualizarEstadoMicVisual(false);
+              enviarTexto(e.results[0][0].transcript);
+            };
+            speechRec.onerror = () => {
+              grabando = false;
+              actualizarEstadoMicVisual(false);
+              mostrarToast("Micrófono bloqueado aquí. Usa texto o los atajos rápidos.", "error");
+            };
+            speechRec.onend = () => { grabando = false; actualizarEstadoMicVisual(false); };
+            speechRec.start();
+            grabando = true;
+            actualizarEstadoMicVisual(true);
+            return;
+          } catch (_) { /* sigue al aviso */ }
+        }
+        mostrarToast("Tu navegador bloqueó el micrófono (en celular se necesita HTTPS). Usa los atajos, texto o foto.", "error");
+      } else {
+        grabando = false;
+        actualizarEstadoMicVisual(false);
+        if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+        if (speechRec) {
+          try { speechRec.stop(); } catch (_) {}
+          speechRec = null;
+        }
+      }
+    }
+
+    function actualizarEstadoMicVisual(activo) {
+      const btn = $("btnMic");
+      const halo = $("micHalo");
+      if (activo) {
+        btn.classList.remove("bg-primario", "hover:bg-primarioOscuro");
+        btn.classList.add("bg-bajo", "scale-105");
+        halo.classList.remove("hidden");
+        $("estadoMic").textContent = "🔴 Escuchando… toca el micrófono de nuevo para enviar.";
+      } else {
+        btn.classList.remove("bg-bajo", "scale-105");
+        btn.classList.add("bg-primario", "hover:bg-primarioOscuro");
+        halo.classList.add("hidden");
+      }
+    }
+
+    // =========================================================================
+    // 4. RENDERIZADO (mismo diseño de Ernesto y Sebas, datos del backend)
+    // =========================================================================
+    function agregarMensaje(tipo, texto, extra = {}) {
+      const chat = $("chat");
+      const wrap = document.createElement("div");
+      const estilos = {
+        usuario: "self-end bg-teal-50 border border-teal-200 text-[#1f2328]",
+        bot: "self-start bg-slate-100 border border-slate-200 text-[#1f2328]",
+        error: "self-start bg-red-50 border border-red-200 text-red-800"
+      };
+      wrap.className = `max-w-[92%] sm:max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm leading-relaxed ${estilos[tipo] || estilos.bot}`;
+
+      if (extra.imagenUrl) {
+        const img = document.createElement("img");
+        img.src = extra.imagenUrl;
+        img.alt = "Foto enviada";
+        img.className = "w-32 h-auto rounded-lg mb-2 border border-teal-200 shadow-xs";
+        wrap.appendChild(img);
+      }
+
+      const p = document.createElement("p");
+      p.textContent = texto;
+      wrap.appendChild(p);
+
+      const okAcciones = (extra.acciones || []).filter((a) => a.ok);
+      if (okAcciones.length) {
+        const badges = document.createElement("div");
+        badges.className = "flex flex-wrap gap-1.5 mt-2";
+        for (const a of okAcciones) {
+          const b = document.createElement("span");
+          const cls = a.tipo === "venta"
+            ? "bg-amber-100 text-amber-800"
+            : (a.tipo === "entrada" || a.tipo === "alta" ? "bg-emerald-100 text-emerald-800" : "bg-sky-100 text-sky-800");
+          b.className = `inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${cls}`;
+          const unidad = a.tipo === "precio" ? "MXN" : (a.unidad ? unidadCorta(a.unidad) : "");
+          b.textContent = `${a.tipo.toUpperCase()}: ${a.producto} (${fmtNum(a.cantidad)} ${unidad})`;
+          badges.appendChild(b);
+        }
+        wrap.appendChild(badges);
+      }
+
+      if (extra.whatsapp_url) {
+        const a = document.createElement("a");
+        a.href = extra.whatsapp_url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.className = "inline-flex items-center gap-1.5 mt-2.5 px-3 py-1.5 rounded-lg bg-whatsapp text-white font-bold text-xs hover:brightness-95 transition";
+        a.textContent = "📲 Abrir pedido en WhatsApp";
+        wrap.appendChild(a);
+      }
+
+      chat.prepend(wrap);
+      while (chat.children.length > 8) chat.lastChild.remove();
+    }
+
+    function clasePunto(estado) {
+      if (estado === "ok") return "bg-ok";
+      if (estado === "atencion") return "bg-atencion";
+      return "bg-bajo";
+    }
+
+    function renderizarTodo() {
+      const pred = tablero.prediccion || [];
+      const resumen = tablero.resumen;
+      const lista = tablero.lista;
+      if (!resumen || !lista) return;
+
+      // 1. KPIs
+      $("kpiValor").textContent = fmtDinero(resumen.valor_inventario);
+      $("kpiSalud").textContent = `Salud de stock: ${resumen.salud_porcentaje}%`;
+      $("kpiApartar").textContent = fmtDinero(resumen.efectivo_apartar);
+      $("kpiUrgentes").textContent = `${resumen.urgentes_lista} productos por surtir`;
+      $("kpiCongelado").textContent = fmtDinero(resumen.capital_congelado);
+      $("kpiLentos").textContent = `${resumen.productos_lentos} productos lentos`;
+
+      // 2. Se está acabando
+      const criticos = pred.filter((p) => p.estado === "bajo" || p.estado === "agotado");
+      $("badgeAlertas").textContent = `${criticos.length} ${criticos.length === 1 ? "crítico" : "críticos"}`;
+      $("alertas").innerHTML = criticos.length
+        ? criticos.map((p) => `
+            <div class="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl border border-red-200 bg-red-50/50">
+              <span class="w-3.5 h-3.5 rounded-full bg-bajo shrink-0"></span>
+              <div class="flex-1 min-w-0">
+                <span class="block font-semibold text-sm text-[#1f2328] truncate">${escapeHtml(p.nombre)}</span>
+                <span class="block text-xs text-[#6b7280]">${escapeHtml(p.categoria)} · mínimo ${fmtNum(p.minimo)} ${escapeHtml(p.unidad)} · se acaba <strong class="text-bajo">${escapeHtml(p.se_acaba_texto)}</strong></span>
+              </div>
+              <div class="text-right font-bold text-sm text-bajo tabular-nums shrink-0">${fmtNum(p.cantidad)} ${unidadCorta(p.unidad)}</div>
+            </div>`).join("")
+        : `<p class="text-sm text-[#6b7280] py-1">¡Excelente! Ningún producto está agotado ni bajo su mínimo.</p>`;
+
+      // 3. Dinero congelado
+      const lentos = resumen.no_pedir || [];
+      $("badgeLentos").textContent = `${lentos.length} ${lentos.length === 1 ? "lento" : "lentos"}`;
+      $("noPedir").innerHTML = lentos.length
+        ? lentos.map((p) => `
+            <div class="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl border border-sky-200 bg-sky-50/50">
+              <span class="w-3.5 h-3.5 rounded-full bg-congelado shrink-0"></span>
+              <div class="flex-1 min-w-0">
+                <span class="block font-semibold text-sm text-[#1f2328] truncate">${escapeHtml(p.nombre)}</span>
+                <span class="block text-xs text-[#6b7280]"><strong class="text-congelado">${fmtDinero(p.valor_actual)} congelados</strong> · vende ~${fmtNum(p.venta_diaria)}/día · se acaba ${escapeHtml(p.se_acaba_texto)}</span>
+              </div>
+              <div class="text-right font-semibold text-xs sm:text-sm text-sky-900 tabular-nums shrink-0">${fmtNum(p.cantidad)} ${unidadCorta(p.unidad)}</div>
+            </div>`).join("")
+        : `<p class="text-sm text-[#6b7280] py-1">No tienes productos estancados hoy.</p>`;
+
+      // 4. Lista de surtido por proveedor
+      const contProv = $("listaProveedores");
+      const btnWa = $("btnWhatsapp");
+      if (!lista.por_proveedor.length) {
+        contProv.innerHTML = `<p class="text-sm text-[#6b7280] py-1">No hay compras urgentes por ahora.</p>`;
+        $("totalCompras").textContent = "";
+        btnWa.classList.add("opacity-40", "pointer-events-none");
+        btnWa.href = "#";
+      } else {
+        contProv.innerHTML = lista.por_proveedor.map((g) => `
+          <div class="rounded-xl border border-[#e5e7eb] bg-slate-50/70 p-3">
+            <div class="flex items-center justify-between gap-2 pb-2">
+              <div>
+                <strong class="text-sm font-bold text-[#1f2328]">${escapeHtml(g.proveedor)}</strong>
+                <span class="text-xs font-semibold text-[#6b7280] ml-1.5">· ${fmtDinero(g.subtotal_estimado)}</span>
+              </div>
+              <a href="${escapeHtml(g.whatsapp_url)}" target="_blank" rel="noopener noreferrer"
+                class="px-2.5 py-1 rounded-lg bg-whatsapp hover:brightness-95 text-white font-bold text-xs transition shrink-0">WhatsApp</a>
+            </div>
+            <ul class="divide-y divide-[#e5e7eb]">
+              ${g.items.map((i) => `
+                <li class="py-1.5 flex items-center justify-between gap-2 text-xs sm:text-sm">
+                  <span class="text-[#1f2328]"><strong class="tabular-nums">${fmtNum(i.cantidad)} ${unidadCorta(i.unidad)}</strong> · ${escapeHtml(i.nombre)}</span>
+                  <span class="text-xs shrink-0 ${i.urgencia === "alta" ? "text-bajo font-semibold" : "text-[#6b7280]"}">se acaba ${escapeHtml(i.se_acaba)}</span>
+                </li>`).join("")}
+            </ul>
+          </div>`).join("");
+        $("totalCompras").textContent = `Efectivo estimado para surtido: ${fmtDinero(lista.total_estimado)}`;
+        btnWa.href = lista.whatsapp_url;
+        btnWa.classList.remove("opacity-40", "pointer-events-none");
+      }
+
+      // 5. Inventario y 6. movimientos
+      renderizarInventario();
+      renderizarMovimientos();
+    }
+
+    function renderizarInventario() {
+      const lista = tablero.prediccion || [];
+      const q = normalizar($("filtroInv").value);
+      const filtrados = q
+        ? lista.filter((p) => normalizar(p.nombre).includes(q) || normalizar(p.categoria).includes(q))
+        : lista;
+
+      const cont = $("inventario");
+      if (!filtrados.length) {
+        cont.innerHTML = `<p class="text-sm text-[#6b7280] py-1">Sin coincidencias para esa búsqueda.</p>`;
+        return;
+      }
+
+      cont.innerHTML = filtrados.map((p) => {
+        const resaltado = productosResaltados.has(p.nombre) ? "bg-amber-50 border-amber-300" : "bg-white border-[#e5e7eb]";
+        const paso = p.unidad === "kg" ? 0.5 : 1;
+        return `
+          <div class="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl border transition-colors duration-500 ${resaltado}">
+            <span class="w-3.5 h-3.5 rounded-full shrink-0 ${clasePunto(p.estado)}" title="Estado: ${escapeHtml(p.estado)}"></span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="font-semibold text-sm text-[#1f2328] truncate">${escapeHtml(p.nombre)}</span>
+                ${p.baja_rotacion ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-sky-100 text-congelado">Lento</span>` : ""}
+              </div>
+              <span class="block text-xs text-[#6b7280]">${escapeHtml(p.categoria || "")} · $${fmtNum(p.precio)} · se acaba ${escapeHtml(p.se_acaba_texto)}</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" data-ajuste="${p.id}" data-delta="${-paso}" aria-label="Restar ${escapeHtml(p.nombre)}"
+                class="w-7 h-7 rounded-lg border border-slate-200 bg-slate-50 hover:bg-red-50 hover:border-red-200 hover:text-bajo font-bold text-sm flex items-center justify-center cursor-pointer transition">−</button>
+              <div class="w-16 text-center tabular-nums leading-tight">
+                <span class="block font-bold text-xs sm:text-sm text-[#1f2328]">${fmtNum(p.cantidad)} ${unidadCorta(p.unidad)}</span>
+                <span class="block text-[10px] text-[#6b7280]">mín ${fmtNum(p.minimo)}</span>
+              </div>
+              <button type="button" data-ajuste="${p.id}" data-delta="${paso}" aria-label="Sumar ${escapeHtml(p.nombre)}"
+                class="w-7 h-7 rounded-lg border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 hover:text-ok font-bold text-sm flex items-center justify-center cursor-pointer transition">+</button>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    function renderizarMovimientos() {
+      const cont = $("movimientos");
+      const movs = tablero.movimientos || [];
+      if (!movs.length) {
+        cont.innerHTML = `<li class="py-2 text-[#6b7280]">Sin movimientos registrados.</li>`;
+        return;
+      }
+      const badges = {
+        venta: "bg-amber-100 text-amber-800",
+        entrada: "bg-emerald-100 text-emerald-800",
+        alta: "bg-teal-100 text-teal-800",
+        ajuste: "bg-sky-100 text-sky-800"
+      };
+      cont.innerHTML = movs.map((m) => {
+        const fecha = new Date(m.fecha);
+        const hoy = new Date().toDateString() === fecha.toDateString();
+        const cuando = hoy
+          ? fecha.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
+          : fecha.toLocaleDateString("es-MX", { day: "2-digit", month: "short" });
+        return `
+          <li class="py-2 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase shrink-0 ${badges[m.tipo] || "bg-slate-100 text-slate-700"}">${escapeHtml(m.tipo)}</span>
+              <span class="truncate text-[#1f2328]"><strong class="tabular-nums">${fmtNum(m.cantidad)} ${unidadCorta(m.unidad)}</strong> · ${escapeHtml(m.nombre)}</span>
+            </div>
+            <span class="text-xs text-[#6b7280] tabular-nums shrink-0">${cuando}</span>
+          </li>`;
+      }).join("");
+    }
+
+    // Botones − / + del inventario (sin IA, directo al backend)
+    $("inventario").addEventListener("click", async (e) => {
+      const btn = e.target.closest("button[data-ajuste]");
+      if (!btn) return;
+      btn.disabled = true;
+      try {
+        const r = await postJSON("/api/ajuste-rapido", { producto_id: Number(btn.dataset.ajuste), delta: Number(btn.dataset.delta) });
+        productosResaltados = new Set(r.acciones.map((a) => a.producto));
+        setTimeout(() => { productosResaltados.clear(); renderizarInventario(); }, 2200);
+        await cargarTablero();
+      } catch (err) {
+        mostrarToast(err.message, "error");
+        btn.disabled = false;
+      }
+    });
+
+    // =========================================================================
+    // 5. IMPORTAR INVENTARIO DESDE EXCEL
+    // =========================================================================
+    const nombresCampo = { nombre: "Producto", cantidad: "Existencia", unidad: "Unidad", precio: "Precio venta",
+                           costo: "Costo", minimo: "Mínimo", categoria: "Categoría" };
+
+    async function enviarExcel(archivo, confirmar) {
+      const datos = new FormData();
+      datos.append("archivo", archivo);
+      datos.append("confirmar", confirmar ? "true" : "false");
+      return api("/api/importar", { method: "POST", body: datos });
+    }
+
+    $("inputExcel").addEventListener("change", async (e) => {
+      const archivo = e.target.files[0];
+      e.target.value = "";
+      if (!archivo) return;
+      const caja = $("vistaPrevia");
+      caja.innerHTML = `<p class="text-sm text-[#6b7280]">Leyendo tu Excel con IA…</p>`;
+      try {
+        const d = await enviarExcel(archivo, false);
+        const columnas = Object.entries(d.columnas).map(([campo, col]) =>
+          `<span class="inline-flex px-2 py-0.5 rounded-full bg-teal-50 border border-teal-200 text-[11px]"><strong>${escapeHtml(nombresCampo[campo] || campo)}</strong>&nbsp;← “${escapeHtml(col)}”</span>`).join(" ");
+        const filas = d.productos.map((p) => `
+          <tr class="border-b border-[#e5e7eb]">
+            <td class="py-1.5 pr-2">${escapeHtml(p.nombre)}</td>
+            <td class="py-1.5 pr-2 tabular-nums">${fmtNum(p.cantidad)} ${unidadCorta(p.unidad)}</td>
+            <td class="py-1.5 pr-2 tabular-nums">${p.precio != null ? fmtDinero(p.precio) : "—"}</td>
+            <td class="py-1.5"><span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${p.accion === "nuevo" ? "bg-emerald-100 text-emerald-800" : "bg-sky-100 text-sky-800"}">${p.accion === "nuevo" ? "nuevo" : `antes ${fmtNum(p.antes)}`}</span></td>
+          </tr>`).join("");
+        caja.innerHTML = `
+          <p class="text-sm">Encontré <strong>${d.productos.length}</strong> productos: <strong>${d.nuevos}</strong> nuevos y <strong>${d.actualizados}</strong> que ya tenías.</p>
+          <p class="text-xs text-[#6b7280] mt-1.5 mb-1">Así entendí tus columnas (${d.metodo === "ia" ? "con IA" : "por palabras clave"}):</p>
+          <div class="flex flex-wrap gap-1.5">${columnas}</div>
+          <div class="max-h-64 overflow-auto mt-3"><table class="w-full text-xs sm:text-sm text-left">
+            <thead><tr class="text-[#6b7280] border-b border-[#e5e7eb]"><th class="py-1.5">Producto</th><th>Hay</th><th>Precio</th><th></th></tr></thead>
+            <tbody>${filas}</tbody></table></div>
+          ${d.ignoradas.length ? `<p class="text-xs text-[#6b7280] mt-2">Ignoré ${d.ignoradas.length} filas sin producto (títulos o totales).</p>` : ""}
+          <button id="btnConfirmarExcel" type="button"
+            class="mt-3 w-full py-3 rounded-xl bg-primario hover:bg-primarioOscuro text-white font-bold text-sm transition cursor-pointer">
+            ✅ Importar ${d.productos.length} productos
+          </button>`;
+        $("btnConfirmarExcel").addEventListener("click", async () => {
+          caja.innerHTML = `<p class="text-sm text-[#6b7280]">Guardando…</p>`;
+          try {
+            const g = await enviarExcel(archivo, true);
+            caja.innerHTML = `<p class="text-sm font-semibold text-primario">✅ Listo: ${g.nuevos} productos nuevos y ${g.actualizados} actualizados.</p>`;
+            hablar(`Listo, importé ${g.productos.length} productos de tu Excel.`);
+            mostrarToast("Inventario importado", "ok");
+            cargarTablero();
+          } catch (err) {
+            caja.innerHTML = `<p class="text-sm text-bajo">❌ ${escapeHtml(err.message)}</p>`;
+          }
+        });
+      } catch (err) {
+        caja.innerHTML = `<p class="text-sm text-bajo">❌ ${escapeHtml(err.message)}</p>`;
+      }
+    });
+
+    // =========================================================================
+    // 6. EVENTOS DE LA INTERFAZ
+    // =========================================================================
+    $("btnMic").addEventListener("click", alternarGrabacion);
+
+    $("formTexto").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const val = $("inputTexto").value;
+      $("inputTexto").value = "";
+      enviarTexto(val);
+    });
+
+    $("inputTicket").addEventListener("change", (e) => {
+      if (e.target.files && e.target.files[0]) enviarImagen(e.target.files[0], "ticket");
+      e.target.value = "";
+    });
+
+    $("inputAnaquel").addEventListener("change", (e) => {
+      if (e.target.files && e.target.files[0]) enviarImagen(e.target.files[0], "anaquel");
+      e.target.value = "";
+    });
+
+    $("btnSimularTicket").addEventListener("click", simularTicketDemo);
+
+    document.querySelectorAll(".atajo").forEach((btn) => {
+      btn.addEventListener("click", () => enviarTexto(btn.dataset.q));
+    });
+
+    $("filtroInv").addEventListener("input", () => renderizarInventario());
+    $("chkTodasCompras").addEventListener("change", cargarTablero);
+
+    $("btnVozOut").addEventListener("click", () => {
+      vozActiva = !vozActiva;
+      $("btnVozOut").textContent = vozActiva ? "🔊 Voz" : "🔇 Silencio";
+      if (!vozActiva && "speechSynthesis" in window) window.speechSynthesis.cancel();
+      mostrarToast(vozActiva ? "Respuestas por voz activadas" : "Voz silenciada");
+    });
+
+    $("btnReset").addEventListener("click", () => reiniciarDemo(false));
+
+    // Arranque: muestra el inventario guardado (no lo reinicia)
+    agregarMensaje("bot", "¡Hola! Soy Surtí. Dime qué vendiste, sube la foto de un ticket o pregúntame qué surtir hoy.");
+    cargarTablero();
+  </script>
 </body>
 </html>
