@@ -69,5 +69,18 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; }
 .whatsapp.inactivo { opacity: .4; pointer-events: none; }
 .msg .whatsapp { display: inline-block; padding: 8px 12px; margin-top: 8px; }
 
+/* Importar Excel */
+.subir { display: block; border: 2px dashed var(--borde); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; }
+.subir input { display: none; }
+.subir:hover { border-color: var(--primario); }
+.vista-previa { margin-top: 12px; font-size: .9rem; }
+.vista-previa table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+.vista-previa th, .vista-previa td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--borde); }
+.vista-previa .etiqueta { font-size: .75rem; padding: 2px 6px; border-radius: 6px; background: #e0f2f1; }
+.vista-previa .etiqueta.nuevo { background: #dcfce7; }
+.vista-previa .tabla-scroll { max-height: 280px; overflow: auto; }
+.boton { display: block; width: 100%; padding: 12px; border: none; border-radius: 12px; background: var(--primario);
+         color: #fff; font-weight: 700; font-size: 1rem; cursor: pointer; }
+
 .movimientos { list-style: none; padding: 0; margin: 0; font-size: .9rem; }
 .movimientos li { padding: 6px 0; border-bottom: 1px solid var(--borde); }

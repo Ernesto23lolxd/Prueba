@@ -25,6 +25,8 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+import importar
+
 BASE_DIR = Path(__file__).resolve().parent
 APP_DIR = BASE_DIR.parent / "app"
 
@@ -96,7 +98,8 @@ def init_db(reset: bool = False):
             cantidad REAL NOT NULL DEFAULT 0,
             minimo REAL NOT NULL DEFAULT 0,
             precio REAL,
-            categoria TEXT
+            categoria TEXT,
+            costo REAL
         );
         CREATE TABLE IF NOT EXISTS movimientos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -108,6 +111,9 @@ def init_db(reset: bool = False):
         );
         """
     )
+    columnas = [c["name"] for c in con.execute("PRAGMA table_info(productos)").fetchall()]
+    if "costo" not in columnas:  # bases creadas antes de esta versión
+        con.execute("ALTER TABLE productos ADD COLUMN costo REAL")
     if con.execute("SELECT COUNT(*) FROM productos").fetchone()[0] == 0:
         cargar_demo(con)
     con.commit()
@@ -510,6 +516,106 @@ def armar_lista_compras(todas: bool = False) -> dict:
 def lista_compras(todas: bool = False):
     """Qué comprar y cuánto (urgentes por defecto; ?todas=true incluye todo lo sugerido)."""
     return armar_lista_compras(todas)
+
+
+def mapear_columnas_con_ia(encabezados: list, muestra: list) -> dict | None:
+    """Gemini decide qué columna del Excel es cada dato. Devuelve None si no hay IA disponible."""
+    if not os.getenv("GEMINI_API_KEY"):
+        return None
+    from google import genai
+    from google.genai import types
+
+    tabla = "\n".join(
+        " | ".join(f"[{i}] {'' if v is None else v}" for i, v in enumerate(fila)) for fila in muestra
+    )
+    prompt = f"""Este es el inventario en Excel de una tienda pequeña en México.
+Encabezados (con su índice): {json.dumps({i: h for i, h in enumerate(encabezados)}, ensure_ascii=False)}
+Primeras filas:
+{tabla}
+
+Di qué índice de columna corresponde a cada campo (o null si no existe):
+- nombre: nombre/descripción del producto
+- cantidad: existencia actual / cuántos hay
+- unidad: unidad de medida (pieza, kg, litro)
+- precio: precio de VENTA al público
+- costo: precio de COMPRA / costo
+- minimo: stock mínimo / punto de reorden
+- categoria: categoría / departamento / familia
+Responde SOLO JSON: {{"nombre": 0, "cantidad": 1, "unidad": null, "precio": 2, "costo": null, "minimo": null, "categoria": null}}"""
+    try:
+        cliente = genai.Client(api_key=os.environ["GEMINI_API_KEY"])  # en variable: si no, se cierra antes de usarse
+        r = cliente.models.generate_content(
+            model=GEMINI_MODEL, contents=prompt,
+            config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0),
+        )
+        crudo = json.loads(r.text)
+        mapa = {k: int(v) for k, v in crudo.items()
+                if k in importar.CAMPOS and isinstance(v, (int, float)) and 0 <= int(v) < len(encabezados)}
+        return mapa if "nombre" in mapa else None
+    except Exception:
+        return None
+
+
+@app.post("/api/importar")
+async def importar_excel(archivo: UploadFile = File(...), confirmar: bool = Form(False)):
+    """Sube el Excel/CSV de la tienda. confirmar=false -> vista previa; confirmar=true -> guarda."""
+    contenido = await archivo.read()
+    try:
+        encabezados, filas = importar.leer_tabla(contenido, archivo.filename or "")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+    mapa = mapear_columnas_con_ia(encabezados, filas[:6])
+    metodo = "ia"
+    if not mapa:
+        mapa, metodo = importar.mapear_heuristico(encabezados), "palabras clave"
+    if "nombre" not in mapa:
+        raise HTTPException(400, "No encontré la columna con el nombre de los productos")
+
+    productos, ignoradas = importar.extraer_productos(filas, mapa)
+
+    con = db()
+    existentes = {normalizar(f["nombre"]): f for f in con.execute("SELECT * FROM productos").fetchall()}
+    for p in productos:
+        actual = existentes.get(normalizar(p["nombre"]))
+        p["accion"] = "actualizar" if actual else "nuevo"
+        p["antes"] = actual["cantidad"] if actual else None
+
+    if confirmar:
+        ahora = datetime.now().isoformat(timespec="seconds")
+        for p in productos:
+            actual = existentes.get(normalizar(p["nombre"]))
+            if actual:
+                con.execute(
+                    "UPDATE productos SET cantidad=?, precio=COALESCE(?, precio), costo=COALESCE(?, costo), "
+                    "minimo=?, unidad=?, categoria=COALESCE(?, categoria) WHERE id=?",
+                    (p["cantidad"], p["precio"], p["costo"], p["minimo"], p["unidad"], p["categoria"], actual["id"]),
+                )
+                pid, tipo = actual["id"], "ajuste"
+            else:
+                con.execute(
+                    "INSERT INTO productos (nombre, unidad, cantidad, minimo, precio, categoria, costo) "
+                    "VALUES (?,?,?,?,?,?,?)",
+                    (p["nombre"], p["unidad"], p["cantidad"], p["minimo"], p["precio"], p["categoria"], p["costo"]),
+                )
+                pid, tipo = con.execute("SELECT last_insert_rowid()").fetchone()[0], "alta"
+            con.execute(
+                "INSERT INTO movimientos (producto_id, tipo, cantidad, fecha, texto_original) VALUES (?,?,?,?,?)",
+                (pid, tipo, p["cantidad"], ahora, f"(importado de {archivo.filename})"),
+            )
+        con.commit()
+    con.close()
+
+    return {
+        "archivo": archivo.filename,
+        "columnas": {campo: encabezados[i] for campo, i in mapa.items()},
+        "metodo": metodo,
+        "productos": productos,
+        "nuevos": sum(p["accion"] == "nuevo" for p in productos),
+        "actualizados": sum(p["accion"] == "actualizar" for p in productos),
+        "ignoradas": ignoradas,
+        "guardado": confirmar,
+    }
 
 
 @app.get("/api/alertas")

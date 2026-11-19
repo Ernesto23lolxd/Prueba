@@ -183,5 +183,71 @@ async function cargarMovimientos() {
   );
 }
 
+// ---------------------------------------------------------------- Importar Excel
+const nombresCampo = { nombre: "Producto", cantidad: "Existencia", unidad: "Unidad", precio: "Precio venta",
+                       costo: "Costo", minimo: "Mínimo", categoria: "Categoría" };
+
+async function enviarExcel(archivo, confirmar) {
+  const datos = new FormData();
+  datos.append("archivo", archivo);
+  datos.append("confirmar", confirmar ? "true" : "false");
+  const r = await fetch(`${API}/api/importar`, { method: "POST", body: datos });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || "No pude leer el archivo");
+  return data;
+}
+
+$("inputExcel").addEventListener("change", async (e) => {
+  const archivo = e.target.files[0];
+  if (!archivo) return;
+  const caja = $("vistaPrevia");
+  caja.textContent = "Leyendo tu Excel…";
+  try {
+    const d = await enviarExcel(archivo, false);
+    const columnas = Object.entries(d.columnas)
+      .map(([campo, col]) => `<li><b></b> ← columna “<span></span>”</li>`).join("");
+    caja.innerHTML = `
+      <p>Encontré <b>${d.productos.length}</b> productos: <b>${d.nuevos}</b> nuevos y <b>${d.actualizados}</b> que ya tenías.</p>
+      <p class="ayuda">Así entendí tus columnas (${d.metodo === "ia" ? "con IA" : "por palabras clave"}):</p>
+      <ul class="columnas">${columnas}</ul>
+      <div class="tabla-scroll"><table><thead><tr><th>Producto</th><th>Hay</th><th>Precio</th><th></th></tr></thead><tbody></tbody></table></div>
+      ${d.ignoradas.length ? `<p class="ayuda">Ignoré ${d.ignoradas.length} filas sin producto (títulos o totales).</p>` : ""}
+      <button class="boton" id="btnConfirmarExcel">✅ Importar ${d.productos.length} productos</button>`;
+    // Textos del archivo con textContent (seguro ante contenido raro en el Excel)
+    caja.querySelectorAll(".columnas li").forEach((li, i) => {
+      const [campo, col] = Object.entries(d.columnas)[i];
+      li.querySelector("b").textContent = nombresCampo[campo] || campo;
+      li.querySelector("span").textContent = col;
+    });
+    caja.querySelector("tbody").replaceChildren(...d.productos.map((p) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td></td><td></td><td></td><td><span class='etiqueta'></span></td>";
+      tr.children[0].textContent = p.nombre;
+      tr.children[1].textContent = `${p.cantidad} ${p.unidad}`;
+      tr.children[2].textContent = p.precio != null ? pesos(p.precio) : "—";
+      const et = tr.querySelector(".etiqueta");
+      et.textContent = p.accion === "nuevo" ? "nuevo" : `antes ${p.antes}`;
+      et.classList.toggle("nuevo", p.accion === "nuevo");
+      return tr;
+    }));
+    $("btnConfirmarExcel").addEventListener("click", async () => {
+      caja.textContent = "Guardando…";
+      try {
+        const g = await enviarExcel(archivo, true);
+        caja.textContent = `✅ Listo: ${g.nuevos} productos nuevos y ${g.actualizados} actualizados.`;
+        hablar(`Listo, importé ${g.productos.length} productos de tu Excel.`);
+        cargarInventario();
+        cargarMovimientos();
+      } catch (err) {
+        caja.textContent = `❌ ${err.message}`;
+      }
+    });
+  } catch (err) {
+    caja.textContent = `❌ ${err.message}`;
+  } finally {
+    e.target.value = ""; // permite volver a subir el mismo archivo
+  }
+});
+
 cargarInventario();
 cargarMovimientos();
