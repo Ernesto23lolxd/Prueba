@@ -78,6 +78,14 @@ async function manejarRespuesta(r) {
                       : `✖ ${a.producto}: ${a.error}`))
     .join("<br>");
   agregarMensaje("bot", data.respuesta, detalle);
+  if (data.whatsapp_url) {
+    // Botón dentro del chat: el navegador bloquea abrir WhatsApp solo, necesita un toque del usuario
+    const a = Object.assign(document.createElement("a"), {
+      href: data.whatsapp_url, target: "_blank", rel: "noopener",
+      className: "whatsapp", textContent: "📲 Abrir WhatsApp con el pedido",
+    });
+    chat.firstChild.appendChild(a);
+  }
   hablar(data.respuesta);
   ultimosCambios = new Set((data.acciones || []).map((a) => a.producto));
   await cargarInventario();
@@ -131,6 +139,36 @@ function pintarInventario(productos) {
 async function cargarInventario() {
   const r = await fetch(`${API}/api/prediccion`); // inventario + cuándo se acaba cada producto
   pintarInventario(await r.json());
+  cargarListaCompras();
+}
+
+// ---------------------------------------------------------------- Lista de compras
+const pesos = (n) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
+
+async function cargarListaCompras() {
+  const r = await fetch(`${API}/api/lista-compras`);
+  const lista = await r.json();
+  const ul = $("listaCompras");
+  if (!lista.items.length) {
+    ul.replaceChildren(Object.assign(document.createElement("li"), { textContent: "Nada urgente por comprar 👌" }));
+  } else {
+    ul.replaceChildren(
+      ...lista.items.map((i) => {
+        const li = document.createElement("li");
+        li.className = i.urgencia;
+        const unidad = i.unidad === "kg" ? "kg" : "pzas";
+        li.innerHTML = `<span><b></b> <span class="nombre"></span></span><span class="cuando"></span>`;
+        li.querySelector("b").textContent = `${i.cantidad} ${unidad}`;
+        li.querySelector(".nombre").textContent = i.nombre;
+        li.querySelector(".cuando").textContent = `se acaba ${i.se_acaba}`;
+        return li;
+      })
+    );
+  }
+  $("totalCompras").textContent = lista.items.length ? `Valor aprox. (a precio de venta): ${pesos(lista.total_estimado)}` : "";
+  const btn = $("btnWhatsapp");
+  btn.href = lista.whatsapp_url;
+  btn.classList.toggle("inactivo", !lista.items.length);
 }
 
 async function cargarMovimientos() {

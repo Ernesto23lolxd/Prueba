@@ -58,5 +58,16 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; }
 @keyframes brillo { 0% { background: #fef9c3; } 100% { background: transparent; } }
 .vacio { color: var(--suave); }
 
+/* Lista de compras */
+.lista { list-style: none; padding: 0; margin: 0; }
+.lista li { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--borde); }
+.lista .cuando { color: var(--suave); font-size: .8rem; }
+.lista .alta .cuando { color: var(--bajo); font-weight: 600; }
+.total { font-weight: 600; text-align: right; }
+.whatsapp { display: block; text-align: center; padding: 12px; border-radius: 12px; background: #25d366;
+            color: #fff; font-weight: 700; text-decoration: none; margin-top: 8px; }
+.whatsapp.inactivo { opacity: .4; pointer-events: none; }
+.msg .whatsapp { display: inline-block; padding: 8px 12px; margin-top: 8px; }
+
 .movimientos { list-style: none; padding: 0; margin: 0; font-size: .9rem; }
 .movimientos li { padding: 6px 0; border-bottom: 1px solid var(--borde); }

@@ -16,6 +16,7 @@ import random
 import sqlite3
 import unicodedata
 from datetime import datetime, timedelta
+from urllib.parse import quote
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -57,7 +58,7 @@ PRODUCTOS_DEMO = [
     ("Sabritas sal 45 g", "pieza", 18, 10, 20, "Botanas", 6),
     ("Galletas Marías", "pieza", 12, 6, 18, "Botanas", 1.5),
     ("Huevo", "kg", 6, 3, 48, "Básicos", 2.5),
-    ("Tortillas", "kg", 10, 4, 24, "Básicos", 6),
+    ("Tortillas", "kg", 10, 4, 24, "Tortillería", 6),
     ("Leche Lala 1 L", "pieza", 8, 8, 29, "Lácteos", 5),
     ("Pan Bimbo grande", "pieza", 4, 4, 52, "Panadería", 2),
     ("Jamón de pavo", "kg", 1.5, 0.5, 160, "Salchichonería", 0.4),
@@ -77,6 +78,9 @@ PRODUCTOS_DEMO = [
 FACTOR_DIA = {0: 0.9, 1: 0.85, 2: 0.9, 3: 0.95, 4: 1.15, 5: 1.4, 6: 1.3}
 DIAS_SEMANA = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
 DIAS_HISTORIAL = 14
+# Para cuántos días conviene comprar: lo perecedero se surte seguido, lo demás para 1 semana
+COBERTURA_DIAS = {"Tortillería": 1, "Panadería": 2, "Lácteos": 3, "Salchichonería": 4}
+COBERTURA_DEFAULT = 7
 
 
 def init_db(reset: bool = False):
@@ -218,8 +222,9 @@ def calcular_prediccion() -> list:
                     break
                 restante -= consumo
 
-        semana = sum(promedio * FACTOR_DIA[(ahora + timedelta(days=d)).weekday()] for d in range(1, 8))
-        comprar = _redondear_compra(semana + p["minimo"] - p["cantidad"], p["unidad"])
+        cobertura = COBERTURA_DIAS.get(p["categoria"], COBERTURA_DEFAULT)
+        necesidad = sum(promedio * FACTOR_DIA[(ahora + timedelta(days=d)).weekday()] for d in range(1, cobertura + 1))
+        comprar = _redondear_compra(necesidad + p["minimo"] - p["cantidad"], p["unidad"])
         fecha_fin = ahora + timedelta(days=dias) if dias is not None else None
         if p["estado"] in ("bajo", "agotado") or (dias is not None and dias <= 1):
             urgencia = "alta"
@@ -351,6 +356,10 @@ Tipos de acción posibles:
 - "minimo": define la cantidad mínima antes de avisar.
 - "precio": cambia el precio.
 - "consultar": solo pregunta (cuánto queda, qué se acaba, qué debo comprar, cuánto vale el inventario).
+- "enviar_lista": pide mandar/compartir la lista de compras o el pedido por WhatsApp o al proveedor
+  (ej. "mándale la lista al proveedor", "pásame el pedido por WhatsApp"). No lleva producto.
+  TÚ NO PUEDES ENVIAR MENSAJES: di que dejaste el pedido listo y que toque el botón verde para mandarlo
+  por WhatsApp (ej. "Te dejé listo el pedido con 9 productos, toca el botón verde para mandarlo").
 
 Reglas:
 - Usa EXACTAMENTE el nombre del inventario si el producto ya existe ("coca" -> "Coca-Cola 600 ml").
@@ -392,7 +401,7 @@ def texto_inventario() -> str:
     lineas.append(f"\nHOY ES {DIAS_SEMANA[ahora.weekday()].upper()} {ahora:%d/%m/%Y} {ahora:%H:%M}")
     lineas.append(f"VALOR TOTAL DEL INVENTARIO (ya calculado): ${total:,.2f}")
     lineas.append(f"PRODUCTOS EN O BAJO SU MÍNIMO: {', '.join(bajos) or 'ninguno'}")
-    lineas.append(f"LISTA DE COMPRAS SUGERIDA (urgentes, para cubrir 1 semana): {'; '.join(compras) or 'nada urgente'}")
+    lineas.append(f"LISTA DE COMPRAS SUGERIDA (urgentes; perecederos para pocos días, lo demás para 1 semana): {'; '.join(compras) or 'nada urgente'}")
     return "\n".join(lineas)
 
 
@@ -424,6 +433,7 @@ def preguntar_a_gemini(texto: str | None = None, audio: bytes | None = None, mim
 
 def procesar(resultado_ia: dict, texto_original: str) -> dict:
     acciones = resultado_ia.get("acciones") or []
+    quiere_lista = any((a.get("tipo") or "").lower() == "enviar_lista" for a in acciones)
     aplicadas = aplicar_acciones(acciones, texto_original)
     respuesta = resultado_ia.get("respuesta", "")
     fallidas = [a for a in aplicadas if not a["ok"]]
@@ -437,6 +447,7 @@ def procesar(resultado_ia: dict, texto_original: str) -> dict:
         "respuesta": respuesta,
         "acciones": aplicadas,
         "inventario": listar_productos(),
+        "whatsapp_url": armar_lista_compras()["whatsapp_url"] if quiere_lista else None,
     }
 
 
@@ -470,6 +481,35 @@ def inventario():
 def prediccion():
     """Por producto: venta diaria, días restantes, cuándo se acaba, cuánto comprar y urgencia."""
     return calcular_prediccion()
+
+
+def armar_lista_compras(todas: bool = False) -> dict:
+    """Lista de compras a partir de la predicción + mensaje listo para WhatsApp."""
+    items = [
+        {"nombre": p["nombre"], "cantidad": p["comprar"], "unidad": p["unidad"],
+         "categoria": p["categoria"], "urgencia": p["urgencia"], "se_acaba": p["se_acaba_texto"],
+         "costo_estimado": round(p["comprar"] * (p["precio"] or 0), 2)}
+        for p in calcular_prediccion()
+        if p["comprar"] > 0 and (todas or p["urgencia"] in ("alta", "media"))
+    ]
+    lineas = ["🛒 *Pedido de surtido*", f"📅 {datetime.now():%d/%m/%Y}", ""]
+    for i in items:
+        unidad = "kg" if i["unidad"] == "kg" else "pzas"
+        lineas.append(f"• {i['cantidad']:g} {unidad} — {i['nombre']}")
+    lineas += ["", "Enviado con Surtí 🤖"]
+    mensaje = "\n".join(lineas)
+    return {
+        "items": items,
+        "total_estimado": round(sum(i["costo_estimado"] for i in items), 2),
+        "mensaje": mensaje,
+        "whatsapp_url": "https://wa.me/?text=" + quote(mensaje),
+    }
+
+
+@app.get("/api/lista-compras")
+def lista_compras(todas: bool = False):
+    """Qué comprar y cuánto (urgentes por defecto; ?todas=true incluye todo lo sugerido)."""
+    return armar_lista_compras(todas)
 
 
 @app.get("/api/alertas")
