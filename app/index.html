@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Surtí · Inventario inteligente por voz y foto</title>
+  <title>STOCK · Inventario por voz para tu tienda</title>
   <!-- Fuente Inter para legibilidad limpia en móvil y escritorio -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -15,12 +15,16 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
           },
           colors: {
-            fondo: '#f6f4ef',
-            primario: '#0f766e',
-            primarioOscuro: '#115e59',
+            fondo: '#121316',
+            primario: '#0095E8',
+            primarioOscuro: '#0077BB',
+            stockCyan: '#0095E8',
+            stockTeal: '#3BB2D0',
+            stockSage: '#B5C8A8',
+            stockPeach: '#F6C58E',
             ok: '#16a34a',
             atencion: '#d97706',
             bajo: '#dc2626',
@@ -31,17 +35,121 @@
       }
     };
   </script>
+  <style>
+    /* ===== Identidad STOCK (diseño de Ernesto): carbón mate + degradado cian → durazno ===== */
+    :root { --grad-stock: linear-gradient(90deg, #0095E8 0%, #3BB2D0 42%, #B5C8A8 72%, #F6C58E 100%); }
+    body {
+      background-color: #121316; color: #F5F6F8;
+      background-image:
+        radial-gradient(circle at 22% 18%, rgba(0,149,232,.09) 0%, transparent 45%),
+        radial-gradient(circle at 82% 24%, rgba(246,197,142,.07) 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 0%, #1c1f26 0%, #121316 58%, #0d0e11 100%);
+      background-attachment: fixed;
+    }
+    .text-stock-gradient { background: var(--grad-stock); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .bg-stock-gradient { background: var(--grad-stock); }
+    header.bg-primario { background: rgba(18,19,22,.78) !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid rgba(255,255,255,.07); }
+    #btnMic.bg-primario, #btnEnviarTexto, #btnConfirmarExcel { background: var(--grad-stock) !important; color: #0d0e11 !important; }
+    #btnMic.bg-primario { box-shadow: 0 14px 30px -8px rgba(0,149,232,.45), 0 10px 24px -8px rgba(246,197,142,.35); }
+    /* Tarjetas y textos en modo oscuro */
+    .bg-white { background-color: rgba(255,255,255,.035) !important; }
+    .text-\[\#1f2328\] { color: #F5F6F8 !important; }
+    .text-\[\#6b7280\], .text-slate-500, .text-slate-700 { color: #a1a1aa !important; }
+    .border-\[\#e5e7eb\] { border-color: rgba(255,255,255,.09) !important; }
+    .divide-\[\#e5e7eb\] > * + * { border-color: rgba(255,255,255,.08) !important; }
+    .bg-slate-50, .bg-slate-100, .bg-slate-50\/70 { background-color: rgba(255,255,255,.05) !important; }
+    .border-slate-200, .border-slate-300 { border-color: rgba(255,255,255,.12) !important; }
+    .bg-amber-50 { background-color: rgba(245,158,11,.08) !important; } .border-amber-200 { border-color: rgba(245,158,11,.3) !important; }
+    .text-amber-800, .text-amber-700 { color: #fcd34d !important; } .text-amber-700\/80 { color: rgba(252,211,77,.8) !important; }
+    .bg-red-50, .bg-red-50\/50 { background-color: rgba(239,68,68,.08) !important; } .border-red-200 { border-color: rgba(239,68,68,.3) !important; }
+    .text-red-800, .text-red-700\/80 { color: #fca5a5 !important; } .bg-red-100 { background-color: rgba(239,68,68,.18) !important; }
+    .bg-sky-50\/50 { background-color: rgba(14,165,233,.08) !important; } .border-sky-200 { border-color: rgba(14,165,233,.3) !important; }
+    .text-sky-900 { color: #bae6fd !important; } .text-sky-800 { color: #7dd3fc !important; } .bg-sky-100 { background-color: rgba(14,165,233,.18) !important; }
+    .bg-teal-50, .bg-teal-50\/40 { background-color: rgba(0,149,232,.10) !important; } .border-teal-200 { border-color: rgba(0,149,232,.35) !important; }
+    .hover\:bg-teal-100:hover, .hover\:bg-teal-50:hover { background-color: rgba(0,149,232,.18) !important; }
+    .bg-amber-100 { background-color: rgba(245,158,11,.18) !important; } .bg-emerald-100 { background-color: rgba(16,185,129,.18) !important; }
+    .text-emerald-800 { color: #6ee7b7 !important; } .bg-teal-100 { background-color: rgba(0,149,232,.18) !important; } .text-teal-800 { color: #7dd3fc !important; }
+    .hover\:bg-red-50:hover { background-color: rgba(239,68,68,.12) !important; } .hover\:bg-emerald-50:hover { background-color: rgba(16,185,129,.12) !important; }
+    input[type="text"], input[type="search"] { background-color: rgba(255,255,255,.05); color: #F5F6F8; }
+    input::placeholder { color: #71717a; }
+    .text-teal-100 { color: #a1a1aa !important; }
+  </style>
 </head>
 <body class="bg-fondo text-[#1f2328] font-sans antialiased min-h-screen pb-10">
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+      <!-- Degradado horizontal exacto de STOCK -->
+      <linearGradient id="stockBrandGrad" x1="0%" y1="50%" x2="100%" y2="50%">
+        <stop offset="0%" stop-color="#0095E8" />
+        <stop offset="42%" stop-color="#3BB2D0" />
+        <stop offset="72%" stop-color="#B5C8A8" />
+        <stop offset="100%" stop-color="#F6C58E" />
+      </linearGradient>
+
+      <!-- Relleno translúcido para caras frontales de la caja -->
+      <linearGradient id="stockBoxFill" x1="0%" y1="25%" x2="100%" y2="75%">
+        <stop offset="0%" stop-color="#0095E8" stop-opacity="0.52" />
+        <stop offset="50%" stop-color="#3BB2D0" stop-opacity="0.2" />
+        <stop offset="100%" stop-color="#F6C58E" stop-opacity="0.52" />
+      </linearGradient>
+
+      <filter id="stockGlowShadow" x="-25%" y="-25%" width="150%" height="150%">
+        <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.6" />
+      </filter>
+
+      <!-- Símbolo SVG a medida: Caja abierta isométrica con solapas desplegadas y manzana con hoja -->
+      <symbol id="stock-box-icon" viewBox="0 0 140 132">
+        <g filter="url(#stockGlowShadow)">
+          <!-- Solapas superiores traseras abiertas -->
+          <polygon points="34,54 57,44 47,34 25,44"
+                   fill="#17191E" stroke="url(#stockBrandGrad)" stroke-width="4.6" stroke-linejoin="round" stroke-linecap="round" />
+          <polygon points="106,54 83,44 93,34 115,44"
+                   fill="#17191E" stroke="url(#stockBrandGrad)" stroke-width="4.6" stroke-linejoin="round" stroke-linecap="round" />
+
+          <!-- Interior oscuro de la caja -->
+          <polygon points="34,54 70,39 106,54 70,70" fill="#121316" />
+
+          <!-- Manzana estilizada con tallo y hoja en el interior -->
+          <g>
+            <!-- Hoja derecha -->
+            <path d="M 71 33 C 72 22, 81 17, 87 18 C 87 25, 80 32, 71 33 Z"
+                  fill="url(#stockBrandGrad)" stroke="url(#stockBrandGrad)" stroke-width="2" stroke-linejoin="round" />
+            <!-- Tallo curvo -->
+            <path d="M 70 35 C 69 29, 66 25, 62 23"
+                  fill="none" stroke="url(#stockBrandGrad)" stroke-width="4.4" stroke-linecap="round" />
+            <!-- Cuerpo de la manzana -->
+            <path d="M 50 58 C 48 45, 57 35, 66 37 C 68.5 37.6, 71.5 37.6, 74 37 C 83 35, 92 45, 90 58 L 70 68 Z"
+                  fill="#16181D" stroke="url(#stockBrandGrad)" stroke-width="4.8" stroke-linejoin="round" stroke-linecap="round" />
+            <!-- Destello curvo en la manzana -->
+            <path d="M 56.5 51 C 56 46, 59 42.5, 62.5 41.8"
+                  fill="none" stroke="url(#stockBrandGrad)" stroke-width="3.6" stroke-linecap="round" />
+          </g>
+
+          <!-- Paneles frontales isométricos -->
+          <polygon points="34,54 70,70 70,118 34,99"
+                   fill="url(#stockBoxFill)" stroke="url(#stockBrandGrad)" stroke-width="4.8" stroke-linejoin="round" />
+          <polygon points="70,70 106,54 106,99 70,118"
+                   fill="url(#stockBoxFill)" stroke="url(#stockBrandGrad)" stroke-width="4.8" stroke-linejoin="round" />
+
+          <!-- Solapas frontales desplegadas -->
+          <polygon points="34,54 70,70 59,87 22,71"
+                   fill="#181A20" stroke="url(#stockBrandGrad)" stroke-width="4.8" stroke-linejoin="round" />
+          <polygon points="70,70 106,54 118,71 81,87"
+                   fill="#181A20" stroke="url(#stockBrandGrad)" stroke-width="4.8" stroke-linejoin="round" />
+        </g>
+      </symbol>
+    </defs>
+  </svg>
 
   <!-- Barra superior de navegación y controles globales -->
   <header class="bg-primario text-white shadow-sm sticky top-0 z-30">
     <div class="max-w-[820px] mx-auto px-4 py-3.5 flex items-center justify-between gap-3">
       <div class="min-w-0">
-        <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight leading-tight flex items-center gap-2">
-          <span>🛒 Surtí</span>
-        </h1>
-        <p class="text-xs sm:text-sm text-teal-100 truncate">Tu copiloto de inventario por voz y foto</p>
+        <a href="/" class="flex items-center gap-2" title="Ir a la portada de STOCK">
+          <svg class="h-8 w-8 shrink-0" aria-hidden="true"><use href="#stock-box-icon" /></svg>
+          <h1 class="text-xl sm:text-2xl font-black tracking-tight leading-tight text-stock-gradient">STOCK</h1>
+        </a>
+        <p class="text-xs sm:text-sm text-teal-100 truncate">Tu inventario por voz y foto</p>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <button id="btnVozOut" type="button"
@@ -217,7 +325,7 @@
     <section aria-label="Importar inventario desde Excel" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">📥 Traer mi inventario desde Excel</h2>
       <p class="text-xs sm:text-sm text-[#6b7280] mt-1 mb-3">
-        ¿Ya llevas tu inventario en Excel? Súbelo y Surtí reconoce tus columnas con IA. No tienes que capturar producto por producto.
+        ¿Ya llevas tu inventario en Excel? Súbelo y STOCK reconoce tus columnas con IA. No tienes que capturar producto por producto.
       </p>
       <label for="inputExcel"
         class="flex items-center justify-center gap-2 w-full py-4 px-4 rounded-xl border-2 border-dashed border-[#e5e7eb] hover:border-primario hover:bg-teal-50/40 text-sm font-semibold text-primario cursor-pointer transition">
@@ -237,7 +345,7 @@
 
   <script>
     // =========================================================================
-    // Surtí · Interfaz de usuario (diseño de Ernesto y Sebas) conectada al backend.
+    // STOCK · Interfaz de usuario (diseño de Ernesto y Sebas) conectada al backend.
     // Toda la lógica (inventario, predicción, IA con Gemini) vive en el backend:
     // la clave de Gemini NUNCA está en el navegador y los datos se guardan en la base.
     // =========================================================================
@@ -309,7 +417,7 @@
       try {
         res = await fetch(API + ruta, opciones);
       } catch (_) {
-        throw new Error("No hay conexión con el servidor de Surtí. ¿Está encendido?");
+        throw new Error("No hay conexión con el servidor de STOCK. ¿Está encendido?");
       }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.detail || `Error ${res.status}`);
@@ -338,7 +446,7 @@
         await api("/api/reset", { method: "POST" });
         productosResaltados.clear();
         $("chat").innerHTML = "";
-        agregarMensaje("bot", "¡Hola! Soy Surtí. Ya cargué los productos de tu tiendita en Durango. Dime qué vendiste, sube la foto de un ticket o pregúntame qué surtir hoy.");
+        agregarMensaje("bot", "¡Hola! Soy STOCK. Ya cargué los productos de tu tiendita en Durango. Dime qué vendiste, sube la foto de un ticket o pregúntame qué surtir hoy.");
         await cargarTablero();
         if (!silencioso) mostrarToast("Inventario de demo reiniciado", "ok");
       } catch (err) {
@@ -370,7 +478,7 @@
     async function enviarTexto(texto) {
       const limpio = (texto || "").trim();
       if (!limpio) return;
-      setCargando(true, "Analizando con Surtí (Gemini IA)...");
+      setCargando(true, "Analizando con STOCK (Gemini IA)...");
       try {
         const r = await postJSON("/api/texto", { texto: limpio });
         mostrarResultado(r, { textoOriginal: limpio });
@@ -874,7 +982,7 @@
     $("btnReset").addEventListener("click", () => reiniciarDemo(false));
 
     // Arranque: muestra el inventario guardado (no lo reinicia)
-    agregarMensaje("bot", "¡Hola! Soy Surtí. Dime qué vendiste, sube la foto de un ticket o pregúntame qué surtir hoy.");
+    agregarMensaje("bot", "¡Hola! Soy STOCK. Dime qué vendiste, sube la foto de un ticket o pregúntame qué surtir hoy.");
     cargarTablero();
   </script>
 </body>

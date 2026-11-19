@@ -780,7 +780,14 @@ app.mount("/static", StaticFiles(directory=APP_DIR), name="static")
 
 
 @app.get("/")
-def index():
+def portada():
+    """Portada de STOCK (landing)."""
+    return FileResponse(APP_DIR / "inicio.html")
+
+
+@app.get("/app")
+def aplicacion():
+    """La app de inventario."""
     return FileResponse(APP_DIR / "index.html")
 
 

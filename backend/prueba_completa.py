@@ -82,10 +82,10 @@ pedir("POST", "/api/reset")
 
 @prueba("1. La página y sus archivos cargan")
 def _():
-    for ruta in ["/", "/static/app.js", "/static/styles.css"]:
+    for ruta in ["/", "/app", "/clasico", "/static/app.js", "/static/styles.css"]:
         codigo, _ = pedir("GET", ruta)
         assert codigo == 200, f"{ruta} -> HTTP {codigo}"
-    return "index, app.js, styles.css"
+    return "portada, app, clásico, app.js, styles.css"
 
 
 @prueba("2. Inventario de demo (20 productos)")

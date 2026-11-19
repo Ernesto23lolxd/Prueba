@@ -1,4 +1,4 @@
-// Surtí · app web (JavaScript puro)
+// STOCK · app web (JavaScript puro)
 const API = ""; // mismo servidor que sirve la página
 
 const $ = (id) => document.getElementById(id);
