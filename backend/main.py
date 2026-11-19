@@ -426,15 +426,31 @@ def preguntar_a_gemini(texto: str | None = None, audio: bytes | None = None, mim
     if texto:
         partes.append(f'El usuario escribió: "{texto}"')
 
-    r = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=partes,
-        config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.2),
-    )
+    ultimo = ""
+    for _intento in range(2):  # si la IA responde mal, se reintenta una vez
+        r = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=partes,
+            config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.2),
+        )
+        ultimo = r.text or ""
+        resultado = leer_json(ultimo)
+        if resultado is not None:
+            return resultado
+    raise HTTPException(502, "No entendí bien, ¿me lo repites?")
+
+
+def leer_json(texto: str):
+    """Lee el primer objeto JSON del texto, aunque la IA agregue basura antes o después."""
+    texto = (texto or "").strip()
+    inicio = texto.find("{")
+    if inicio < 0:
+        return None
     try:
-        return json.loads(r.text)
-    except (json.JSONDecodeError, TypeError):
-        raise HTTPException(502, f"La IA no devolvió JSON válido: {r.text!r}")
+        obj, _fin = json.JSONDecoder().raw_decode(texto[inicio:])
+        return obj if isinstance(obj, dict) else None
+    except json.JSONDecodeError:
+        return None
 
 
 def procesar(resultado_ia: dict, texto_original: str) -> dict:
