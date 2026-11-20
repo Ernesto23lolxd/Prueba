@@ -309,6 +309,7 @@
             <button type="button" role="menuitem" data-menu="tutorial" class="menu-item">❔ Ver tutorial</button>
             <button type="button" role="menuitem" data-menu="bienvenida" class="menu-item">👋 Ver bienvenida</button>
             <button type="button" role="menuitem" data-menu="instalar" id="menuInstalar" class="menu-item">📲 Instalar en mi celular</button>
+            <a role="menuitem" href="https://github.com/Ernesto23lolxd/Prueba/releases/download/apk/STOCK.apk" id="menuApk" class="menu-item" rel="noopener">🤖 Descargar app para Android (APK)</a>
             <div class="h-px bg-white/10 my-1"></div>
             <button type="button" role="menuitem" data-menu="factura-demo" class="menu-item">⚡ Probar con una factura de ejemplo</button>
             <button type="button" role="menuitem" data-menu="demo" class="menu-item">🧪 Cargar tienda de ejemplo</button>
@@ -2020,6 +2021,7 @@
       mostrarToast("¡Listo! STOCK ya está en tu pantalla de inicio", "ok");
     });
     if (yaInstalada()) $("menuInstalar").classList.add("hidden");
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent) || yaInstalada()) $("menuApk").classList.add("hidden");
 
     async function instalarApp() {
       if (avisoInstalar) {
@@ -2033,7 +2035,7 @@
       const texto = esIOS
         ? "En Safari:\n1. Toca el botón Compartir (el cuadrito con la flecha ⬆️).\n2. Elige “Agregar a pantalla de inicio”.\n3. Toca “Agregar”.\n\nSTOCK aparecerá con su ícono, como cualquier app."
         : /Android/i.test(ua)
-          ? "En Chrome:\n1. Toca el menú ⋮ (arriba a la derecha).\n2. Elige “Instalar app” o “Agregar a la pantalla principal”.\n3. Confirma.\n\nSTOCK aparecerá con su ícono, como cualquier app."
+          ? "En Chrome:\n1. Toca el menú ⋮ (arriba a la derecha).\n2. Elige “Instalar app” o “Agregar a la pantalla principal”.\n3. Confirma.\n\nSTOCK aparecerá con su ícono, como cualquier app.\n\n¿Prefieres el APK? En este mismo menú ⋯ toca “Descargar app para Android (APK)”."
           : "En Chrome o Edge: busca el ícono de instalar (una pantallita con flecha) a la derecha de la barra de direcciones, o en el menú ⋮ elige “Instalar STOCK”.";
       confirmar({ titulo: "📲 Instala STOCK en tu celular", texto, si: "Entendido", soloAceptar: true });
     }

@@ -6,7 +6,29 @@ micrófono, la cámara y los archivos del celular como cualquier app.
 
 **Enlace:** https://stock-tienda.onrender.com/app
 
-## Instalar
+## 🤖 APK para Android
+**Descarga directa:** https://github.com/Ernesto23lolxd/Prueba/releases/download/apk/STOCK.apk
+
+1. Abre el enlace en el celular y descarga `STOCK.apk` (2.5 MB).
+2. Ábrelo. Si Android pregunta, permite **"Instalar apps de esta fuente"** (Chrome o el administrador de archivos).
+3. Listo: STOCK queda con su ícono y abre a pantalla completa, **sin barra de navegador**.
+
+También está en la app (menú ⋯ → **🤖 Descargar app para Android (APK)**) y en la portada.
+
+| Detalle | Valor |
+|---|---|
+| Tipo | Trusted Web Activity (TWA): la forma oficial de Google para convertir una PWA en app de Android |
+| Paquete | `mx.stock.tienda` · versión 1.0 · Android 5.0 o más nuevo |
+| Requisito | Chrome instalado (viene en casi todos los Android); si no hay, abre en otro navegador |
+| Verificación | `https://stock-tienda.onrender.com/.well-known/assetlinks.json` (huella de la firma) |
+| Firma | Llave de **demostración** del hackatón (`android/stock-demo.keystore`, contraseña pública `android`) |
+| Cómo se compila | GitHub Actions (`.github/workflows/android-apk.yml`) en cada cambio a `android/`, o a mano desde la pestaña *Actions* → *APK Android* → *Run workflow* |
+
+> Como la app es la misma web, **cualquier mejora que se publique en Render llega sola al APK** sin reinstalar.
+> Para Play Store: crear una llave privada (que NO se sube a GitHub), poner su huella en `assetlinks.json` y
+> generar un `.aab` (`gradle bundleRelease`).
+
+## Instalar como PWA (sin APK)
 ### Android (Chrome, Edge o Samsung Internet)
 1. Abre el enlace.
 2. Menú **⋯** de STOCK → **📲 Instalar en mi celular** → **Instalar**.
@@ -38,11 +60,6 @@ El ícono de instalar aparece a la derecha de la barra de direcciones.
 - ✅ Chrome/Edge la consideran **instalable**
 - ✅ Service worker activo; **abre sin internet** con estilos y aviso, y se recupera al volver la señal
 - ✅ En iPhone: sin zoom al escribir, sin desbordes e instrucciones de instalación de Safari
-
-## ¿Y en Play Store?
-Con la PWA lista, se puede empaquetar para Android **sin reescribir nada**: en **pwabuilder.com** se pega el enlace
-y genera el paquete para Play Store (TWA). Requiere una cuenta de desarrollador de Google Play (pago único) y
-algunos días de revisión, así que es el paso siguiente después del hackatón.
 
 ## Para la presentación
 - Instalen STOCK **antes** en 1 o 2 celulares del equipo y ábranla una vez con internet.

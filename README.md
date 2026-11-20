@@ -9,6 +9,7 @@ y kilos, lee la foto del ticket, trae el inventario desde Excel y da un **resume
 **100 % software:** solo se necesita el celular o la computadora. Sin aparatos extra.
 
 ### 👉 Pruébala: **https://stock-tienda.onrender.com/app**
+### 🤖 App para Android: [descargar `STOCK.apk`](https://github.com/Ernesto23lolxd/Prueba/releases/download/apk/STOCK.apk)
 (Render gratis se duerme: la primera carga tarda ~1 minuto.)
 
 ## 👋 Lista para empezar en ceros
@@ -57,6 +58,7 @@ backend/   Python + FastAPI + SQLite + Gemini (IA)
   prueba_movil.py           app instalable: manifiesto, service worker, sin internet, iPhone
 app/       inicio.html (portada) · index.html (la app) · clasico.html (respaldo)
 demo/      Excel/CSV, audios y factura PDF de ejemplo para probar
+android/  proyecto Android (TWA); GitHub Actions lo compila y publica STOCK.apk en Releases
 docs/      SEGURIDAD.md · DESPLIEGUE.md · MOVIL.md · REPORTE_PRUEBAS.md · PITCH_SPEECH.md
 ```
 
