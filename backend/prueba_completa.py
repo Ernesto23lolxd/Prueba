@@ -218,12 +218,92 @@ def _():
     return f"último: {m[0]['tipo']} {m[0]['nombre']}"
 
 
-@prueba("17. Reinicio de datos de demo")
+BACKEND = Path(__file__).resolve().parent
+
+
+@prueba("17. Factura XML (CFDI): convierte cajas a piezas y suma al inventario")
+def _():
+    pedir("POST", "/api/reset")
+    # Costo anterior de la Coca más bajo, para comprobar el aviso de "te llegó más caro"
+    csv_costo = "Producto,Existencia,Costo\nCoca-Cola 600 ml,30,15\n".encode()
+    pedir("POST", "/api/importar", archivos={"archivo": ("costos.csv", csv_costo, "text/csv")}, campos={"confirmar": "true"})
+    antes = inv()
+    xml = (BACKEND / "demo_cfdi.xml").read_bytes()
+    codigo, d = pedir("POST", "/api/cfdi", archivos={"archivo": ("demo_cfdi.xml", xml, "text/xml")}, timeout=120)
+    assert codigo == 200, (codigo, d)
+    despues = inv()
+    esperado = {"Coca-Cola 600 ml": 72, "Leche Lala 1 L": 12, "Frijol pinto": 10, "Pan Bimbo grande": 8}
+    for nombre, suma in esperado.items():
+        real = despues[nombre]["cantidad"] - antes[nombre]["cantidad"]
+        assert real == suma, f"{nombre}: sumó {real}, esperaba {suma} (cajas → piezas)"
+    assert "más caro" in d["respuesta"], f"falta aviso de precio: {d['respuesta']}"
+    assert "efectivo" in d["respuesta"], f"falta tip de efectivo: {d['respuesta']}"
+    for palabra in ["IVA", "ISR", "RESICO", "póliza", "acreditable"]:
+        assert palabra.lower() not in d["respuesta"].lower(), f"lenguaje fiscal en la respuesta: {palabra}"
+    return "72 Cocas, 12 leches, 10 kg frijol, 8 panes + avisos amables"
+
+
+@prueba("18. Misma factura otra vez → 409 sin duplicar inventario")
+def _():
+    antes = inv()["Coca-Cola 600 ml"]["cantidad"]
+    codigo, d = pedir("POST", "/api/cfdi/demo")
+    assert codigo == 409 and "ya la subiste" in d["detail"], (codigo, d)
+    assert inv()["Coca-Cola 600 ml"]["cantidad"] == antes, "duplicó el inventario"
+    return d["detail"]
+
+
+@prueba("19. Factura en PDF (lectura con IA)")
+def _():
+    pdf = (DEMO / "factura_ejemplo.pdf").read_bytes()
+    antes = inv()
+    codigo, d = pedir("POST", "/api/cfdi", archivos={"archivo": ("factura_ejemplo.pdf", pdf, "application/pdf")}, timeout=120)
+    assert codigo == 200, (codigo, d)
+    despues = inv()
+    sab = despues["Sabritas sal 45 g"]["cantidad"] - antes["Sabritas sal 45 g"]["cantidad"]
+    atun = despues["Atún Dolores"]["cantidad"] - antes["Atún Dolores"]["cantidad"]
+    huevo = despues["Huevo"]["cantidad"] - antes["Huevo"]["cantidad"]
+    assert sab == 24 and atun == 24, f"Sabritas +{sab} (esp. 24), Atún +{atun} (esp. 24)"
+    assert 2.5 <= huevo <= 5, f"Huevo +{huevo} kg (2 charolas de 30 ≈ 3.6 kg)"
+    codigo2, _ = pedir("POST", "/api/cfdi", archivos={"archivo": ("factura_ejemplo.pdf", pdf, "application/pdf")}, timeout=120)
+    assert codigo2 == 409, f"el PDF repetido debió dar 409 y dio {codigo2}"
+    return f"Sabritas +{sab:g}, Atún +{atun:g}, Huevo +{huevo:g} kg; repetido → 409"
+
+
+@prueba("20. Archivo que no es factura → error claro")
+def _():
+    codigo, d = pedir("POST", "/api/cfdi", archivos={"archivo": ("nota.xml", b"<hola/>", "text/xml")})
+    assert codigo == 400 and "factura" in d["detail"].lower(), (codigo, d)
+    return d["detail"]
+
+
+@prueba("21. Resumen del mes")
+def _():
+    codigo, m = pedir("GET", "/api/resumen-mes")
+    assert codigo == 200 and m["surtido"]["facturas"] == 2, m.get("surtido")
+    assert m["vendido"]["monto"] > 0 and m["mas_vendidos"] and "monto" in m["dinero_parado"], m
+    return (f"{m['mes']}: vendido ${m['vendido']['monto']:,.0f}, surtido ${m['surtido']['monto']:,.0f} "
+            f"({m['surtido']['facturas']} facturas), parado ${m['dinero_parado']['monto']:,.0f}")
+
+
+@prueba("22. Resumen del mes en CSV descargable")
+def _():
+    codigo, texto = pedir("GET", "/api/resumen-mes/csv")
+    assert codigo == 200 and isinstance(texto, str), codigo
+    assert "FACTURAS DE PROVEEDOR CARGADAS" in texto and "DISTRIBUIDORA ABARROTERA DEL GUADIANA" in texto, texto[:300]
+    return f"{texto.count(chr(10))} renglones"
+
+
+@prueba("23. Reinicio de datos de demo (también borra facturas)")
 def _():
     pedir("POST", "/api/reset")
     i = inv()
     assert len(i) == 20 and "Queso menonita" not in i
-    return "20 productos otra vez"
+    _, m = pedir("GET", "/api/resumen-mes")
+    assert m["surtido"]["facturas"] == 0, "quedaron facturas tras el reinicio"
+    codigo, _ = pedir("POST", "/api/cfdi/demo")
+    assert codigo == 200, "tras reiniciar, la factura demo debe poder subirse otra vez"
+    pedir("POST", "/api/reset")
+    return "20 productos y 0 facturas"
 
 
 # ------------------------------------------------------------------ Reporte

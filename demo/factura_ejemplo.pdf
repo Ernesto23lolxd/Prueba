@@ -1,0 +1,71 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 959 >>
+stream
+BT
+/F1 11 Tf
+50 780 Td
+/F1 16 Tf
+(DISTRIBUIDORA COMERCIAL EL TUNAL \(EJEMPLO\)) Tj
+0 -24 Td
+/F1 10 Tf
+(RFC: DCT900101XX1   -   Factura \(CFDI 4.0\)   -   Serie A  Folio 7731) Tj
+0 -24 Td
+/F1 10 Tf
+(Folio fiscal \(UUID\): 7C9E2B10-4D3A-4F21-9A6B-PDF2026DEMO1) Tj
+0 -24 Td
+/F1 10 Tf
+(Fecha: 19/11/2026   Forma de pago: 03 Transferencia   Metodo: PUE) Tj
+0 -24 Td
+/F1 10 Tf
+( ) Tj
+0 -24 Td
+/F1 11 Tf
+(CANT   UNIDAD    DESCRIPCION                         P.UNIT     IMPORTE) Tj
+0 -24 Td
+/F1 11 Tf
+(  2    CAJA      SABRITAS SAL 45G C/12              180.00      360.00) Tj
+0 -24 Td
+/F1 11 Tf
+(  1    CAJA      ATUN DOLORES 140G C/24             480.00      480.00) Tj
+0 -24 Td
+/F1 11 Tf
+(  2    CHAROLA   HUEVO BLANCO C/30 PZAS              95.00      190.00) Tj
+0 -24 Td
+/F1 10 Tf
+( ) Tj
+0 -24 Td
+/F1 12 Tf
+(SUBTOTAL: 1,030.00     TOTAL: 1,030.00 MXN) Tj
+0 -24 Td
+/F1 9 Tf
+(Documento de ejemplo para la demo de STOCK. Proveedor y folio ficticios.) Tj
+0 -24 Td
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001251 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1319
+%%EOF

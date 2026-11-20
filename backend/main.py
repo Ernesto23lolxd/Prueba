@@ -8,7 +8,9 @@ Ejecutar (desde la carpeta backend):
 
 Abrir: http://localhost:8000
 """
+import csv
 import difflib
+import io
 import json
 import math
 import os
@@ -21,10 +23,11 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+import cfdi
 import importar
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -39,7 +42,9 @@ if _env.exists():
             os.environ.setdefault(_k.strip(), _v.strip().strip('"').strip("'"))
 
 DB_PATH = BASE_DIR / "inventario.db"
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+# Modelo estable y disponible para esta clave (gemini-2.5-flash ya no está disponible para cuentas nuevas).
+# Se puede cambiar en backend/.env con GEMINI_MODEL=...
+GEMINI_MODEL = os.getenv("GEMINI_MODEL") or "gemini-3.5-flash-lite"
 
 app = FastAPI(title="STOCK — Inventario por voz")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -88,7 +93,9 @@ COBERTURA_DEFAULT = 7
 def init_db(reset: bool = False):
     con = db()
     if reset:
-        con.executescript("DROP TABLE IF EXISTS movimientos; DROP TABLE IF EXISTS productos;")
+        con.executescript(
+            "DROP TABLE IF EXISTS movimientos; DROP TABLE IF EXISTS productos; DROP TABLE IF EXISTS cfdi_procesados;"
+        )
     con.executescript(
         """
         CREATE TABLE IF NOT EXISTS productos (
@@ -108,6 +115,15 @@ def init_db(reset: bool = False):
             cantidad REAL NOT NULL,
             fecha TEXT NOT NULL,
             texto_original TEXT
+        );
+        -- Facturas de proveedor ya cargadas (evita sumar dos veces la misma)
+        CREATE TABLE IF NOT EXISTS cfdi_procesados (
+            uuid TEXT PRIMARY KEY,
+            proveedor TEXT,
+            total REAL,
+            forma_pago TEXT,
+            fecha TEXT NOT NULL,
+            archivo TEXT
         );
         """
     )
@@ -394,7 +410,7 @@ Reglas:
   (usa el nombre del inventario si ya existe; si no existe, ponlo tal cual y se dará de alta). En "respuesta" resume qué sumaste.
 - Si recibes una FOTO de anaquel: cuenta las piezas visibles de productos del inventario y regístralas como "ajuste".
 - Si la imagen no se entiende, no inventes acciones: pide otra foto más clara.
-- "respuesta": frase corta, amable y hablada (se leerá en voz alta), en español de México. Confirma lo que hiciste
+- "respuesta": frase corta, amable y hablada (se leerá en voz alta), en español de México (trata de "tú": "vendes", "tienes"; nunca "vos" ni "vendés"). Confirma lo que hiciste
   y, si algún producto queda en o bajo su mínimo, avísale. Para consultas, responde con los datos del inventario.
 - "transcripcion": lo que entendiste que dijo el usuario.
 
@@ -435,7 +451,22 @@ INSTRUCCION_FOTO = {
               "Cada producto es una acción 'entrada' con su cantidad. En 'transcripcion' resume el ticket.",
     "anaquel": "Esta imagen es un anaquel o refrigerador de la tienda: cuenta las piezas visibles de productos "
                "del inventario y regístralas como 'ajuste'. En 'transcripcion' di qué contaste.",
+    "factura": "Este documento es una FACTURA de un proveedor: todo lo que trae LLEGÓ a la tienda. "
+               + "Cada partida es una acción 'entrada'. " + "{conversion}"
+               + " Agrega también al JSON la llave \"factura\": {{\"proveedor\": \"...\", \"total\": 0, "
+               "\"uuid\": \"folio fiscal si aparece o null\", \"forma_pago\": \"clave de 2 dígitos si aparece o null\"}}. "
+               "En 'transcripcion' resume la factura (proveedor y cuántas partidas).",
 }
+
+# Cómo convertir lo que vende el proveedor (mayoreo) a lo que cuenta la tienda (piezas o kilos)
+REGLAS_CONVERSION = (
+    "IMPORTANTE: el proveedor vende por mayoreo. Convierte a la UNIDAD DEL INVENTARIO de la tienda: "
+    "'CAJA C/24' = 24 piezas por caja, 'PAQ C/6' = 6 piezas por paquete, 'BULTO 10 KG' = 10 kg por bulto, "
+    "'CHAROLA C/30' = 30 piezas. Multiplica por la cantidad de cajas/paquetes. Ejemplo: 2 cajas C/24 = 48 piezas. "
+    "Usa el nombre EXACTO del inventario si el producto ya existe; si no existe, ponle un nombre corto y claro "
+    "(sin claves del proveedor) y su unidad (pieza o kg). En cada acción agrega \"partida\" con el número de partida (1, 2, 3...)."
+)
+INSTRUCCION_FOTO["factura"] = INSTRUCCION_FOTO["factura"].format(conversion=REGLAS_CONVERSION)
 
 
 def preguntar_a_gemini(texto: str | None = None, audio: bytes | None = None, mime: str | None = None,
@@ -749,6 +780,245 @@ async def importar_excel(archivo: UploadFile = File(...), confirmar: bool = Form
         "ignoradas": ignoradas,
         "guardado": confirmar,
     }
+
+
+# ---------------------------------------------------------------- Facturas de proveedor (CFDI XML / PDF)
+DEMO_CFDI = BASE_DIR / "demo_cfdi.xml"
+MSG_FACTURA_REPETIDA = ("Esta factura ya la subiste antes; no la volvimos a sumar "
+                        "para no duplicar tu inventario.")
+LIMITE_EFECTIVO_TIP = 2000
+
+
+def _factura_ya_cargada(uuid: str) -> bool:
+    con = db()
+    existe = con.execute("SELECT 1 FROM cfdi_procesados WHERE uuid=?", (uuid,)).fetchone() is not None
+    con.close()
+    return existe
+
+
+def _guardar_factura(uuid: str, proveedor: str, total: float, forma_pago: str | None, archivo: str):
+    con = db()
+    con.execute(
+        "INSERT INTO cfdi_procesados (uuid, proveedor, total, forma_pago, fecha, archivo) VALUES (?,?,?,?,?,?)",
+        (uuid, proveedor, total, forma_pago, datetime.now().isoformat(timespec="seconds"), archivo),
+    )
+    con.commit()
+    con.close()
+
+
+def _solo_entradas(ia: dict) -> dict:
+    """Todo lo que viene en una factura LLEGÓ a la tienda: se registra como entrada."""
+    for a in ia.get("acciones") or []:
+        if (a.get("tipo") or "").lower() not in ("entrada", "alta"):
+            a["tipo"] = "entrada"
+    return ia
+
+
+def _tip_efectivo(forma_pago: str | None, total: float) -> str | None:
+    if str(forma_pago or "").strip() == "01" and total > LIMITE_EFECTIVO_TIP:
+        return (f"💡 Tip: como esta compra pasó de ${LIMITE_EFECTIVO_TIP:,} en efectivo, si la próxima la pagas "
+                "por transferencia te sirve mejor si llevas cuentas con contador.")
+    return None
+
+
+def _costos_y_tips(acciones: list, importes: dict) -> list:
+    """Guarda cuánto te costó cada pieza/kilo y avisa (amable) si un producto llegó más caro que la vez pasada."""
+    tips = []
+    con = db()
+    for a in acciones:
+        partida, cantidad = a.get("partida"), float(a.get("cantidad") or 0)
+        try:
+            importe = importes.get(int(partida))
+        except (TypeError, ValueError):
+            importe = None
+        if not importe or cantidad <= 0:
+            continue
+        p = buscar_producto(con, a.get("producto") or "")
+        if not p:
+            continue
+        costo_nuevo = round(importe / cantidad, 2)
+        if p["costo"] and costo_nuevo > p["costo"] * 1.03 and len(tips) < 2:
+            tips.append(f"💡 Ojo: {p['nombre']} te llegó más caro que la vez pasada "
+                        f"(${p['costo']:,.2f} → ${costo_nuevo:,.2f} por {p['unidad']}). "
+                        "Revisa si conviene ajustar tu precio.")
+        con.execute("UPDATE productos SET costo=? WHERE id=?", (costo_nuevo, p["id"]))
+    con.commit()
+    con.close()
+    return tips
+
+
+def procesar_factura_xml(contenido: bytes, nombre_archivo: str) -> dict:
+    try:
+        f = cfdi.leer_cfdi(contenido)
+    except ValueError as e:
+        raise HTTPException(400, f"No pude leer la factura: {e}")
+    if _factura_ya_cargada(f["uuid"]):
+        raise HTTPException(409, MSG_FACTURA_REPETIDA)
+
+    instruccion = (
+        f"{REGLAS_CONVERSION}\n\n{cfdi.partidas_para_ia(f)}\n\n"
+        "Todo esto LLEGÓ a la tienda: registra cada partida como 'entrada' en piezas o kilos. "
+        "En 'respuesta' di en una frase qué sumaste (ej. 'Sumé 72 Cocas, 12 leches y 10 kilos de frijol')."
+    )
+    ia = _solo_entradas(preguntar_a_gemini(texto=instruccion))
+    acciones_ia = [dict(a) for a in ia.get("acciones") or []]
+    resultado = procesar(ia, f"(factura de {f['proveedor']})")
+    if not any(a["ok"] for a in resultado["acciones"]):
+        return resultado  # no se sumó nada: no la marcamos como cargada para que pueda reintentarse
+
+    tips = _costos_y_tips(acciones_ia, {c["partida"]: c["importe"] for c in f["conceptos"]})
+    tip = _tip_efectivo(f["forma_pago"], f["total"])
+    if tip:
+        tips.append(tip)
+    if tips:
+        resultado["respuesta"] = f"{resultado['respuesta']} {' '.join(tips)}"
+    _guardar_factura(f["uuid"], f["proveedor"], f["total"], f["forma_pago"], nombre_archivo)
+    resultado["factura"] = {"uuid": f["uuid"], "proveedor": f["proveedor"], "total": f["total"],
+                            "forma_pago": f["forma_pago"], "partidas": len(f["conceptos"]), "tipo": "xml"}
+    return resultado
+
+
+def procesar_factura_pdf(contenido: bytes, nombre_archivo: str) -> dict:
+    ia = _solo_entradas(preguntar_a_gemini(imagen=contenido, mime="application/pdf", modo_foto="factura"))
+    info = ia.get("factura") if isinstance(ia.get("factura"), dict) else {}
+    uuid = str(info.get("uuid") or "").strip().upper()
+    if len(uuid) < 30:  # sin folio fiscal legible: identificador por archivo y hora
+        uuid = f"PDF-{nombre_archivo}-{datetime.now():%Y%m%d%H%M%S}"
+    elif _factura_ya_cargada(uuid):
+        raise HTTPException(409, MSG_FACTURA_REPETIDA)
+
+    proveedor = str(info.get("proveedor") or "Proveedor")
+    try:
+        total = float(info.get("total") or 0)
+    except (TypeError, ValueError):
+        total = 0.0
+    forma_pago = (str(info.get("forma_pago")).zfill(2) if info.get("forma_pago") else None)
+
+    resultado = procesar(ia, f"(factura PDF de {proveedor})")
+    if not any(a["ok"] for a in resultado["acciones"]):
+        return resultado
+    tip = _tip_efectivo(forma_pago, total)
+    if tip:
+        resultado["respuesta"] = f"{resultado['respuesta']} {tip}"
+    _guardar_factura(uuid, proveedor, total, forma_pago, nombre_archivo)
+    resultado["factura"] = {"uuid": uuid, "proveedor": proveedor, "total": total, "forma_pago": forma_pago,
+                            "partidas": len(resultado["acciones"]), "tipo": "pdf"}
+    return resultado
+
+
+@app.post("/api/cfdi")
+async def subir_factura(archivo: UploadFile = File(...)):
+    """Sube la factura del proveedor (XML o PDF): suma lo que llegó al inventario, convirtiendo cajas a piezas."""
+    contenido = await archivo.read()
+    nombre = archivo.filename or "factura"
+    if not contenido:
+        raise HTTPException(400, "El archivo está vacío")
+    if len(contenido) > 15 * 1024 * 1024:
+        raise HTTPException(400, "El archivo es muy pesado (máx. 15 MB)")
+    if contenido.lstrip()[:5] == b"%PDF-" or nombre.lower().endswith(".pdf"):
+        return procesar_factura_pdf(contenido, nombre)
+    if contenido.lstrip()[:1] == b"<" or nombre.lower().endswith(".xml"):
+        return procesar_factura_xml(contenido, nombre)
+    raise HTTPException(400, "Sube el XML o el PDF de tu factura")
+
+
+@app.post("/api/cfdi/demo")
+def factura_demo():
+    """Procesa la factura de ejemplo (backend/demo_cfdi.xml) con un clic, para la demo."""
+    return procesar_factura_xml(DEMO_CFDI.read_bytes(), DEMO_CFDI.name)
+
+
+# ---------------------------------------------------------------- Resumen del mes (sin lenguaje contable)
+MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
+         "septiembre", "octubre", "noviembre", "diciembre"]
+
+
+def calcular_resumen_mes() -> dict:
+    ahora = datetime.now()
+    inicio = ahora.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat(timespec="seconds")
+    con = db()
+    ventas = con.execute(
+        "SELECT p.nombre, p.unidad, SUM(m.cantidad) AS cantidad, SUM(m.cantidad * COALESCE(p.precio, 0)) AS monto, "
+        "COUNT(*) AS veces FROM movimientos m JOIN productos p ON p.id = m.producto_id "
+        "WHERE m.tipo='venta' AND m.fecha >= ? GROUP BY p.id ORDER BY monto DESC",
+        (inicio,),
+    ).fetchall()
+    facturas = con.execute(
+        "SELECT * FROM cfdi_procesados WHERE fecha >= ? ORDER BY fecha DESC", (inicio,)
+    ).fetchall()
+    con.close()
+
+    parado = calcular_resumen()["no_pedir"]
+    return {
+        "mes": f"{MESES[ahora.month - 1]} {ahora.year}",
+        "vendido": {
+            "monto": round(sum(v["monto"] for v in ventas), 2),
+            "movimientos": sum(v["veces"] for v in ventas),
+        },
+        "surtido": {
+            "facturas": len(facturas),
+            "monto": round(sum(f["total"] or 0 for f in facturas), 2),
+        },
+        "mas_vendidos": [
+            {"nombre": v["nombre"], "cantidad": round(v["cantidad"], 2), "unidad": v["unidad"], "monto": round(v["monto"], 2)}
+            for v in ventas[:5]
+        ],
+        "dinero_parado": {
+            "monto": round(sum(p["valor_actual"] for p in parado), 2),
+            "productos": [{"nombre": p["nombre"], "cantidad": p["cantidad"], "unidad": p["unidad"],
+                           "valor": p["valor_actual"], "se_acaba": p["se_acaba_texto"]} for p in parado],
+        },
+        "ultimas_facturas": [
+            {"fecha": f["fecha"], "proveedor": f["proveedor"], "total": f["total"], "archivo": f["archivo"]}
+            for f in facturas[:5]
+        ],
+        "todas_las_facturas": [dict(f) for f in facturas],
+    }
+
+
+@app.get("/api/resumen-mes")
+def resumen_mes():
+    """Tu mes en resumen: lo vendido, lo surtido con facturas y el dinero parado."""
+    datos = calcular_resumen_mes()
+    datos.pop("todas_las_facturas")
+    return datos
+
+
+@app.get("/api/resumen-mes/csv")
+def resumen_mes_csv():
+    """Archivo para guardar o mandar al contador: facturas cargadas y movimientos del mes."""
+    d = calcular_resumen_mes()
+    salida = io.StringIO()
+    w = csv.writer(salida)
+    w.writerow([f"Resumen del mes - {d['mes']}", "", "Generado con STOCK", datetime.now().strftime("%d/%m/%Y %H:%M")])
+    w.writerow([])
+    w.writerow(["Lo que has vendido (registrado en la app)", f"{d['vendido']['monto']:.2f}",
+                f"{d['vendido']['movimientos']} ventas registradas"])
+    w.writerow(["Lo que has surtido con facturas", f"{d['surtido']['monto']:.2f}",
+                f"{d['surtido']['facturas']} facturas"])
+    w.writerow(["Dinero parado (productos que casi no salen)", f"{d['dinero_parado']['monto']:.2f}",
+                f"{len(d['dinero_parado']['productos'])} productos"])
+    w.writerow([])
+    w.writerow(["FACTURAS DE PROVEEDOR CARGADAS"])
+    w.writerow(["Fecha de carga", "Proveedor", "Total", "Forma de pago", "Folio", "Archivo"])
+    for f in d["todas_las_facturas"]:
+        w.writerow([f["fecha"].replace("T", " "), f["proveedor"], f"{(f['total'] or 0):.2f}",
+                    f["forma_pago"] or "", f["uuid"], f["archivo"] or ""])
+    w.writerow([])
+    w.writerow(["LO QUE MÁS SE VENDIÓ"])
+    w.writerow(["Producto", "Cantidad", "Unidad", "Monto aproximado"])
+    for v in d["mas_vendidos"]:
+        w.writerow([v["nombre"], f"{v['cantidad']:g}", v["unidad"], f"{v['monto']:.2f}"])
+    w.writerow([])
+    w.writerow(["DINERO PARADO (EVITA VOLVER A PEDIRLOS)"])
+    w.writerow(["Producto", "Cantidad", "Unidad", "Valor", "Se acaba"])
+    for p in d["dinero_parado"]["productos"]:
+        w.writerow([p["nombre"], f"{p['cantidad']:g}", p["unidad"], f"{p['valor']:.2f}", p["se_acaba"]])
+    return Response(
+        content=("﻿" + salida.getvalue()).encode("utf-8"),  # BOM: Excel abre bien los acentos
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="resumen_mensual_stock.csv"'},
+    )
 
 
 @app.get("/api/alertas")
