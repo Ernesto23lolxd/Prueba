@@ -23,12 +23,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import quote
 
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Path as RutaParam, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 import cfdi
@@ -308,18 +308,67 @@ def normalizar(texto: str) -> str:
     return "".join(c for c in texto if unicodedata.category(c) != "Mn")
 
 
+def _numeros(texto: str) -> set:
+    """Tamaños y números de un nombre: 'Coca-Cola 600 ml' -> {600.0}; 'Agua 1.5 L' -> {1.5}."""
+    return {float(n.replace(",", ".")) for n in re.findall(r"\d+(?:[.,]\d+)?", texto)}
+
+
+def _mismos_numeros(a: str, b: str) -> bool:
+    """Dos nombres solo pueden ser el mismo producto si sus números no se contradicen
+    ('Coca 600' ≠ 'Coca 2.5 L', 'Artículo 2' ≠ 'Artículo 12'). Si uno no trae números, no se contradicen."""
+    na, nb = _numeros(a), _numeros(b)
+    return not na or not nb or na <= nb or nb <= na
+
+
+def _clave_busqueda(texto: str) -> str:
+    """'Cocas' / 'Coca-Cola' / 'COCA COLA' -> 'coca' / 'coca cola': sin signos y sin plural simple."""
+    texto = re.sub(r"[^a-z0-9.,]+", " ", normalizar(texto))
+    texto = re.sub(r"(?<=\d)(?=[a-z])|(?<=[a-z])(?=\d)", " ", texto)  # "600ml" -> "600 ml"
+    palabras = texto.split()
+    return " ".join(w[:-2] if w.endswith("es") and len(w) > 5 and not w[-3].isdigit()
+                    else w[:-1] if w.endswith("s") and len(w) > 3 and not w[-2].isdigit() else w
+                    for w in palabras)
+
+
 def buscar_producto(con, nombre: str):
-    """Busca el producto por nombre exacto o parecido (tolera errores del dictado)."""
+    """Busca el producto por nombre exacto o parecido (tolera errores del dictado), sin confundir tamaños."""
     filas = con.execute("SELECT * FROM productos").fetchall()
-    mapa = {normalizar(f["nombre"]): f for f in filas}
-    clave = normalizar(nombre)
+    exacto = {normalizar(f["nombre"]): f for f in filas}
+    if normalizar(nombre) in exacto:
+        return exacto[normalizar(nombre)]
+    mapa = {_clave_busqueda(f["nombre"]): f for f in filas}
+    clave = _clave_busqueda(nombre)
+    if not clave:
+        return None
     if clave in mapa:
         return mapa[clave]
-    for k, f in mapa.items():  # "coca" -> "coca-cola 600 ml"
-        if clave and (clave in k or k in clave):
-            return f
-    parecidos = difflib.get_close_matches(clave, list(mapa), n=1, cutoff=0.6)
-    return mapa[parecidos[0]] if parecidos else None
+    # "coca" -> "coca-cola 600 ml" (el que se dio de alta primero, normalmente el más común)
+    dentro = [k for k in mapa if clave in k and _mismos_numeros(clave, k)]
+    if dentro:
+        return mapa[min(dentro, key=lambda k: mapa[k]["id"])]
+    # "coca-cola 600 ml pet" -> "coca-cola 600 ml" (el nombre más completo que quepa)
+    contiene = [k for k in mapa if k in clave and _mismos_numeros(clave, k)]
+    if contiene:
+        return mapa[max(contiene, key=len)]
+    # Parecido palabra por palabra (sin números ni unidades): TODAS las palabras dichas deben parecerse a alguna
+    # del producto. "panes bimbo" -> "Pan Bimbo grande"; "leche alpura" NO es "Leche Lala"; "agua ciel 600 ml" NO es
+    # "Coca-Cola 600 ml".
+    def palabras(t):
+        return [w for w in t.split() if not re.fullmatch(r"[\d.,]+|ml|l|lt|lts|g|gr|kg|pz|pza|c", w)]
+
+    dichas = palabras(clave)
+    if not dichas:
+        return None
+    puntaje = {}
+    for k in mapa:
+        suyas = palabras(k)
+        if not suyas or not _mismos_numeros(clave, k):
+            continue
+        mejores = [max(difflib.SequenceMatcher(None, w, x).ratio() for x in suyas) for w in dichas]
+        if min(mejores) >= 0.8:
+            puntaje[k] = sum(mejores) / len(mejores)
+    mejor = max(puntaje, key=lambda k: (puntaje[k], -mapa[k]["id"]), default=None)
+    return mapa[mejor] if mejor else None
 
 
 # ---------------------------------------------------------------- Lotes (para deshacer)
@@ -354,6 +403,9 @@ def aplicar_acciones(acciones: list, texto_original: str, lote_id: str | None = 
     resultados = []
     con = db()
     try:
+        # Candado de escritura desde el inicio: dos ventas al mismo tiempo no pueden leer la misma existencia
+        # (sin esto, 25 ventas simultáneas de 1 pieza sobre 10 aceptaban 17).
+        con.iniciar_escritura()
         for a in acciones:
             tipo = a["tipo"]
             nombre = a.get("producto") or ""
@@ -361,6 +413,8 @@ def aplicar_acciones(acciones: list, texto_original: str, lote_id: str | None = 
             if tipo in ("consultar", "enviar_lista", "optimizar_presupuesto") or not nombre:
                 continue
             p = buscar_producto(con, nombre)
+            if p is not None:  # relee y bloquea el renglón (Postgres: SELECT ... FOR UPDATE)
+                p = con.execute("SELECT * FROM productos WHERE id=?" + con.para_actualizar, (p["id"],)).fetchone()
 
             if p is None:
                 if tipo in ("entrada", "ajuste", "alta"):
@@ -873,7 +927,7 @@ def optimizar_presupuesto(body: Presupuesto):
 
 # ---------------------------------------------------------------- C. Rescate de dinero parado (promo)
 class PromoRescate(BaseModel):
-    producto_id: int = Field(gt=0)
+    producto_id: int = Field(gt=0, le=2**53)
 
 
 @app.post("/api/promo-rescate")
@@ -908,7 +962,7 @@ def promo_rescate(body: PromoRescate):
 
 # ---------------------------------------------------------------- Ajustes rápidos, edición y borrado
 class AjusteRapido(BaseModel):
-    producto_id: int = Field(gt=0)
+    producto_id: int = Field(gt=0, le=2**53)
     delta: float = Field(ge=-seguridad.MAX_CANTIDAD, le=seguridad.MAX_CANTIDAD, allow_inf_nan=False)
 
 
@@ -935,14 +989,30 @@ def ajuste_rapido(body: AjusteRapido):
 
 class EdicionProducto(BaseModel):
     nombre: str | None = Field(default=None, min_length=1, max_length=80)
+
+    @field_validator("nombre")
+    @classmethod
+    def _nombre_limpio(cls, v):
+        """Sin caracteres invisibles ni de control; un nombre de puros espacios no es un nombre."""
+        if v is None:
+            return v
+        v = re.sub(r"[\x00-\x1f\x7f\u200b-\u200f\u2028-\u202f\u2060\ufeff]", "", v)
+        v = re.sub(r"\s+", " ", v).strip()
+        if not v:
+            raise ValueError("El nombre no puede quedar vacío.")
+        return v
+
     cantidad: float | None = Field(default=None, ge=0, le=seguridad.MAX_CANTIDAD, allow_inf_nan=False)
     minimo: float | None = Field(default=None, ge=0, le=seguridad.MAX_CANTIDAD, allow_inf_nan=False)
     precio: float | None = Field(default=None, ge=0, le=seguridad.MAX_PRECIO, allow_inf_nan=False)
     costo_compra: float | None = Field(default=None, ge=0, le=seguridad.MAX_PRECIO, allow_inf_nan=False)
 
 
+ID_MAXIMO = 2**53  # más grande que cualquier id real; evita desbordes de la base con números absurdos
+
+
 @app.patch("/api/productos/{producto_id}")
-def editar_producto(producto_id: int, body: EdicionProducto):
+def editar_producto(body: EdicionProducto, producto_id: int = RutaParam(gt=0, le=ID_MAXIMO)):
     """Corrige a mano nombre, existencia, mínimo, precio o costo. Se puede deshacer."""
     cambios = body.model_dump(exclude_none=True)
     if not cambios:
@@ -979,7 +1049,7 @@ def editar_producto(producto_id: int, body: EdicionProducto):
 
 
 @app.delete("/api/productos/{producto_id}")
-def borrar_producto(producto_id: int):
+def borrar_producto(producto_id: int = RutaParam(gt=0, le=ID_MAXIMO)):
     """Quita el producto por completo (y su historial), para que no estorbe en ceros."""
     con = db()
     try:
@@ -1285,7 +1355,8 @@ def procesar_factura_xml(contenido: bytes, nombre_archivo: str) -> dict:
     try:
         f = cfdi.leer_cfdi(contenido)
     except ValueError as e:
-        raise HTTPException(400, f"No pude leer la factura: {e}")
+        mensaje = str(e)
+        raise HTTPException(400, mensaje if mensaje.startswith("Este XML es") else f"No pude leer la factura: {mensaje}")
     if _factura_ya_cargada(f["uuid"]):
         raise HTTPException(409, MSG_FACTURA_REPETIDA)
 
@@ -1318,7 +1389,8 @@ def procesar_factura_xml(contenido: bytes, nombre_archivo: str) -> dict:
     if servicios:
         resultado["respuesta"] += (f" No sumé {servicios} {'concepto' if servicios == 1 else 'conceptos'} de servicio "
                                    "(como fletes) porque no son mercancía.")
-    importes = {c["partida"]: c["importe"] or c["valor_unitario"] * c["cantidad"] for c in mercancia}
+    importes = {c["partida"]: c["importe"] if (c["importe"] or c.get("descuento")) else c["valor_unitario"] * c["cantidad"]
+                for c in mercancia}
     return _cerrar_factura(resultado, f["uuid"], f["proveedor"], f["total"], f["forma_pago"], nombre_archivo,
                            "xml", importes, len(f["conceptos"]))
 
