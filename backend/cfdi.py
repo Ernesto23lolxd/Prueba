@@ -1,3 +1,7 @@
+# =====================================================================================================
+# 🧾 cfdi.py — lee facturas electrónicas del SAT (CFDI 3.3 y 4.0) en XML, de forma segura
+# Solo sacamos lo que sirve para el inventario y anotamos qué datos sensibles traía (para no mandarlos a la IA).
+# =====================================================================================================
 """
 Lectura de facturas electrónicas (CFDI 3.3 y 4.0) en XML.
 
@@ -14,13 +18,17 @@ import re
 from defusedxml import DefusedXmlException
 from defusedxml.ElementTree import ParseError, fromstring
 
+# 👉 Si el XML trae DOCTYPE o ENTITY lo rechazamos de volada: así se hacen los ataques XXE
 _PELIGROSO = re.compile(rb"<!\s*(DOCTYPE|ENTITY)", re.IGNORECASE)
 # Claves de unidad del SAT que indican servicio, no mercancía (E48 = unidad de servicio, ACT = actividad,
 # E51 = trabajo, A9 = tarifa)
+# 👉 Claves de unidad del SAT que son servicios (flete, trabajo…), no mercancía
 CLAVES_SERVICIO = {"E48", "ACT", "E51", "A9"}
 # En el catálogo c_ClaveProdServ del SAT, los segmentos 70 a 95 son servicios (fletes 78, rentas 80, etc.)
+# 👉 En el catálogo del SAT, las claves de producto 70-95 son servicios
 SEGMENTO_SERVICIOS = range(70, 96)
 # Solo la factura de INGRESO (I) es una compra de mercancía. E = nota de crédito, P = pago, T = traslado, N = nómina
+# 👉 Solo la factura de Ingreso (I) es compra. Nota de crédito, pago, traslado y nómina se rechazan
 TIPOS_NO_COMPRA = {
     "E": "Este XML es una nota de crédito (descuento o devolución), no una compra. No cambié tu inventario.",
     "P": "Este XML es un comprobante de pago, no trae mercancía. No cambié tu inventario.",
@@ -29,11 +37,13 @@ TIPOS_NO_COMPRA = {
 }
 
 
+# 👉 Quita el namespace de la etiqueta: '{http://sat...}Concepto' → 'Concepto'
 def _local(tag: str) -> str:
     """'{http://www.sat.gob.mx/cfd/4}Concepto' -> 'Concepto' (ignora el prefijo del namespace)."""
     return tag.rsplit("}", 1)[-1]
 
 
+# 👉 Lee un atributo sin importar mayúsculas (3.3 y 4.0 se escriben distinto a veces)
 def _attr(elemento, *nombres, default=None):
     """Lee un atributo sin importar mayúsculas/minúsculas (CFDI 3.3 y 4.0 usan los mismos nombres)."""
     mapa = {k.lower(): v for k, v in elemento.attrib.items()}
@@ -43,6 +53,7 @@ def _attr(elemento, *nombres, default=None):
     return default
 
 
+# 👉 Texto a número sin tronar (si viene raro, regresa el default)
 def _num(valor, default=0.0) -> float:
     try:
         return float(str(valor).replace(",", ""))
@@ -50,6 +61,7 @@ def _num(valor, default=0.0) -> float:
         return default
 
 
+# 👉 📄 Lee el CFDI: proveedor, total, folio, partidas (con descuentos y moneda) y qué datos sensibles traía
 def leer_cfdi(contenido: bytes) -> dict:
     """Devuelve {uuid, proveedor, rfc, total, forma_pago, fecha, conceptos[]}. Lanza ValueError si no es un CFDI."""
     if _PELIGROSO.search(contenido):

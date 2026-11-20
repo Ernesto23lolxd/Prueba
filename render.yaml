@@ -1,3 +1,5 @@
+# 👉 Receta para Render (el hosting). Dice cómo instalar (pip install), cómo arrancar (uvicorn) y las variables.
+# 👉 Los secretos (GEMINI_API_KEY y DATABASE_URL) NO van aquí: se ponen a mano en el panel de Render.
 # Despliegue de STOCK en Render (Blueprint). Render toma el código de GitHub (rama main) y lo publica.
 # Cada push a main vuelve a desplegar solo. La base de datos vive en Supabase (DATABASE_URL).
 services:

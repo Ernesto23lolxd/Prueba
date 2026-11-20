@@ -1,3 +1,7 @@
+# =====================================================================================================
+# 🛡️ privacidad.py — EL ESCUDO: antes de mandarle una factura a la IA le quitamos todo lo sensible
+# RFC, CURP, nombres, domicilios, correos, teléfonos, cuentas, folio, sellos… A la IA solo le llega lo del inventario.
+# =====================================================================================================
 """
 Escudo de privacidad para facturas (CFDI).
 
@@ -12,6 +16,7 @@ necesita (folio para no duplicar, total, forma de pago) se leen AQUÍ, en el ser
 import re
 
 # (categoría que se le muestra al tendero, patrón, reemplazo). El orden importa: lo más específico primero.
+# 👉 Patrones (regex) de datos sensibles y con qué los tapamos. El orden importa: lo más específico primero
 PATRONES = [
     ("cadena original", re.compile(r"\|\|.*?\|\|", re.S), "[cadena original]"),
     ("folio fiscal", re.compile(r"\b[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\b", re.I), "[folio]"),
@@ -30,6 +35,7 @@ PATRONES = [
 ]
 
 # Renglones que por su etiqueta solo traen datos de personas, domicilios o verificación: se quitan completos
+# 👉 Si un renglón SIN precio trae estas palabras ('Domicilio', 'RFC', 'Sello'…), se va completo
 ETIQUETAS_SENSIBLES = [
     ("nombres", re.compile(r"raz[oó]n\s+social|\bnombre\b|\breceptor\b|\bemisor\b|\bcliente\b|\batenci[oó]n\b", re.I)),
     ("domicilio fiscal", re.compile(r"domicilio|direcci[oó]n|\bcalle\b|colonia|\bcol\.|municipio|delegaci[oó]n|"
@@ -46,6 +52,7 @@ ETIQUETAS_SENSIBLES = [
 ]
 
 
+# 👉 Tapa los datos sensibles dentro de un texto y anota qué tapó
 def limpiar_texto(texto: str, quitado: set) -> str:
     """Reemplaza datos sensibles dentro de un texto (ej. la descripción de una partida)."""
     for categoria, patron, reemplazo in PATRONES:
@@ -55,6 +62,7 @@ def limpiar_texto(texto: str, quitado: set) -> str:
     return texto
 
 
+# 👉 XML: arma el texto para la IA SOLO con las partidas (sin proveedor, RFC, domicilio, folio, sellos)
 def partidas_minimas(conceptos: list, quitado: set) -> str:
     """CFDI en XML: a la IA SOLO le llegan las partidas (sin proveedor, RFC, domicilios, folio ni sellos)."""
     lineas = ["Partidas de la factura del proveedor:"]
@@ -68,11 +76,13 @@ def partidas_minimas(conceptos: list, quitado: set) -> str:
     return "\n".join(lineas)
 
 
+# 👉 ¿Este renglón parece de producto? (trae algún número y alguna palabra)
 def _parece_partida(linea: str) -> bool:
     """Un renglón útil para inventariar trae al menos un número (cantidad o precio) y alguna palabra."""
     return bool(re.search(r"\d", linea)) and bool(re.search(r"[A-Za-zÁÉÍÓÚÑáéíóúñ]{2,}", linea))
 
 
+# 👉 En renglones de producto borra notas tipo '(pedido de Juan, tel …)' sin perder el producto
 def _quitar_notas_sensibles(linea: str, quitado: set) -> str:
     """En un renglón de producto, borra notas entre paréntesis o tras etiquetas que traen datos de personas
     ("(pedido de Juan Pérez, tel …)"), sin tocar la descripción, la cantidad ni los precios."""
@@ -86,6 +96,7 @@ def _quitar_notas_sensibles(linea: str, quitado: set) -> str:
     return re.sub(r"\([^)]*\)|\[[^\]]*\]", nota, linea)
 
 
+# 👉 PDF: se queda solo con renglones de productos y totales, ya limpios
 def texto_minimo_pdf(texto: str, quitado: set) -> str:
     """CFDI en PDF: se queda solo con los renglones de productos y totales, ya limpios.
     Quita renglones de nombres, domicilios, sellos, folio, etc. y luego borra lo sensible que quede suelto."""
@@ -109,6 +120,7 @@ def texto_minimo_pdf(texto: str, quitado: set) -> str:
     return "\n".join(utiles)
 
 
+# 👉 Lo que SÍ necesitamos del PDF (folio, total, forma de pago, proveedor) lo leemos aquí y no sale
 def datos_locales_pdf(texto: str) -> dict:
     """Lo que STOCK necesita de un PDF y se lee AQUÍ (nunca se manda a la IA): folio, total y forma de pago."""
     folio = re.search(r"\b[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\b", texto, re.I)
@@ -126,6 +138,7 @@ def datos_locales_pdf(texto: str) -> dict:
     }
 
 
+# 👉 Nombres bonitos de lo que protegimos, para avisarle al tendero
 ETIQUETA_CATEGORIA = {
     "RFC": "RFC", "CURP": "CURP", "nombres": "nombres y razón social", "domicilio fiscal": "domicilio fiscal",
     "correos": "correos", "teléfonos": "teléfonos", "folio fiscal": "folio fiscal",
@@ -134,6 +147,7 @@ ETIQUETA_CATEGORIA = {
 }
 
 
+# 👉 El resumen que ve el tendero: '🔒 Antes de usar la IA quité: RFC, nombres…'
 def resumen(quitado: set, partidas: int) -> dict:
     orden = list(ETIQUETA_CATEGORIA)
     lista = [ETIQUETA_CATEGORIA[c] for c in sorted(quitado, key=lambda c: orden.index(c) if c in orden else 99)]

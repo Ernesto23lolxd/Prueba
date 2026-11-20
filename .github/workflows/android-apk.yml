@@ -1,3 +1,6 @@
+# 👉 Esto corre en los servidores de GitHub (no en nuestra laptop, que no aguanta Gradle 😅).
+# 👉 Cada que cambia algo en android/ (o le dan "Run workflow" en la pestaña Actions) compila el APK y lo sube a
+#    Releases con el tag "apk". El enlace de descarga siempre es el mismo.
 # Compila el APK de STOCK para Android en los servidores de GitHub y lo publica en Releases.
 # Descarga fija: https://github.com/Ernesto23lolxd/Prueba/releases/download/apk/STOCK.apk
 name: APK Android

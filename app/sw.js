@@ -1,3 +1,7 @@
+// 👉 Este es el "service worker": un script que vive en el celular y se mete entre la app y el internet.
+// 👉 Neta solo hace 3 cosas: (1) guarda copia de la app para que abra aunque no haya señal, (2) guarda Tailwind
+//    y las fuentes, y (3) NUNCA guarda /api/ (el inventario siempre es el real del servidor). Si cambian algo aquí,
+//    súbanle a VERSION para que los celulares bajen la nueva.
 /* STOCK · service worker
  * - La app (HTML) se pide primero a internet y se guarda copia: si no hay señal, abre la última copia.
  * - Archivos fijos (íconos, Tailwind, fuentes): se sirven de la copia y se actualizan en segundo plano.

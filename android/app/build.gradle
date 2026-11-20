@@ -1,3 +1,6 @@
+// 👉 Config del APK de Android. No es una app "nativa" desde cero: es una TWA (Trusted Web Activity),
+// 👉 o sea un envoltorio oficial de Google que abre nuestra web a pantalla completa con el motor de Chrome.
+// 👉 applicationId = el "nombre único" de la app en Android. Si lo cambian, también en assetlinks (main.py).
 // STOCK para Android: Trusted Web Activity (TWA). Abre https://stock-tienda.onrender.com/app a pantalla
 // completa con el motor de Chrome del celular (micrófono, cámara y subir facturas funcionan igual que en la web).
 plugins {

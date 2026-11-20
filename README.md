@@ -45,6 +45,8 @@ y kilos, lee la foto del ticket, trae el inventario desde Excel y da un **resume
 - **Corregir y eliminar:** cada producto tiene **✏️ Corregir** (nombre, existencia, mínimo, precio, costo) y
   **🗑️ Eliminar** (borrado definitivo, con confirmación dentro de la tarjeta).
 
+> 🧭 **¿Quieres entender el código?** Lee [`docs/GUIA_DEL_CODIGO.md`](docs/GUIA_DEL_CODIGO.md) (explicado por nosotros, sin rodeos) y busca los comentarios 👉 dentro de cada archivo.
+
 ## Estructura
 ```
 backend/   Python + FastAPI + SQLite + Gemini (IA)
@@ -66,7 +68,7 @@ backend/   Python + FastAPI + SQLite + Gemini (IA)
 app/       inicio.html (portada) · index.html (la app) · clasico.html (respaldo)
 demo/      Excel/CSV, audios y factura PDF de ejemplo para probar
 android/  proyecto Android (TWA); GitHub Actions lo compila y publica STOCK.apk en Releases
-docs/      SEGURIDAD.md · DESPLIEGUE.md · MOVIL.md · REPORTE_PRUEBAS.md · PITCH_SPEECH.md
+docs/      GUIA_DEL_CODIGO.md · SEGURIDAD.md · DESPLIEGUE.md · MOVIL.md · REPORTE_PRUEBAS.md · PITCH_SPEECH.md
 ```
 
 ## 🚀 Publicar en internet

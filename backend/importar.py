@@ -1,3 +1,6 @@
+# =====================================================================================================
+# 📥 importar.py — leer el Excel o CSV del tendero aunque venga como venga (títulos, filas de TOTAL, columnas raras)
+# =====================================================================================================
 """
 Importar el inventario que la tienda ya tiene en Excel (.xlsx) o CSV.
 
@@ -13,8 +16,10 @@ import io
 import re
 import unicodedata
 
+# 👉 Los campos que buscamos en el Excel
 CAMPOS = ["nombre", "cantidad", "unidad", "precio", "costo", "minimo", "categoria"]
 
+# 👉 Palabras que delatan cada columna ('existencia', 'cuántos me quedan' → cantidad, etc.)
 PALABRAS = {
     "nombre": ["producto", "articulo", "descripcion", "nombre", "item", "concepto", "mercancia"],
     "cantidad": ["existencia", "cantidad", "cant", "stock", "inventario", "piezas", "disponible", "hay"],
@@ -26,11 +31,13 @@ PALABRAS = {
 }
 
 
+# 👉 Minúsculas y sin acentos para comparar encabezados
 def _norm(texto) -> str:
     texto = unicodedata.normalize("NFD", str(texto or "").lower().strip())
     return "".join(c for c in texto if unicodedata.category(c) != "Mn")
 
 
+# 👉 Abre el Excel/CSV, encuentra dónde empiezan los encabezados y regresa encabezados + filas
 def leer_tabla(contenido: bytes, nombre_archivo: str) -> tuple[list, list]:
     """Devuelve (encabezados, filas) del primer hoja/archivo."""
     nombre = nombre_archivo.lower()
@@ -71,6 +78,7 @@ def leer_tabla(contenido: bytes, nombre_archivo: str) -> tuple[list, list]:
     return encabezados, filas
 
 
+# 👉 ¿Esta celda es un número? (acepta $ y comas)
 def _es_numero(valor) -> bool:
     """True solo si TODO el valor es un número ("12", "$1,250.50"). "Coca-Cola 600 ml" NO es número."""
     if isinstance(valor, (int, float)):
@@ -78,6 +86,7 @@ def _es_numero(valor) -> bool:
     return bool(re.fullmatch(r"\s*\$?\s*-?[\d.,]+\s*", str(valor or ""))) and _a_numero(valor) is not None
 
 
+# 👉 Convierte '$1,234.50' a 1234.5
 def _a_numero(valor):
     if valor is None or valor == "":
         return None
@@ -96,6 +105,7 @@ def _a_numero(valor):
         return None
 
 
+# 👉 Adivina qué columna es cuál con las PALABRAS (si no alcanza, main.py le pregunta a la IA)
 def mapear_heuristico(encabezados: list) -> dict:
     """Plan B sin IA: busca palabras clave en los encabezados."""
     mapa = {}
@@ -112,6 +122,7 @@ def mapear_heuristico(encabezados: list) -> dict:
     return mapa
 
 
+# 👉 ¿Se vende por pieza o por kilo? (por la columna o por el nombre del producto)
 def _unidad(valor, nombre: str) -> str:
     u = _norm(valor)
     if u in ("kg", "kilo", "kilos", "kilogramo", "kilogramos", "kgs") or "kg" in u:
@@ -123,6 +134,7 @@ def _unidad(valor, nombre: str) -> str:
     return "pieza"
 
 
+# 👉 Convierte las filas en productos y separa las que no sirven (vacías, TOTAL, etc.)
 def extraer_productos(filas: list, mapa: dict) -> tuple[list, list]:
     """Convierte filas en productos. Devuelve (productos, filas_ignoradas)."""
     def celda(fila, campo):

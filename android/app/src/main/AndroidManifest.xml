@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 👉 El "acta de nacimiento" de la app de Android: qué abre (DEFAULT_URL), colores, ícono y permisos.
+         👉 LauncherActivity es la pantalla que abre STOCK a pantalla completa. El intent-filter con autoVerify
+            hace que los enlaces a stock-tienda.onrender.com se abran en la app (si assetlinks.json coincide). -->
 
     <uses-permission android:name="android.permission.INTERNET" />
 
