@@ -19,6 +19,8 @@ y kilos, lee la foto del ticket, trae el inventario desde Excel y da un **resume
   predicción, alertas y dinero parado) y **empezar de cero**.
 - Funciona en **Android, iPhone, iPad y computadora**: probada en 12 tamaños, de 320 px a 2560 px y con el
   celular acostado.
+- **Se instala como app en el celular** (PWA): ícono en la pantalla de inicio, pantalla completa y abre aunque
+  falle la señal. Menú ⋯ → **📲 Instalar en mi celular**. Guía: [`docs/MOVIL.md`](docs/MOVIL.md).
 
 ## 🏆 Lo que nos hace diferentes: cuidamos el efectivo y la ganancia
 1. **🚨 Escudo anti-inflación:** al subir la factura, STOCK calcula cuánto te costó de verdad cada pieza o
@@ -52,9 +54,10 @@ backend/   Python + FastAPI + SQLite + Gemini (IA)
   prueba_cfdi.py            15 facturas CFDI generadas y subidas (XML 4.0/3.3, PDF, USD, descuentos…)
   prueba_emparejamiento.py  35 casos de emparejar lo dictado con el producto correcto
   prueba_interfaz.py        la app completa en 12 dispositivos (Playwright)
+  prueba_movil.py           app instalable: manifiesto, service worker, sin internet, iPhone
 app/       inicio.html (portada) · index.html (la app) · clasico.html (respaldo)
 demo/      Excel/CSV, audios y factura PDF de ejemplo para probar
-docs/      SEGURIDAD.md · DESPLIEGUE.md · REPORTE_PRUEBAS.md · PITCH_SPEECH.md
+docs/      SEGURIDAD.md · DESPLIEGUE.md · MOVIL.md · REPORTE_PRUEBAS.md · PITCH_SPEECH.md
 ```
 
 ## 🚀 Publicar en internet

@@ -11,7 +11,8 @@
 | `prueba_auditoria.py` | Ciberseguridad y robustez (20 ataques y entradas raras) | **20/20** | **20/20** |
 | `prueba_cfdi.py` | 15 facturas CFDI generadas y subidas (XML 4.0 y 3.3, PDF, dólares, descuentos, servicios, notas de crédito…) | **15/15** | **15/15** |
 | `prueba_emparejamiento.py` | Emparejar lo que dicta el tendero o escribe el proveedor con el producto correcto | **35/35** | (no usa servidor) |
-| `prueba_interfaz.py` | La app completa en 12 dispositivos: bienvenida, 17 pasos del tutorial, 6 secciones, menú, botones y XSS | **12/12** | (local) |
+| `prueba_interfaz.py` | La app completa en 12 dispositivos: bienvenida, 17 pasos del tutorial, 6 secciones, menú, botones y XSS | **12/12** | **12/12** |
+| `prueba_movil.py` | App instalable (PWA): manifiesto e íconos, service worker, instalable en Android, abre sin internet, instalación en iPhone y teclado sin zoom | — | **4/4** |
 
 ¹ En la nube pasaron 31/32. La que falta es la del límite de peticiones: para correr las demás hubo que subir el límite a 400, así que nunca se alcanzó. Ya se regresó a 25; en la laptop sí pasó (32/32), pero en la nube **falta verificarla**.
 
