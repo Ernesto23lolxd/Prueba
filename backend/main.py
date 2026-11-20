@@ -37,7 +37,7 @@ from urllib.parse import quote
 from fastapi import FastAPI, File, Form, HTTPException, Path as RutaParam, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -114,8 +114,33 @@ app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS,
 
 # ---------------------------------------------------------------- Errores seguros (nunca exponer detalles internos)
 # 👉 Cuando algo truena 'a propósito' (HTTPException) regresamos solo el mensaje bonito, nada técnico
+# 👉 Direcciones que la gente escribe "casi bien" (el celular pone /App con mayúscula, o ponen /index.html)
+ALIAS_PAGINAS = {
+    "/app": "/app", "/index.html": "/app", "/app.html": "/app", "/inicio": "/", "/inicio.html": "/",
+    "/home": "/", "/stock": "/app", "/tienda": "/app", "/privacidad": "/privacidad", "/aviso": "/privacidad",
+    "/aviso-de-privacidad": "/privacidad", "/terminos": "/terminos", "/términos": "/terminos",
+}
+PAGINA_404 = """<!doctype html><html lang="es-MX"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>STOCK · Página no encontrada</title>
+<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#121316;
+color:#d4d4d8;font:16px/1.6 system-ui,sans-serif;text-align:center;padding:24px}h1{color:#fff;margin:.2em 0}
+a{display:inline-block;margin:8px;padding:12px 20px;border-radius:12px;font-weight:700;text-decoration:none}
+.a{background:linear-gradient(90deg,#0095E8,#F6C58E);color:#0d0e11}.b{border:1px solid #444;color:#fff}</style></head>
+<body><div><div style="font-size:48px">📦</div><h1>Esa página no existe</h1>
+<p>Puede que la dirección se haya escrito un poquito distinta.</p>
+<a class="a" href="/app">Abrir STOCK</a><a class="b" href="/">Ir a la portada</a></div></body></html>"""
+
+
+# 👉 Cuando algo truena 'a propósito' (HTTPException) regresamos solo el mensaje bonito, nada técnico.
+#    Si es una PÁGINA que no existe (no la API), corregimos la dirección o mostramos una página amable.
 @app.exception_handler(StarletteHTTPException)
 async def _error_http(request: Request, exc: StarletteHTTPException):
+    ruta = request.url.path
+    if exc.status_code == 404 and not ruta.startswith("/api/") and request.method in ("GET", "HEAD"):
+        destino = ALIAS_PAGINAS.get(ruta.lower().rstrip("/") or "/")
+        if destino and destino != ruta:
+            return RedirectResponse(destino, status_code=307)
+        return HTMLResponse(PAGINA_404, status_code=404)
     return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
 
 
