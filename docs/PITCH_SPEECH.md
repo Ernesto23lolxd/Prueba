@@ -57,27 +57,32 @@ Y no es una maqueta: ya está publicado en internet, con su base de datos en la 
 
 ## 3. EL NEGOCIO
 
-### Diapositiva 9 · 3:30 – 3:50
-¿Cuál es el negocio? Una **suscripción mensual**.
-- Plan **gratis** para probar, con cinco comandos de voz al día.
-- Plan principal, **Tiendita**: **99 pesos al mes**, o sea 3 pesos con 30 al día, menos que una Coca.
-- Plan **Negocio**, de 249, para quien tiene varias sucursales o empleados.
+### Diapositiva 9 · 3:30 – 3:55
+¿Cuál es el negocio? Una **suscripción con tres planes**.
+- **Barrio, gratis para siempre:** se sostiene con anuncios discretos de proveedores locales, que **nunca usan los datos de la tienda**.
+- **Tiendita, el plan principal: 149 pesos al mes**, o sea **menos de 5 pesos al día**. Es sin anuncios, con voz y fotos sin límite, facturas, predicción, pedidos por WhatsApp y escudo anti-inflación. Le **regalamos una tarjeta NFC** para que sus clientes le dejen reseñas en Google Maps y lo encuentren más fácil.
+- **Negocio Pro, 299 pesos**, para quien crece.
 
-Como el 84 % cobra en efectivo, también se puede **pagar en OXXO**.
+Se paga con **tarjeta, transferencia o en OXXO**, sin plazos forzosos.
 
-### Diapositiva 10 · 3:50 – 4:10
-¿Cuánto nos cuesta? Atender una tienda nos cuesta unos **20 pesos al mes**: unos 8 de inteligencia artificial, 5 de servidor y 7 de comisión de cobro. Eso deja un **margen bruto de alrededor del 80 %**, unos 79 pesos por tienda. Con costos fijos de unos 25 mil pesos al mes, alcanzamos el **punto de equilibrio con unas 320 tiendas**. Son estimaciones nuestras con los precios públicos de los servicios que ya usamos.
+### Diapositiva 10 · 3:55 – 4:15
+¿Cuánto nos cuesta? Atender una Tiendita nos cuesta **unos 33 pesos al mes**: 8 de inteligencia artificial, 10 de servidores, 9 de comisión de cobro y 6 de la tarjeta NFC repartida en seis meses. **De cada Tiendita nos quedan 116 pesos al mes**, un margen bruto de **78 %**. Del plan Pro nos quedan **223**. Y el plan gratuito **no nos cuesta**: se paga solo con los anuncios locales. Son estimaciones con las tarifas públicas de los servicios que ya usamos.
 
-### Diapositiva 11 · 4:10 – 4:35
-En la capital estimamos unas **5 mil tienditas de abarrotes**. Nuestra meta del primer año es llegar al 10 %: **500 tiendas**. Eso son **49 mil 500 pesos al mes**, casi 600 mil al año, y unos **14 mil 500 de utilidad mensual** al cierre del año.
+### Diapositiva 11 · 4:15 – 4:40
+Y no prometemos de más.
+- Empezamos con un **piloto de tres meses** con costos fijos de **950 pesos**: con **9 tiendas** ya no perdemos.
+- Crecemos poco a poco, y solo contratamos a un promotor cuando ya hay cerca de cien tiendas.
+- La **inversión inicial, unos 1,900 pesos, se recupera en el quinto mes**.
+
+Nuestra meta del primer año es **realista: 120 tiendas de paga**, apenas el **2.4 %** de las tienditas de la capital, más 300 en el plan gratis. Eso son unos **24 mil pesos de ingresos al mes** y unos **10 mil de utilidad**.
 
 ¿Cómo llegamos a ellas?
-- Con los **distribuidores** que ya visitan las tiendas todos los días.
+- Con los **distribuidores** que ya visitan las tiendas.
 - Con la **CANACOPE**.
-- Con **promotores de barrio**.
+- Con las **reseñas en Google Maps** que trae la tarjeta NFC.
 - Regalando **un mes** a quien recomiende STOCK.
 
-Después: Gómez Palacio, Lerdo y el resto del estado.
+El segundo año: **Gómez Palacio y Lerdo**.
 
 ## 4. DATOS, PRIVACIDAD, LEGALIDAD Y ÉTICA
 
@@ -117,13 +122,15 @@ Gracias. Pueden probarlo ahora mismo en **stock-tienda.onrender.com**.
 | **¿Y si la IA se equivoca?** | Cada movimiento queda en el historial con un botón de **deshacer**. Validamos todo lo que responde la IA: no puede vender más de lo que hay, ni poner precios absurdos, ni inventar acciones. |
 | **¿Cuánto les cuesta la IA?** | Usamos un modelo ligero de Gemini. Con unos 30 comandos al día, son unos **8 pesos al mes por tienda** (estimación con precios públicos). |
 | **¿Y si no tienen internet?** | Hoy necesita datos móviles, como WhatsApp, y consume muy poco. En la siguiente fase: modo sin conexión que sincroniza después. |
-| **¿Quién paga 99 pesos?** | Una tienda que **deja de quedarse sin Coca o sin huevo un solo día** ya recupera eso. Por eso existe el plan gratis: que lo prueben y vean el ahorro. *(Recomendado: decir cuántos tenderos entrevistaron, si lo hicieron.)* |
+| **¿Quién paga 149 pesos?** | Son **menos de 5 pesos al día**. Una tienda que **deja de quedarse sin Coca o sin huevo un solo día**, o que detecta a tiempo una subida del proveedor, ya los recupera. Y el plan Barrio es gratis para que lo prueben. *(Recomendado: decir cuántos tenderos entrevistaron, si lo hicieron.)* |
+| **¿No son muy optimistas los números?** | Al contrario: la meta es **120 tiendas en el año, el 2.4 % de la capital**. Con 9 tiendas ya cubrimos los costos del piloto y la inversión inicial se recupera en el mes 5. |
+| **¿Para qué la tarjeta NFC?** | El cliente la acerca con su celular en el mostrador y le deja una **reseña en Google Maps** a la tienda: más visibilidad local sin que el tendero haga nada. Cuesta unos $35 y la repartimos en 6 meses del plan. |
 | **¿Dónde se guardan los datos?** | En Supabase (PostgreSQL), con cifrado y seguridad por filas. Los servidores están en EE. UU. y eso **se declara en el aviso de privacidad**, como pide la ley. |
 | **¿Usan los datos para algo más?** | No. No los vendemos ni los compartimos. Un posible ingreso futuro son **reportes agregados y anónimos** para distribuidores, pero solo con consentimiento explícito. |
 | **¿Por qué no usan sensores?** | Los evaluamos. Encarecían la solución y la tiendita no los necesita: **la voz y la factura ya cuentan el inventario**. |
 | **¿Ya tienen inicio de sesión?** | Todavía no: es una demo. Es lo primero antes de una tienda real, junto con el aviso de privacidad y los respaldos. |
 
 ## ⚠️ Antes de presentar
-- Revisen las **fuentes** en la última diapositiva. Los costos y la meta de 500 tiendas son **estimaciones**: díganlo así.
+- Revisen las **fuentes** en la última diapositiva. Los costos y la meta de 120 tiendas son **estimaciones**: díganlo así.
 - Si entrevistaron tenderos, agreguen una frase real en la diapositiva 4. A los jueces les encanta.
 - Ensayen con cronómetro: el total debe quedar por debajo del tiempo que les den. Si les dan 3 minutos, quiten las diapositivas 5, 10 y 14 y dejen el resto.

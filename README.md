@@ -1,156 +1,139 @@
-# 📦 STOCK — Inventario por voz para tu tienda
+<p align="center">
+  <img src="docs/img/banner.jpg" alt="STOCK: inventario por voz para la tiendita de barrio" width="820">
+</p>
 
-El dueño de la tiendita le habla al celular ("vendí 3 Cocas", "llegaron 10 kilos de frijol",
-"¿qué surto y qué no?") y STOCK actualiza el inventario, responde en voz alta, predice qué se
-va a acabar, avisa qué NO volver a pedir (dinero parado) y arma el pedido por WhatsApp.
-También lee la **factura del proveedor (XML o PDF)** y convierte solita cajas y bultos a piezas
-y kilos, lee la foto del ticket, trae el inventario desde Excel y da un **resumen del mes** sencillo.
+<h1 align="center">STOCK</h1>
+<p align="center"><strong>El asistente de inventario por voz para la tiendita de barrio.</strong><br>
+Le hablas y STOCK lleva la cuenta: te dice qué se acaba, qué no volver a pedir y arma tu pedido por WhatsApp.</p>
 
-**100 % software:** solo se necesita el celular o la computadora. Sin aparatos extra.
+<p align="center">
+  <a href="https://stock-tienda.onrender.com/app"><b>▶ Abrir la app</b></a> ·
+  <a href="https://github.com/Ernesto23lolxd/Prueba/releases/download/apk/STOCK.apk"><b>🤖 Descargar APK (Android)</b></a> ·
+  <a href="https://stock-tienda.onrender.com">Portada</a> ·
+  <a href="docs/DIAGNOSTICO_FINAL.md">🏁 Diagnóstico final</a>
+</p>
 
-### 👉 Pruébala: **https://stock-tienda.onrender.com/app**
-### 🏁 Diagnóstico final: [`docs/DIAGNOSTICO_FINAL.md`](docs/DIAGNOSTICO_FINAL.md) · ✅ lista para presentar
-### 🤖 App para Android: [descargar `STOCK.apk`](https://github.com/Ernesto23lolxd/Prueba/releases/download/apk/STOCK.apk)
-(Render gratis se duerme: la primera carga tarda ~1 minuto.)
+<p align="center">Hackatón Tecno 2026 · Durango, México · Categoría: <i>Control de inventarios en pequeños negocios</i></p>
 
-## 👋 Lista para empezar en ceros
-- **Arranca vacía**, lista para inventariar: se dictan los productos ("Llegaron 24 Cocas de 600 a 22 pesos"),
-  se sube la factura del proveedor o se trae el Excel.
-- **Bienvenida** la primera vez y **tutorial animado de 17 pasos** que recorre toda la app; se repite con el botón **?**.
-- **Menú ⋯:** factura de ejemplo, **tienda de ejemplo** (20 productos con 2 semanas de ventas, para mostrar
-  predicción, alertas y dinero parado) y **empezar de cero**.
-- Funciona en **Android, iPhone, iPad y computadora**: probada en 12 tamaños, de 320 px a 2560 px y con el
-  celular acostado.
-- **🔑 Protegida con PIN por tienda** (sesión segura, freno contra adivinanzas; empezar de cero pide el PIN).
-- **📜 Aviso de Privacidad y Términos y Condiciones** ([`/privacidad`](https://stock-tienda.onrender.com/privacidad) · [`/terminos`](https://stock-tienda.onrender.com/terminos)): al registrar la tienda hay que leerlos y aceptarlos; se guarda la versión aceptada y la fecha.
-- **🛡️ Escudo de privacidad:** antes de usar la IA, la factura se limpia de RFC, nombres, domicilios, correos,
-  folio y sellos; a la IA solo le llegan cantidades, descripciones y precios. Detalle: [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md).
-- **Se instala como app en el celular** (PWA): ícono en la pantalla de inicio, pantalla completa y abre aunque
-  falle la señal. Menú ⋯ → **📲 Instalar en mi celular**. Guía: [`docs/MOVIL.md`](docs/MOVIL.md).
+---
 
-## 🏆 Lo que nos hace diferentes: cuidamos el efectivo y la ganancia
-1. **🚨 Escudo anti-inflación:** al subir la factura, STOCK calcula cuánto te costó de verdad cada pieza o
-   kilo. Si el proveedor te subió el precio 5 % o más, o si ya casi no le ganas (menos de 15 %), te avisa:
-   *"Aguas: tu proveedor te subió el Aceite 1-2-3 de $35 a $41 (+17 %)… Te conviene subirlo a $51"*,
-   con un botón para **actualizar el precio en 1 clic**.
-2. **💵 "Nomás tengo $X hoy":** dices cuánto efectivo traes y STOCK arma la mejor compra **sin pasarse ni un
-   peso**: primero lo que se te acaba mañana, luego lo de 2 días y al final completa el pedido. Te dice cuánto
-   te sobra, qué queda pendiente y qué **no** comprarle al preventista. Las cuentas las hace Python, no la IA.
-3. **🔥 Rescate de dinero parado:** para lo que casi no se vende, la IA redacta una promo para tu estado de
-   WhatsApp o el grupo de vecinos, sin bajar del costo. Botones para copiar o abrir en WhatsApp.
+> **Para los jueces:** la tienda de la demo está protegida con PIN y pide aceptar el Aviso de Privacidad y los
+> Términos. Pídanle el PIN al equipo. La primera carga puede tardar ~1 minuto (servidor gratuito que "despierta").
 
-## ↩️ Corregir errores sin miedo
-- **Deshacer:** cada acción (voz, texto, foto, factura, Excel, corrección o ajuste) queda en un *lote*. El botón
-  **↩️ Deshacer** revierte todo el lote en una sola transacción: regresa existencias, precios y costos, borra los
-  productos que se crearon por error y, si era una factura, libera su folio para volver a subir la correcta.
-- **Corregir y eliminar:** cada producto tiene **✏️ Corregir** (nombre, existencia, mínimo, precio, costo) y
-  **🗑️ Eliminar** (borrado definitivo, con confirmación dentro de la tarjeta).
+## 📉 El problema
+- En Durango hay **61,400 micronegocios** (95.1 % de todos los negocios): dan el 41.9 % del empleo, pero solo el 20.5 % de los ingresos.
+- **35.5 % de los negocios de Durango cerró entre 2019 y 2021**, más que el promedio nacional (32.6 %).
+- Quiebran por **dinero atorado en mercancía, robo hormiga y merma, costos que suben y ventas perdidas**.
+- Operan a ciegas: solo el **35.8 %** usa internet, el **1.3 %** de esos usa IA y el **84.5 %** cobra en efectivo.
 
-> 🧭 **¿Quieres entender el código?** Lee [`docs/GUIA_DEL_CODIGO.md`](docs/GUIA_DEL_CODIGO.md) (explicado por nosotros, sin rodeos) y busca los comentarios 👉 dentro de cada archivo.
+<sub>Fuentes: INEGI (Censos Económicos 2024, Demografía de los Negocios 2021) y CANACOPE/CCE vía Posta Durango 2026. Detalle en <a href="docs/investigacion/IMPACTO_DURANGO.md">docs/investigacion</a>.</sub>
 
-## Estructura
+## 💡 La solución
+| El tendero… | STOCK… |
+|---|---|
+| 🎙️ dice *"vendí 3 Cocas y 2 Sabritas"* | descuenta el inventario y contesta en voz alta |
+| 📄 sube la factura (CFDI XML o PDF) de su proveedor | convierte cajas a piezas, empareja "CIEL 1000" con *Agua Ciel 1 L*, calcula el costo real y avisa si le subieron el precio 🚨 |
+| 📸 toma foto al ticket o al anaquel | suma lo que llegó o cuenta lo que hay |
+| 📥 sube su Excel tal como lo tiene | entiende sus columnas con IA |
+| ⚠️ quiere saber qué se acaba | predice el día en que se termina cada producto |
+| 🛍️ va a surtir | arma el pedido por proveedor y lo manda por WhatsApp |
+| 💵 dice *"nomás tengo $1,000"* | reparte el dinero en lo más urgente sin pasarse ni un peso |
+| 🧊 tiene mercancía que no sale | le dice qué no volver a pedir y le arma una promo |
+| ↩️ se equivoca | deshace cualquier acción completa con un toque |
+
+Funciona en **Android, iPhone y computadora**, se instala como app (o con el **APK**), abre aunque falle la señal y
+trae **bienvenida y tutorial animado** de 17 pasos.
+
+## 📱 Capturas
+| Inicio | Surtir | Dinero parado | Mi mes |
+|---|---|---|---|
+| <img src="docs/img/app-inicio.jpg" width="200"> | <img src="docs/img/app-surtir.jpg" width="200"> | <img src="docs/img/app-dinero-parado.jpg" width="200"> | <img src="docs/img/app-mi-mes.jpg" width="200"> |
+
+## 🏗️ Arquitectura
+```mermaid
+flowchart LR
+    A["📱 App (PWA / APK)<br/>HTML + Tailwind + JS"] -- "HTTPS + cookie del PIN" --> B["⚙️ Servidor FastAPI<br/>(Render)"]
+    B -- "solo datos de inventario<br/>(escudo de privacidad)" --> C["🤖 Google Gemini"]
+    B -- "SQL parametrizado" --> D[("🗄️ Supabase Postgres<br/>cifrado + RLS")]
+    C -- "JSON propuesto" --> B
+    B -- "valida y aplica en un lote" --> D
 ```
-backend/   Python + FastAPI + SQLite + Gemini (IA)
-  main.py             API, inventario, predicción, IA, lotes/deshacer, optimizador
-  basedatos.py        Postgres (Supabase) o SQLite local con la misma interfaz
-  seguridad.py        archivos, prompt injection, validación de la IA, límite por IP y cabeceras HTTP
-  cfdi.py             lectura segura de facturas XML (CFDI 3.3 y 4.0) con defusedxml
-  importar.py         importación de Excel / CSV
-  demo_cfdi.xml       factura de ejemplo (proveedor ficticio) con un aumento de precio para la demo
-  prueba_completa.py        32 pruebas de punta a punta (voz real, texto, facturas, Excel, deshacer…)
-  prueba_auditoria.py       20 pruebas de ciberseguridad y robustez
-  prueba_cfdi.py            15 facturas CFDI generadas y subidas (XML 4.0/3.3, PDF, USD, descuentos…)
-  prueba_emparejamiento.py  35 casos de emparejar lo dictado con el producto correcto
-  prueba_interfaz.py        la app completa en 12 dispositivos (Playwright)
-  prueba_movil.py           app instalable: manifiesto, service worker, sin internet, iPhone
-  prueba_privacidad.py      escudo de privacidad: nada sensible llega a la IA (sin servidor)
-  prueba_legal.py           registro con aceptación obligatoria del aviso y los términos (Playwright)
-  (las suites entran con el PIN de prueba: variable STOCK_PIN, por defecto 246810)
-app/       inicio.html (portada) · index.html (la app) · clasico.html (respaldo)
-demo/      Excel/CSV, audios y factura PDF de ejemplo para probar
-android/  proyecto Android (TWA); GitHub Actions lo compila y publica STOCK.apk en Releases
-docs/      GUIA_DEL_CODIGO.md · SEGURIDAD.md · DESPLIEGUE.md · MOVIL.md · REPORTE_PRUEBAS.md · PITCH_SPEECH.md
-```
+**Regla de diseño:** la IA **propone**; Python **valida y calcula** (las cuentas de dinero nunca las hace la IA).
 
-## 🚀 Publicar en internet
-Supabase (base de datos) + Render (hosting desde GitHub): paso a paso en [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md).
-Sin `DATABASE_URL`, STOCK usa SQLite local como siempre.
+| Capa | Tecnología |
+|---|---|
+| App | HTML, Tailwind CSS, JavaScript; PWA (manifest + service worker); APK Android (Trusted Web Activity) |
+| Servidor | Python 3.12, FastAPI, Uvicorn |
+| IA | Google Gemini (voz, fotos, facturas, emparejamiento) |
+| Datos | Supabase (PostgreSQL) en la nube · SQLite local |
+| Infraestructura | Render (hosting), Cloudflare, GitHub Actions (compila el APK) |
 
-## Variables en `backend/.env`
-```
-GEMINI_API_KEY=AIza...                 # obligatoria (NO se sube a GitHub)
-GEMINI_MODEL=gemini-3.5-flash-lite     # opcional; ese es el valor por defecto
-ALLOWED_ORIGINS=http://localhost:8000  # opcional; agrega la URL del túnel si usas uno (separadas por coma)
-RATE_LIMIT_POR_MINUTO=25               # opcional; peticiones a la IA por minuto por IP
-DATABASE_URL=postgresql://...           # opcional; Supabase. Sin ella usa SQLite local
-```
+## 🔒 Seguridad, privacidad y legalidad
+- **PIN por tienda:** huella scrypt, sesión en cookie HttpOnly/SameSite/Secure firmada con HMAC, bloqueo tras 5 intentos.
+- **Escudo de privacidad:** antes de usar la IA se quitan de la factura RFC, nombres, domicilios, correos, teléfonos, folio, sellos y certificados.
+- Defensa contra inyección SQL, XSS, XXE, *prompt injection*, archivos disfrazados, abuso (límite por IP) y ventas simultáneas.
+- Cabeceras de seguridad (CSP, HSTS, nosniff, DENY), base de datos cerrada al público (RLS), 0 secretos en el repositorio.
+- **[Aviso de Privacidad](https://stock-tienda.onrender.com/privacidad)** (LFPDPPP) y **[Términos y Condiciones](https://stock-tienda.onrender.com/terminos)**, con aceptación obligatoria y constancia.
 
-## Correr
-```powershell
-cd backend
-pip install -r requirements.txt
-python -m uvicorn main:app --host 0.0.0.0 --port 8000
-# (sin --reload: con OneDrive no detecta cambios; si cambias el código, Ctrl+C y vuelve a correrlo)
-```
-- Portada: **http://localhost:8000/**
-- App: **http://localhost:8000/app**
+Detalle: [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md).
 
-## Probar todo
-```powershell
-cd backend
-$env:RATE_LIMIT_POR_MINUTO=400; python -m uvicorn main:app --port 8000   # en una terminal
-python prueba_completa.py; python prueba_auditoria.py; python prueba_cfdi.py      # en otra
-python prueba_emparejamiento.py   # sin servidor
-python prueba_interfaz.py         # requiere: pip install playwright (usa el Edge instalado)
-```
-Las suites hacen muchas llamadas seguidas a la IA; por eso, solo para probar, se sube el límite por minuto.
-Resultados y fallas corregidas: [`docs/REPORTE_PRUEBAS.md`](docs/REPORTE_PRUEBAS.md)
-(32/32 · 20/20 · 15/15 · 35/35 · 12/12 dispositivos).
-
-## ⚠️ Micrófono en el celular
-El navegador solo deja usar el micrófono en **localhost** o con **HTTPS**. Para el celular usa un túnel:
-`npx localtunnel --port 8000` o `cloudflared tunnel --url http://localhost:8000` (y agrega esa URL a `ALLOWED_ORIGINS`).
-
-## Endpoints
-| Método | Ruta | Para qué |
+## 💼 Modelo de negocio
+| Plan | Precio | Incluye |
 |---|---|---|
-| POST | /api/voz | Audio (campo `audio`, máx. 10 MB) → IA → acciones en el inventario. Devuelve `lote_id` |
-| POST | /api/texto | `{"texto": "..."}` → igual que voz. Entiende "tengo $1,000, ¿qué compro?" |
-| POST | /api/foto | Imagen (`imagen`, máx. 10 MB) + `modo` = ticket / anaquel |
-| POST | /api/cfdi | Factura (`archivo` .xml o .pdf, máx. 5 MB): convierte cajas/bultos a piezas o kg, los suma y regresa `alertas_precio`. Repetida → **409** |
-| POST | /api/cfdi/demo | Procesa `backend/demo_cfdi.xml` con un clic (también respeta el 409) |
-| POST | /api/optimizar-presupuesto | `{"presupuesto": 1000}` → qué comprar sin pasarse, sobrante, pendientes, qué NO comprar y `whatsapp_url` |
-| POST | /api/promo-rescate | `{"producto_id": 18}` → mensaje de promo para WhatsApp + `whatsapp_url` |
-| POST | /api/lotes/{lote_id}/deshacer | Revierte todo lo que hizo esa acción. Dos veces → **409** |
-| PATCH | /api/productos/{id} | Corrige `nombre`, `cantidad`, `minimo`, `precio` o `costo_compra` (se puede deshacer) |
-| DELETE | /api/productos/{id} | Borra el producto y su historial por completo |
-| GET | /api/resumen-mes | Tu mes en resumen: lo vendido, lo surtido con facturas, lo más vendido, dinero parado y últimas facturas |
-| GET | /api/resumen-mes/csv | Descarga `resumen_mensual_stock.csv` para guardar o mandar al contador |
-| POST | /api/importar | Excel/CSV (`archivo`, máx. 5 MB) + `confirmar` = false (vista previa) / true (se puede deshacer) |
-| POST | /api/ajuste-rapido | `{"producto_id": 1, "delta": -1}` botones − / + |
-| GET | /api/tablero | Todo lo de la pantalla: predicción, KPIs, lista y movimientos (con `lote_id`) |
-| GET | /api/prediccion | Cuándo se acaba cada producto y cuánto comprar |
-| GET | /api/lista-compras | Pedido agrupado por proveedor + enlaces de WhatsApp |
-| GET | /api/resumen | Valor del inventario, efectivo a apartar, dinero congelado |
-| GET | /api/movimientos | Historial |
-| GET | /api/salud | Estado del servidor y de la base de datos (lo usa Render) |
-| POST | /api/reset | Borra todo: `{"modo": "vacio"}` (por defecto, tienda en ceros) o `{"modo": "demo"}` (tienda de ejemplo). Se apaga con `PERMITIR_RESET=0` |
+| **Barrio** | $0 · con anuncios locales | Inventario, semáforo, lista de surtido, 5 comandos de voz al día |
+| **Tiendita** (principal) | **$149/mes** (menos de $5 al día) | Sin anuncios, voz y fotos sin límite, facturas, predicción, WhatsApp, escudo anti-inflación, 🎁 1 tarjeta NFC para reseñas en Google Maps |
+| **Negocio Pro** | $299/mes | Todo lo anterior + funciones avanzadas, resumen para el contador, soporte prioritario, 🎁 2 tarjetas NFC |
 
-## Cómo se lee una factura
-- **XML (exacto):** se lee con `defusedxml` → proveedor, total, forma de pago, folio fiscal (UUID) y partidas.
-  La IA solo traduce "1 CAJA C/24" a "24 piezas" y empareja con tu inventario; el costo real por pieza
-  (importe ÷ piezas) lo calcula Python.
-- **PDF (respaldo):** el PDF se manda a Gemini, que lee las partidas y hace la misma conversión.
-- **Sin duplicados:** se guardan el folio fiscal y la **huella SHA-256 del archivo**; la misma factura no se suma dos veces.
-- **Servicios fuera:** fletes, estadías o rentas (clave de unidad E48/ACT/E51 o clave de producto SAT 70–95) no se suman.
-- **Solo compras:** notas de crédito, complementos de pago, traslados y nómina se rechazan con un mensaje claro.
-- **Costo real:** se descuentan los descuentos de la partida y las facturas en dólares se convierten con su tipo de cambio.
-- **Emparejamiento:** "CIEL 1000 C/12" → *Agua Ciel 1 L*; los tamaños y las marcas deben coincidir (Agua 600 ≠ Coca 600).
-- **Avisos amables, nunca regaños:** sobreprecio del proveedor, margen bajo o compra de más de $2,000 en efectivo.
-  Sin lenguaje contable ni cálculos de impuestos.
+- **Por tienda:** una Tiendita nos cuesta ≈ $33/mes y deja **+$116** (78 % de margen bruto).
+- **Arranque:** inversión inicial ≈ $1,900, que se recupera en el mes 5; con 9 tiendas el piloto ya no pierde.
+- **Meta realista del año 1:** **120 tiendas de paga** (2.4 % de la capital) → ≈ $24,480 de ingresos y ≈ $10,300 de utilidad al mes.
 
-## 🔒 Seguridad
-Resumen (detalle en [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md)): XML blindado contra XXE y XML bombs, archivos
-validados por tamaño real y firma (magic bytes), escape de todo dato dinámico en la interfaz, defensa contra
-prompt injection y validación estricta de lo que responde la IA, SQL 100 % parametrizado, cabeceras HTTP de
-seguridad, límite de peticiones por IP, CORS configurable y errores que nunca exponen detalles internos.
+## ✅ Calidad: pruebas automatizadas
+| Suite | Resultado |
+|---|---|
+| Funciones de punta a punta (voz real, facturas, Excel, deshacer…) | **32/32** |
+| Facturas CFDI generadas y subidas (XML 4.0/3.3, PDF, USD, descuentos, servicios…) | **15/15** |
+| Ciberseguridad (inyecciones, XXE, archivos trampa, PIN, sesiones falsas…) | **26/26** |
+| Interfaz en 12 dispositivos (Android 320 px → monitor 2560 px) | **12/12** |
+| App móvil (instalable, sin internet, iPhone) · Aviso legal y registro | **4/4 · 3/3** |
+| Escudo de privacidad · Emparejamiento de productos | **2/2 · 35/35** |
+
+19 fallas encontradas y corregidas durante las pruebas: [`docs/REPORTE_PRUEBAS.md`](docs/REPORTE_PRUEBAS.md).
+
+## 🚀 Correrlo localmente
+```bash
+git clone https://github.com/Ernesto23lolxd/Prueba.git && cd Prueba/backend
+pip install -r requirements.txt
+echo "GEMINI_API_KEY=tu_clave" > .env          # sin DATABASE_URL usa SQLite local
+python -m uvicorn main:app --port 8000          # abre http://localhost:8000/app
+```
+Pruebas: `python prueba_completa.py` (con el servidor encendido). Publicar en la nube: [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md).
+
+## 🗂️ Estructura
+```
+├── app/        Interfaz: app (index.html), portada, aviso de privacidad, términos, PWA e íconos
+├── backend/    Servidor FastAPI: IA, inventario, facturas, PIN, privacidad, seguridad y pruebas (prueba_*.py)
+├── android/    APK de Android (Trusted Web Activity)
+├── demo/       Archivos de ejemplo: Excel, CSV, audios y factura
+├── docs/       Documentación (ver tabla de abajo)
+├── .github/    GitHub Actions: compila y publica el APK
+└── render.yaml Despliegue en Render
+```
+
+## 📚 Documentación
+| Documento | Contenido |
+|---|---|
+| [GUIA_DEL_CODIGO.md](docs/GUIA_DEL_CODIGO.md) | Cómo está armado todo, explicado por el equipo |
+| [DIAGNOSTICO_FINAL.md](docs/DIAGNOSTICO_FINAL.md) | Auditoría final y veredicto |
+| [REPORTE_PRUEBAS.md](docs/REPORTE_PRUEBAS.md) | Resultados de todas las pruebas y fallas corregidas |
+| [SEGURIDAD.md](docs/SEGURIDAD.md) | Medidas de ciberseguridad, PIN y escudo de privacidad |
+| [API.md](docs/API.md) | Rutas del servidor |
+| [MOVIL.md](docs/MOVIL.md) | App instalable y APK de Android |
+| [DESPLIEGUE.md](docs/DESPLIEGUE.md) | Publicar con Supabase + Render |
+| [PITCH_SPEECH.md](docs/PITCH_SPEECH.md) | Speech del pitch y preguntas del jurado |
+| [investigacion/](docs/investigacion/IMPACTO_DURANGO.md) | Datos de Durango y fuentes |
+
+## 👥 Equipo
+**Braulio** (backend e IA) · **Jorge** · **Ernesto** (diseño de la app y pitch) · **Sebas** (diseño e identidad visual)
+
+<sub>Proyecto desarrollado para el Hackatón Tecno 2026 · Durango, México.</sub>
