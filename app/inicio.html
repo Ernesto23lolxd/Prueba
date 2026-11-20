@@ -1014,6 +1014,9 @@
     /* C. DATOS REALES DEL BACKEND */
     async function cargarTablero() {
       try {
+        // Los datos de la tienda están protegidos con PIN: solo se piden si ya hay sesión
+        const acceso = await fetch('/api/acceso/estado').then((r) => r.json()).catch(() => ({}));
+        if (!acceso.sesion) { triggerDynamicIsland('🔒 Entra a la app con tu PIN'); return; }
         const res = await fetch('/api/tablero');
         if (res.status === 401) { triggerDynamicIsland('🔒 Entra a la app con tu PIN'); return; }
         if (!res.ok) throw new Error();
