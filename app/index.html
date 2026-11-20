@@ -347,6 +347,7 @@
             <button type="button" role="menuitem" data-menu="cambiar-pin" class="menu-item">🔑 Cambiar mi PIN</button>
             <button type="button" role="menuitem" data-menu="bloquear" class="menu-item">🔒 Bloquear STOCK</button>
             <button type="button" role="menuitem" data-menu="legal" class="menu-item">📜 Privacidad y términos</button>
+            <button type="button" role="menuitem" data-menu="planes" class="menu-item">💎 Planes y precios</button>
           </div>
         </div>
       </div>
@@ -1947,6 +1948,12 @@
       else if (accion === "cambiar-pin") cambiarPin();
       else if (accion === "bloquear") bloquear();
       else if (accion === "legal") abrirLector("privacidad");
+      else if (accion === "planes") confirmar({ titulo: "💎 Planes de STOCK", soloAceptar: true, si: "Entendido",
+        texto: "🏘️ Barrio · $0 al mes\nInventario, semáforo, lista de surtido y 5 comandos de voz al día. Con anuncios locales.\n\n"
+          + "⭐ Tiendita · $169 al mes (menos de $6 al día)\nSin anuncios ni límites: voz, fotos, facturas, predicción, WhatsApp y escudo anti-inflación. 🎁 1 tarjeta NFC.\n\n"
+          + "🏪 Negocio Pro · $329 al mes\nTodo lo anterior + IA avanzada, resumen para el contador y soporte prioritario. 🎁 2 tarjetas NFC.\n\n"
+          + "🚀 Ultra · $649 al mes\nPara minisúpers y cadenas: IA de mayor capacidad, 5× peticiones, sucursales, reportes y soporte dedicado. 🎁 3 tarjetas NFC.\n\n"
+          + "Durante el lanzamiento STOCK es gratis. Sin plazos forzosos: cancelas cuando quieras." });
       else if (accion === "demo") {
         if (await confirmar({ titulo: "¿Cargar la tienda de ejemplo?", texto: "Se borra lo que tengas y se carga una tiendita de Durango con 20 productos y 2 semanas de ventas, para ver todas las funciones.", si: "Cargar ejemplo" })) reiniciarTienda("demo");
       } else if (accion === "cero") {

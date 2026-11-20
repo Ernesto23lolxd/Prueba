@@ -82,11 +82,12 @@ Detalle: [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md).
 |---|---|---|
 | **Barrio** | $0 · con anuncios locales | Inventario, semáforo, lista de surtido, 5 comandos de voz al día |
 | **Tiendita** (principal) | **$169/mes** (menos de $6 al día) | Sin anuncios, voz y fotos sin límite, facturas, predicción, WhatsApp, escudo anti-inflación, 🎁 1 tarjeta NFC para reseñas en Google Maps |
-| **Negocio Pro** | $329/mes | Todo lo anterior + funciones avanzadas, resumen para el contador, soporte prioritario, 🎁 2 tarjetas NFC |
+| **Negocio Pro** | $329/mes | Todo lo anterior + IA avanzada, resumen para el contador, soporte prioritario, 🎁 2 tarjetas NFC |
+| **Ultra** | $649/mes | Para minisúpers y cadenas: IA de mayor capacidad, 5× peticiones, sucursales, reportes, soporte dedicado, 🎁 3 tarjetas NFC |
 
-- **Por tienda:** una Tiendita nos cuesta ≈ $33/mes y deja **+$136** (80 % de margen bruto).
-- **Arranque:** piloto de $950/mes con equilibrio en 7 tiendas; 12 tiendas en el mes 1 (3 por fundador) → utilidad desde el inicio y la **inversión inicial ≈ $1,900 se recupera en el mes 2**.
-- **Meta del año 1:** **150 tiendas de paga** (3 % de la capital) → ≈ $32,470 de ingresos y ≈ $17,200 de utilidad al mes; ≈ $98 mil de utilidad en el año.
+- **Por cliente al mes:** Tiendita **+$136** (80 %) · Pro **+$252** (77 %) · Ultra **+$530** (82 %).
+- **Rentable desde el mes 2:** 12 tiendas en el mes 1 (3 por fundador) y la **inversión inicial ≈ $1,900 se recupera en el mes 2**.
+- **Año 1:** **310 tiendas de paga** (6 % de la capital) → ≈ $80,600 de ingresos y ≈ $49,500 de utilidad al mes; ≈ $236 mil de utilidad en el año.
 
 ## ✅ Calidad: pruebas automatizadas
 | Suite | Resultado |
