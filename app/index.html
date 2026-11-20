@@ -73,9 +73,23 @@
     input[type="text"], input[type="search"] { background-color: rgba(255,255,255,.05); color: #F5F6F8; }
     input::placeholder { color: #71717a; }
     .text-teal-100 { color: #a1a1aa !important; }
+    /* Barra de sectores: abajo en el celular (como app), arriba en la computadora */
+    .nav-stock { background: rgba(13,14,17,.94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+                 border-top: 1px solid rgba(255,255,255,.08); }
+    @media (min-width: 640px) { .nav-stock { border-top: 0; border-bottom: 1px solid rgba(255,255,255,.08); } }
+    .nav-stock .tab { color: #a1a1aa; }
+    .nav-stock .tab:hover { color: #F5F6F8; }
+    .nav-stock .tab.activo { color: #F5F6F8; }
+    .nav-stock .tab .raya { opacity: 0; }
+    .nav-stock .tab.activo .raya { opacity: 1; }
+    .nav-stock .tab.activo .icono { transform: translateY(-1px) scale(1.08); }
+    [data-ir] { cursor: pointer; transition: transform .15s ease, border-color .15s ease; }
+    [data-ir]:hover { transform: translateY(-2px); }
+    [data-vista] { animation: entrarVista .25s ease both; }
+    @keyframes entrarVista { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   </style>
 </head>
-<body class="bg-fondo text-[#1f2328] font-sans antialiased min-h-screen pb-10">
+<body class="bg-fondo text-[#1f2328] font-sans antialiased min-h-screen pb-28 sm:pb-10">
   <svg width="0" height="0" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
     <defs>
       <!-- Degradado horizontal exacto de STOCK -->
@@ -166,38 +180,76 @@
     </div>
   </header>
 
+  <!-- Barra de sectores: cada botón muestra SOLO esa parte de la app -->
+  <nav id="navSectores" aria-label="Secciones de la app"
+    class="nav-stock fixed bottom-0 inset-x-0 z-40 sm:sticky sm:top-[var(--alto-header,68px)] sm:bottom-auto">
+    <div class="max-w-[820px] mx-auto grid grid-cols-6 px-1 sm:px-4">
+      <button type="button" class="tab relative flex flex-col items-center gap-0.5 py-2 sm:py-2.5 text-[10px] sm:text-xs font-semibold transition" data-vista-btn="inicio">
+        <span class="icono text-lg sm:text-base transition">🏠</span><span>Inicio</span>
+        <span class="raya absolute top-0 sm:top-auto sm:bottom-0 inset-x-3 h-[3px] rounded-full bg-stock-gradient transition"></span>
+      </button>
+      <button type="button" class="tab relative flex flex-col items-center gap-0.5 py-2 sm:py-2.5 text-[10px] sm:text-xs font-semibold transition" data-vista-btn="alertas">
+        <span class="icono text-lg sm:text-base transition">⚠️</span><span>Se acaba</span>
+        <span id="navBadgeAlertas" class="hidden absolute top-1 right-[18%] min-w-[18px] h-[18px] px-1 rounded-full bg-bajo text-white text-[10px] font-bold leading-[18px]"></span>
+        <span class="raya absolute top-0 sm:top-auto sm:bottom-0 inset-x-3 h-[3px] rounded-full bg-stock-gradient transition"></span>
+      </button>
+      <button type="button" class="tab relative flex flex-col items-center gap-0.5 py-2 sm:py-2.5 text-[10px] sm:text-xs font-semibold transition" data-vista-btn="surtir">
+        <span class="icono text-lg sm:text-base transition">🛍️</span><span>Surtir</span>
+        <span id="navBadgeSurtir" class="hidden absolute top-1 right-[18%] min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-[#0d0e11] text-[10px] font-bold leading-[18px]"></span>
+        <span class="raya absolute top-0 sm:top-auto sm:bottom-0 inset-x-3 h-[3px] rounded-full bg-stock-gradient transition"></span>
+      </button>
+      <button type="button" class="tab relative flex flex-col items-center gap-0.5 py-2 sm:py-2.5 text-[10px] sm:text-xs font-semibold transition" data-vista-btn="parado">
+        <span class="icono text-lg sm:text-base transition">🧊</span><span>Parado</span>
+        <span id="navBadgeParado" class="hidden absolute top-1 right-[18%] min-w-[18px] h-[18px] px-1 rounded-full bg-sky-500 text-white text-[10px] font-bold leading-[18px]"></span>
+        <span class="raya absolute top-0 sm:top-auto sm:bottom-0 inset-x-3 h-[3px] rounded-full bg-stock-gradient transition"></span>
+      </button>
+      <button type="button" class="tab relative flex flex-col items-center gap-0.5 py-2 sm:py-2.5 text-[10px] sm:text-xs font-semibold transition" data-vista-btn="inventario">
+        <span class="icono text-lg sm:text-base transition">📦</span><span>Inventario</span>
+        <span class="raya absolute top-0 sm:top-auto sm:bottom-0 inset-x-3 h-[3px] rounded-full bg-stock-gradient transition"></span>
+      </button>
+      <button type="button" class="tab relative flex flex-col items-center gap-0.5 py-2 sm:py-2.5 text-[10px] sm:text-xs font-semibold transition" data-vista-btn="mes">
+        <span class="icono text-lg sm:text-base transition">📅</span><span>Mi mes</span>
+        <span class="raya absolute top-0 sm:top-auto sm:bottom-0 inset-x-3 h-[3px] rounded-full bg-stock-gradient transition"></span>
+      </button>
+    </div>
+  </nav>
+
   <!-- Toast discreto de notificaciones (sin alert/confirm) -->
-  <div id="toastContainer" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[420px] pointer-events-none flex flex-col gap-2"></div>
+  <div id="toastContainer" class="fixed bottom-24 sm:bottom-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[420px] pointer-events-none flex flex-col gap-2"></div>
 
   <!-- Contenedor principal mobile-first -->
   <main class="max-w-[820px] mx-auto px-3 sm:px-4 pt-4 space-y-4">
 
     <!-- 1. Tarjeta de 3 KPIs financieros -->
-    <section aria-label="Indicadores financieros" class="bg-white rounded-[14px] p-3.5 sm:p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="inicio" aria-label="Indicadores financieros" class="bg-white rounded-[14px] p-3.5 sm:p-4 shadow-sm border border-[#e5e7eb]">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
         <!-- Valor total del inventario -->
-        <div class="rounded-xl p-3 bg-slate-50 border border-slate-200 text-center">
-          <span class="block text-xs font-medium text-slate-500">Valor inventario</span>
+        <div data-ir="inventario" role="button" tabindex="0" title="Ver mi inventario" class="rounded-xl p-3 bg-slate-50 border border-slate-200 text-center">
+          <span class="block text-xs font-medium text-slate-500">Valor inventario →</span>
           <strong id="kpiValor" class="block text-xl sm:text-2xl font-extrabold text-[#1f2328] tabular-nums mt-0.5">$0</strong>
           <span id="kpiSalud" class="block text-[11px] text-slate-500 mt-0.5">Salud de stock: 100%</span>
         </div>
         <!-- Efectivo a apartar para surtido -->
-        <div class="rounded-xl p-3 bg-amber-50 border border-amber-200 text-center">
-          <span class="block text-xs font-medium text-amber-800">Apartar p/ surtido</span>
+        <div data-ir="surtir" role="button" tabindex="0" title="Ver qué surtir" class="rounded-xl p-3 bg-amber-50 border border-amber-200 text-center">
+          <span class="block text-xs font-medium text-amber-800">Apartar p/ surtido →</span>
           <strong id="kpiApartar" class="block text-xl sm:text-2xl font-extrabold text-amber-700 tabular-nums mt-0.5">$0</strong>
           <span id="kpiUrgentes" class="block text-[11px] text-amber-700/80 mt-0.5">0 productos urgentes</span>
         </div>
         <!-- Capital congelado -->
-        <div class="rounded-xl p-3 bg-red-50 border border-red-200 text-center">
-          <span class="block text-xs font-medium text-red-800">Capital congelado</span>
+        <div data-ir="parado" role="button" tabindex="0" title="Ver el dinero parado" class="rounded-xl p-3 bg-red-50 border border-red-200 text-center">
+          <span class="block text-xs font-medium text-red-800">Capital congelado →</span>
           <strong id="kpiCongelado" class="block text-xl sm:text-2xl font-extrabold text-bajo tabular-nums mt-0.5">$0</strong>
           <span id="kpiLentos" class="block text-[11px] text-red-700/80 mt-0.5">0 productos lentos</span>
         </div>
       </div>
+      <button type="button" id="avisoAlertas" data-ir="alertas"
+        class="hidden mt-2.5 w-full flex items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-semibold text-red-800">
+        <span id="avisoAlertasTexto"></span><span>Ver →</span>
+      </button>
     </section>
 
     <!-- 2. Asistente Multimodal (Voz + Cámara + Simulador + Texto) -->
-    <section aria-label="Asistente multimodal" class="bg-white rounded-[14px] p-4 sm:p-5 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="inicio" aria-label="Asistente multimodal" class="bg-white rounded-[14px] p-4 sm:p-5 shadow-sm border border-[#e5e7eb]">
       <div class="flex flex-col items-center text-center">
         <!-- Acciones principales: hablar o subir la factura del proveedor -->
         <div class="flex items-center justify-center gap-4 sm:gap-6">
@@ -290,7 +342,7 @@
     </section>
 
     <!-- 3. Sección: Se está acabando -->
-    <section aria-label="Productos bajos o agotados" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="alertas" aria-label="Productos bajos o agotados" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <div class="flex items-center justify-between gap-2 mb-2.5">
         <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">⚠️ Se está acabando</h2>
         <span id="badgeAlertas" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-100 text-bajo">0 críticos</span>
@@ -299,7 +351,7 @@
     </section>
 
     <!-- 4. Sección: Dinero congelado (Escudo anti-preventista) -->
-    <section aria-label="Capital congelado" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="parado" aria-label="Capital congelado" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <div class="flex items-center justify-between gap-2 mb-1">
         <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">🧊 Dinero congelado (no resurtir)</h2>
         <span id="badgeLentos" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-100 text-congelado">0 lentos</span>
@@ -311,7 +363,7 @@
     </section>
 
     <!-- 5. Sección: Lista de surtido agrupada por proveedor -->
-    <section aria-label="Lista de compras por proveedor" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="surtir" aria-label="Lista de compras por proveedor" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
         <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">🛍️ Lista de surtido por proveedor</h2>
         <label class="inline-flex items-center gap-1.5 text-xs text-[#6b7280] cursor-pointer select-none">
@@ -341,7 +393,7 @@
     </section>
 
     <!-- 5b. Sección: Tu mes en resumen (sin lenguaje contable) -->
-    <section aria-label="Tu mes en resumen" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="mes" aria-label="Tu mes en resumen" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <div class="flex items-center justify-between gap-2 mb-1">
         <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">📅 Tu mes en resumen</h2>
         <span id="mesNombre" class="text-xs font-semibold text-[#6b7280]"></span>
@@ -372,7 +424,7 @@
     </section>
 
     <!-- 6. Sección: Inventario completo con buscador y controles rápidos -->
-    <section aria-label="Inventario completo" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="inventario" aria-label="Inventario completo" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div>
           <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">📦 Inventario</h2>
@@ -385,7 +437,7 @@
     </section>
 
     <!-- 6b. Sección: Importar inventario desde Excel -->
-    <section aria-label="Importar inventario desde Excel" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="inventario" aria-label="Importar inventario desde Excel" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">📥 Traer mi inventario desde Excel</h2>
       <p class="text-xs sm:text-sm text-[#6b7280] mt-1 mb-3">
         ¿Ya llevas tu inventario en Excel? Súbelo y STOCK reconoce tus columnas con IA. No tienes que capturar producto por producto.
@@ -399,7 +451,7 @@
     </section>
 
     <!-- 7. Sección: Últimos movimientos -->
-    <section aria-label="Últimos movimientos" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="mes" aria-label="Últimos movimientos" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <h2 class="text-base sm:text-lg font-bold text-[#1f2328] mb-2.5">🕑 Últimos movimientos</h2>
       <ul id="movimientos" class="divide-y divide-[#e5e7eb] text-xs sm:text-sm"></ul>
     </section>
@@ -580,6 +632,9 @@
       if (r.presupuesto) {
         $("inputPresupuesto").value = r.presupuesto.presupuesto;
         mostrarPresupuesto(r.presupuesto, $("resultadoPresupuesto"));
+        $("chat").firstChild.appendChild(boton("Ver mi compra en Surtir →",
+          "inline-flex items-center mt-2.5 px-3 py-1.5 rounded-lg bg-stock-gradient text-[#0d0e11] font-bold text-xs cursor-pointer",
+          () => irA("surtir")));
       }
       hablar(r.respuesta);
       productosResaltados = new Set((r.acciones || []).filter((a) => a.ok).map((a) => a.producto));
@@ -813,6 +868,52 @@
     }
 
     // =========================================================================
+    // 3b. SECTORES: cada botón muestra solo una parte de la app (#inicio, #inventario…)
+    // =========================================================================
+    const VISTAS = ["inicio", "alertas", "surtir", "parado", "inventario", "mes"];
+    let vistaActual = "inicio";
+
+    function mostrarVista(nombre, { guardar = true, subir = true } = {}) {
+      if (!VISTAS.includes(nombre)) nombre = "inicio";
+      vistaActual = nombre;
+      document.querySelectorAll("[data-vista]").forEach((el) => el.classList.toggle("hidden", el.dataset.vista !== nombre));
+      document.querySelectorAll("[data-vista-btn]").forEach((b) => {
+        const activo = b.dataset.vistaBtn === nombre;
+        b.classList.toggle("activo", activo);
+        b.setAttribute("aria-current", activo ? "page" : "false");
+      });
+      if (location.hash !== `#${nombre}`) history.replaceState(null, "", `#${nombre}`);
+      if (guardar) { try { localStorage.setItem("stock_vista", nombre); } catch (_) {} }
+      if (subir) window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function irA(nombre) { mostrarVista(nombre); }
+
+    document.querySelectorAll("[data-vista-btn]").forEach((b) => b.addEventListener("click", () => irA(b.dataset.vistaBtn)));
+    document.addEventListener("click", (e) => {
+      const destino = e.target.closest("[data-ir]");
+      if (destino) irA(destino.dataset.ir);
+    });
+    document.addEventListener("keydown", (e) => {
+      const destino = e.target.closest && e.target.closest("[data-ir]");
+      if (destino && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); irA(destino.dataset.ir); }
+    });
+    window.addEventListener("hashchange", () => mostrarVista(location.hash.slice(1), { subir: false }));
+
+    // En la computadora la barra va pegada debajo del encabezado
+    function ajustarAltoHeader() {
+      const h = document.querySelector("header");
+      if (h) document.documentElement.style.setProperty("--alto-header", `${h.offsetHeight}px`);
+    }
+    window.addEventListener("resize", ajustarAltoHeader);
+
+    function ponerBadge(id, n) {
+      const el = $(id);
+      el.textContent = n > 9 ? "9+" : String(n);
+      el.classList.toggle("hidden", !n);
+    }
+
+    // =========================================================================
     // 4. RENDERIZADO (mismo diseño de Ernesto y Sebas, datos del backend)
     // =========================================================================
     function agregarMensaje(tipo, texto, extra = {}) {
@@ -975,6 +1076,15 @@
         btnWa.href = hrefWhatsapp(lista.whatsapp_url);
         btnWa.classList.remove("opacity-40", "pointer-events-none");
       }
+
+      // Avisos en la barra de sectores y en Inicio
+      ponerBadge("navBadgeAlertas", criticos.length);
+      ponerBadge("navBadgeSurtir", resumen.urgentes_lista);
+      ponerBadge("navBadgeParado", (resumen.no_pedir || []).length);
+      $("avisoAlertas").classList.toggle("hidden", !criticos.length);
+      $("avisoAlertasTexto").textContent = criticos.length
+        ? `⚠️ ${criticos.length} ${criticos.length === 1 ? "producto se está acabando" : "productos se están acabando"}`
+        : "";
 
       // 5. Inventario y 6. movimientos
       renderizarInventario();
@@ -1359,6 +1469,14 @@
     });
 
     $("btnReset").addEventListener("click", () => reiniciarDemo(false));
+
+    // Arranque: abre el sector del enlace (ej. /app#inventario) o el último que usó
+    ajustarAltoHeader();
+    let vistaInicial = location.hash.slice(1);
+    if (!VISTAS.includes(vistaInicial)) {
+      try { vistaInicial = localStorage.getItem("stock_vista") || "inicio"; } catch (_) { vistaInicial = "inicio"; }
+    }
+    mostrarVista(vistaInicial, { subir: false });
 
     // Arranque: muestra el inventario guardado (no lo reinicia)
     agregarMensaje("bot", "¡Hola! Soy STOCK. Dime qué vendiste, sube la foto de un ticket o pregúntame qué surtir hoy.");
