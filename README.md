@@ -8,6 +8,18 @@ y kilos, lee la foto del ticket, trae el inventario desde Excel y da un **resume
 
 **100 % software:** solo se necesita el celular o la computadora. Sin aparatos extra.
 
+### 👉 Pruébala: **https://stock-tienda.onrender.com/app**
+(Render gratis se duerme: la primera carga tarda ~1 minuto.)
+
+## 👋 Lista para empezar en ceros
+- **Arranca vacía**, lista para inventariar: se dictan los productos ("Llegaron 24 Cocas de 600 a 22 pesos"),
+  se sube la factura del proveedor o se trae el Excel.
+- **Bienvenida** la primera vez y **tutorial animado de 17 pasos** que recorre toda la app; se repite con el botón **?**.
+- **Menú ⋯:** factura de ejemplo, **tienda de ejemplo** (20 productos con 2 semanas de ventas, para mostrar
+  predicción, alertas y dinero parado) y **empezar de cero**.
+- Funciona en **Android, iPhone, iPad y computadora**: probada en 12 tamaños, de 320 px a 2560 px y con el
+  celular acostado.
+
 ## 🏆 Lo que nos hace diferentes: cuidamos el efectivo y la ganancia
 1. **🚨 Escudo anti-inflación:** al subir la factura, STOCK calcula cuánto te costó de verdad cada pieza o
    kilo. Si el proveedor te subió el precio 5 % o más, o si ya casi no le ganas (menos de 15 %), te avisa:
@@ -35,10 +47,14 @@ backend/   Python + FastAPI + SQLite + Gemini (IA)
   cfdi.py             lectura segura de facturas XML (CFDI 3.3 y 4.0) con defusedxml
   importar.py         importación de Excel / CSV
   demo_cfdi.xml       factura de ejemplo (proveedor ficticio) con un aumento de precio para la demo
-  prueba_completa.py  31 pruebas de punta a punta
+  prueba_completa.py        32 pruebas de punta a punta (voz real, texto, facturas, Excel, deshacer…)
+  prueba_auditoria.py       20 pruebas de ciberseguridad y robustez
+  prueba_cfdi.py            15 facturas CFDI generadas y subidas (XML 4.0/3.3, PDF, USD, descuentos…)
+  prueba_emparejamiento.py  35 casos de emparejar lo dictado con el producto correcto
+  prueba_interfaz.py        la app completa en 12 dispositivos (Playwright)
 app/       inicio.html (portada) · index.html (la app) · clasico.html (respaldo)
 demo/      Excel/CSV, audios y factura PDF de ejemplo para probar
-docs/      SEGURIDAD.md (medidas de ciberseguridad)
+docs/      SEGURIDAD.md · DESPLIEGUE.md · REPORTE_PRUEBAS.md · PITCH_SPEECH.md
 ```
 
 ## 🚀 Publicar en internet
@@ -67,10 +83,14 @@ python -m uvicorn main:app --host 0.0.0.0 --port 8000
 ## Probar todo
 ```powershell
 cd backend
-$env:RATE_LIMIT_POR_MINUTO=150; python -m uvicorn main:app --port 8000   # en una terminal
-python prueba_completa.py                                                  # en otra
+$env:RATE_LIMIT_POR_MINUTO=400; python -m uvicorn main:app --port 8000   # en una terminal
+python prueba_completa.py; python prueba_auditoria.py; python prueba_cfdi.py      # en otra
+python prueba_emparejamiento.py   # sin servidor
+python prueba_interfaz.py         # requiere: pip install playwright (usa el Edge instalado)
 ```
-La suite hace muchas llamadas seguidas a la IA; por eso, solo para probar, se sube el límite por minuto.
+Las suites hacen muchas llamadas seguidas a la IA; por eso, solo para probar, se sube el límite por minuto.
+Resultados y fallas corregidas: [`docs/REPORTE_PRUEBAS.md`](docs/REPORTE_PRUEBAS.md)
+(32/32 · 20/20 · 15/15 · 35/35 · 12/12 dispositivos).
 
 ## ⚠️ Micrófono en el celular
 El navegador solo deja usar el micrófono en **localhost** o con **HTTPS**. Para el celular usa un túnel:
@@ -99,15 +119,18 @@ El navegador solo deja usar el micrófono en **localhost** o con **HTTPS**. Para
 | GET | /api/resumen | Valor del inventario, efectivo a apartar, dinero congelado |
 | GET | /api/movimientos | Historial |
 | GET | /api/salud | Estado del servidor y de la base de datos (lo usa Render) |
-| POST | /api/reset | Reinicia los datos de demo (también borra facturas y lotes) |
+| POST | /api/reset | Borra todo: `{"modo": "vacio"}` (por defecto, tienda en ceros) o `{"modo": "demo"}` (tienda de ejemplo). Se apaga con `PERMITIR_RESET=0` |
 
 ## Cómo se lee una factura
 - **XML (exacto):** se lee con `defusedxml` → proveedor, total, forma de pago, folio fiscal (UUID) y partidas.
   La IA solo traduce "1 CAJA C/24" a "24 piezas" y empareja con tu inventario; el costo real por pieza
   (importe ÷ piezas) lo calcula Python.
 - **PDF (respaldo):** el PDF se manda a Gemini, que lee las partidas y hace la misma conversión.
-- **Sin duplicados:** el folio fiscal se guarda en `cfdi_procesados`; si vuelves a subir la misma, no se suma.
-- **Servicios fuera:** fletes, estadías o rentas (clave de unidad E48/ACT) no se suman al inventario.
+- **Sin duplicados:** se guardan el folio fiscal y la **huella SHA-256 del archivo**; la misma factura no se suma dos veces.
+- **Servicios fuera:** fletes, estadías o rentas (clave de unidad E48/ACT/E51 o clave de producto SAT 70–95) no se suman.
+- **Solo compras:** notas de crédito, complementos de pago, traslados y nómina se rechazan con un mensaje claro.
+- **Costo real:** se descuentan los descuentos de la partida y las facturas en dólares se convierten con su tipo de cambio.
+- **Emparejamiento:** "CIEL 1000 C/12" → *Agua Ciel 1 L*; los tamaños y las marcas deben coincidir (Agua 600 ≠ Coca 600).
 - **Avisos amables, nunca regaños:** sobreprecio del proveedor, margen bajo o compra de más de $2,000 en efectivo.
   Sin lenguaje contable ni cálculos de impuestos.
 
