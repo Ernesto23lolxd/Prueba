@@ -76,7 +76,8 @@ class ProteccionPin(BaseHTTPMiddleware):
             con = db()
             try:
                 configurado = acceso.leer(con, "pin_huella") is not None
-                ok = configurado and acceso.token_valido(con, request.cookies.get(acceso.COOKIE))
+                ok = (configurado and acceso.token_valido(con, request.cookies.get(acceso.COOKIE))
+                      and acceso.legal_aceptado(con))
             finally:
                 con.close()
             if not ok:
@@ -1670,6 +1671,7 @@ def salud():
 # ---------------------------------------------------------------- PIN de acceso por tienda
 class PeticionPin(BaseModel):
     pin: str = Field(min_length=1, max_length=12)
+    acepto_legal: str | None = Field(default=None, max_length=40)  # versión del aviso y términos que aceptó
 
 
 class CambioPin(BaseModel):
@@ -1717,10 +1719,14 @@ def acceso_estado(request: Request):
     con = db()
     try:
         configurado = acceso.leer(con, "pin_huella") is not None
-        sesion = configurado and acceso.token_valido(con, request.cookies.get(acceso.COOKIE))
+        legal = acceso.legal_aceptado(con)
+        sesion = configurado and legal and acceso.token_valido(con, request.cookies.get(acceso.COOKIE))
     finally:
         con.close()
-    return {"configurado": configurado, "sesion": sesion}
+    return {"configurado": configurado, "sesion": sesion, "legal_version": acceso.LEGAL_VERSION, "legal_aceptado": legal}
+
+
+MSG_LEGAL = ("Para usar STOCK tienes que leer y aceptar el Aviso de Privacidad y los Términos y Condiciones.")
 
 
 @app.post("/api/acceso/crear")
@@ -1734,6 +1740,9 @@ def acceso_crear(body: PeticionPin, request: Request):
         con.iniciar_escritura()
         if acceso.leer(con, "pin_huella") is not None:
             raise HTTPException(409, "Esta tienda ya tiene PIN. Entra con él.")
+        if body.acepto_legal != acceso.LEGAL_VERSION:
+            raise HTTPException(428, MSG_LEGAL)
+        acceso.guardar_aceptacion(con)
         acceso.guardar(con, "pin_huella", acceso.huella_pin(body.pin))
         acceso.guardar(con, "pin_version", str(int(acceso.leer(con, "pin_version") or 0) + 1))
         con.commit()
@@ -1745,6 +1754,15 @@ def acceso_crear(body: PeticionPin, request: Request):
 @app.post("/api/acceso/entrar")
 def acceso_entrar(body: PeticionPin, request: Request):
     verificar_pin(body.pin, request)
+    con = db()
+    try:
+        if not acceso.legal_aceptado(con):  # documentos nuevos o nunca aceptados: hay que aceptarlos para entrar
+            if body.acepto_legal != acceso.LEGAL_VERSION:
+                raise HTTPException(428, MSG_LEGAL)
+            acceso.guardar_aceptacion(con)
+            con.commit()
+    finally:
+        con.close()
     return _respuesta_con_sesion(request, {"ok": True})
 
 
@@ -1803,6 +1821,18 @@ app.mount("/static", StaticFiles(directory=APP_DIR), name="static")
 def portada():
     """Portada de STOCK (landing)."""
     return FileResponse(APP_DIR / "inicio.html")
+
+
+@app.get("/privacidad")
+def aviso_privacidad():
+    """Aviso de Privacidad Integral (LFPDPPP)."""
+    return FileResponse(APP_DIR / "privacidad.html")
+
+
+@app.get("/terminos")
+def terminos():
+    """Términos y Condiciones de Uso."""
+    return FileResponse(APP_DIR / "terminos.html")
 
 
 @app.get("/sw.js")

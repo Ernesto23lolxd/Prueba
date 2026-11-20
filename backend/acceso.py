@@ -18,6 +18,9 @@ import time
 from collections import defaultdict, deque
 
 COOKIE = "stock_sesion"
+# Versión vigente del Aviso de Privacidad y los Términos (app/privacidad.html y app/terminos.html).
+# Si cambian, se sube este valor y todas las tiendas deben aceptarlos otra vez al entrar.
+LEGAL_VERSION = "1.0-2026-11-20"
 DURACION = 30 * 24 * 3600
 VENTANA_IP, MAX_IP = 15 * 60, 5
 VENTANA_GLOBAL, MAX_GLOBAL = 3600, 30
@@ -85,6 +88,17 @@ def crear_token(con) -> str:
     carga = f"{int(time.time()) + DURACION}.{version}"
     firma = hmac.new(secreto(con).encode(), carga.encode(), hashlib.sha256).hexdigest()
     return f"{carga}.{firma}"
+
+
+def legal_aceptado(con) -> bool:
+    return leer(con, "legal_version") == LEGAL_VERSION
+
+
+def guardar_aceptacion(con):
+    """Constancia del consentimiento: qué versión se aceptó y cuándo (UTC)."""
+    from datetime import datetime, timezone
+    guardar(con, "legal_version", LEGAL_VERSION)
+    guardar(con, "legal_aceptado_en", datetime.now(timezone.utc).isoformat(timespec="seconds"))
 
 
 def token_valido(con, token: str | None) -> bool:

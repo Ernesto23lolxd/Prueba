@@ -113,6 +113,22 @@
     }
     #avisoSinRed { padding-top: calc(.4rem + env(safe-area-inset-top)); }
 
+    /* ===== Aviso de privacidad y términos ===== */
+    .lector-doc { color: #d4d4d8; font-size: .92rem; line-height: 1.6; }
+    .lector-doc h1 { color: #fff; font-size: 1.35rem; font-weight: 900; line-height: 1.2; }
+    .lector-doc h2 { color: #fff; font-size: 1.02rem; font-weight: 800; margin: 1.4rem 0 .4rem; padding-top: .5rem; border-top: 1px solid rgba(255,255,255,.08); }
+    .lector-doc h3 { color: #e4e4e7; font-weight: 700; margin: .9rem 0 .2rem; }
+    .lector-doc p, .lector-doc ul, .lector-doc ol { margin: .45rem 0; }
+    .lector-doc ul { list-style: disc; padding-left: 1.2rem; } .lector-doc ol { list-style: decimal; padding-left: 1.2rem; }
+    .lector-doc table { width: 100%; border-collapse: collapse; font-size: .82rem; margin: .5rem 0; display: block; overflow-x: auto; }
+    .lector-doc th, .lector-doc td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .lector-doc th { color: #fff; background: rgba(255,255,255,.05); }
+    .lector-doc .meta { color: #a1a1aa; font-size: .8rem; }
+    .lector-doc .resumen { background: rgba(0,149,232,.10); border: 1px solid rgba(0,149,232,.35); border-radius: 12px; padding: .6rem .9rem; }
+    .lector-doc .pendiente { background: #fde68a; color: #1c1917; padding: 0 3px; border-radius: 4px; font-weight: 600; }
+    .lector-doc a { color: #5ab0f2; text-decoration: underline; }
+    .lector-doc code { font-size: .8rem; }
+
     /* ===== Pantalla del PIN ===== */
     .pin-tecla { height: 4rem; border-radius: 1.1rem; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
                  color: #fff; font-size: 1.6rem; font-weight: 800; cursor: pointer; transition: transform .1s, background .15s; }
@@ -330,6 +346,7 @@
             <div class="h-px bg-white/10 my-1"></div>
             <button type="button" role="menuitem" data-menu="cambiar-pin" class="menu-item">🔑 Cambiar mi PIN</button>
             <button type="button" role="menuitem" data-menu="bloquear" class="menu-item">🔒 Bloquear STOCK</button>
+            <button type="button" role="menuitem" data-menu="legal" class="menu-item">📜 Privacidad y términos</button>
           </div>
         </div>
       </div>
@@ -396,6 +413,49 @@
         </div>
         <p class="bv-in text-[11px] text-[#71717a] mt-4" style="--d:9">Puedes repetir el tutorial cuando quieras con el botón <b>?</b> de arriba.</p>
       </div>
+    </div>
+  </div>
+
+  <!-- ================= ACEPTAR AVISO DE PRIVACIDAD Y TÉRMINOS ================= -->
+  <div id="pantallaLegal" class="hidden fixed inset-0 z-[89] overflow-y-auto bv-fondo" role="dialog" aria-modal="true" aria-labelledby="legalTitulo">
+    <div class="min-h-full flex items-center justify-center p-5">
+      <div class="w-full max-w-[440px]">
+        <div class="text-center">
+          <div class="text-4xl" aria-hidden="true">📜</div>
+          <h2 id="legalTitulo" class="text-2xl font-black text-white mt-2">Antes de empezar</h2>
+          <p id="legalSub" class="text-sm text-[#a1a1aa] mt-1">Lee cómo cuidamos tu información y las reglas de uso.</p>
+        </div>
+        <ul class="mt-5 grid gap-2 text-sm">
+          <li class="bv-fila"><span class="bv-ico">🙅</span><span><b>No vendemos tus datos</b> ni los usamos para publicidad.</span></li>
+          <li class="bv-fila"><span class="bv-ico">🛡️</span><span><b>Antes de usar la IA</b> quitamos de tus facturas RFC, nombres, domicilios, folio y sellos.</span></li>
+          <li class="bv-fila"><span class="bv-ico">🧾</span><span><b>No timbramos ni entramos al SAT</b>: solo leemos las facturas que subes.</span></li>
+          <li class="bv-fila"><span class="bv-ico">🗑️</span><span><b>Tus datos son tuyos</b>: los corriges, descargas o borras cuando quieras.</span></li>
+        </ul>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+          <button type="button" data-leer="privacidad" class="px-3 py-3 rounded-xl border border-white/15 text-sm font-bold text-white hover:bg-white/5 cursor-pointer">📄 Leer Aviso de Privacidad</button>
+          <button type="button" data-leer="terminos" class="px-3 py-3 rounded-xl border border-white/15 text-sm font-bold text-white hover:bg-white/5 cursor-pointer">📄 Leer Términos y Condiciones</button>
+        </div>
+        <label class="flex items-start gap-3 mt-5 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer text-sm text-[#e4e4e7] leading-snug">
+          <input id="legalCheck" type="checkbox" class="mt-0.5 w-5 h-5 shrink-0 accent-[#0095E8] cursor-pointer">
+          <span>He leído y acepto el <b>Aviso de Privacidad</b> y los <b>Términos y Condiciones</b> de STOCK.</span>
+        </label>
+        <button type="button" id="legalAceptar" disabled
+          class="w-full mt-4 py-3.5 rounded-xl bg-stock-gradient text-[#0d0e11] font-extrabold text-base active:scale-[.98] transition cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed">Aceptar y continuar</button>
+        <button type="button" id="legalNo" class="w-full mt-2 py-2.5 text-sm font-semibold text-[#a1a1aa] hover:text-white cursor-pointer">No acepto</button>
+        <p id="legalAviso" role="alert" class="hidden text-center text-xs text-amber-300 mt-1">Sin aceptarlos no podemos crear tu tienda ni guardar tu información.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lector de los documentos (dentro de la app, sin salir) -->
+  <div id="lectorLegal" class="hidden fixed inset-0 z-[91] bg-black/70 flex items-stretch sm:items-center justify-center sm:p-5" role="dialog" aria-modal="true" aria-label="Documento legal">
+    <div class="w-full sm:max-w-[720px] sm:max-h-[90vh] bg-[#16181d] sm:rounded-2xl border border-white/10 flex flex-col">
+      <div class="flex items-center gap-2 p-3 border-b border-white/10">
+        <button type="button" data-doc="privacidad" class="doc-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold cursor-pointer">Aviso de Privacidad</button>
+        <button type="button" data-doc="terminos" class="doc-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold cursor-pointer">Términos</button>
+        <button type="button" id="lectorCerrar" class="ml-auto px-3 py-1.5 rounded-lg text-sm font-bold text-white bg-white/10 hover:bg-white/20 cursor-pointer">Cerrar ✕</button>
+      </div>
+      <div id="lectorTexto" class="lector-doc flex-1 overflow-y-auto p-4 sm:p-6" tabindex="0"></div>
     </div>
   </div>
 
@@ -809,7 +869,7 @@
       }
       const data = await res.json().catch(() => ({}));
       if (res.status === 401 && (data.codigo === "pin_requerido" || data.codigo === "pin_sin_crear")) {
-        pedirAcceso(data.codigo === "pin_sin_crear" ? "crear" : "entrar");
+        pedirAcceso();
       }
       if (!res.ok) {
         const error = new Error(data.detail || `Error ${res.status}`);
@@ -1825,6 +1885,7 @@
       else if (accion === "factura-demo") { mostrarVista("inicio"); enviarFactura(null); }
       else if (accion === "cambiar-pin") cambiarPin();
       else if (accion === "bloquear") bloquear();
+      else if (accion === "legal") abrirLector("privacidad");
       else if (accion === "demo") {
         if (await confirmar({ titulo: "¿Cargar la tienda de ejemplo?", texto: "Se borra lo que tengas y se carga una tiendita de Durango con 20 productos y 2 semanas de ventas, para ver todas las funciones.", si: "Cargar ejemplo" })) reiniciarTienda("demo");
       } else if (accion === "cero") {
@@ -2166,11 +2227,22 @@
         if (pinModo === "crear") return siguientePaso("confirmar"), (pinGuardado = v);
         if (pinModo === "confirmar") {
           if (v !== pinGuardado) { siguientePaso("crear"); return errorPin("No coinciden. Vuelve a crearlo."); }
-          await postJSON("/api/acceso/crear", { pin: v });
+          await postJSON("/api/acceso/crear", { pin: v, acepto_legal: legalAceptado });
           mostrarToast("Listo, tu tienda quedó protegida con tu PIN", "ok");
           return cerrarPin(true);
         }
-        if (pinModo === "entrar") { await postJSON("/api/acceso/entrar", { pin: v }); return cerrarPin(true); }
+        if (pinModo === "entrar") {
+          try { await postJSON("/api/acceso/entrar", { pin: v, acepto_legal: legalAceptado }); }
+          catch (err) {
+            if (err.status !== 428) throw err;
+            // Hay una versión nueva del aviso o los términos: se acepta y se vuelve a entrar con el mismo PIN
+            const r = pinResolver; pinResolver = null; $("pantallaPin").classList.add("hidden");
+            if (!(await pedirAceptacionLegal(true))) { pinResolver = r; return cerrarPin(false); }
+            await postJSON("/api/acceso/entrar", { pin: v, acepto_legal: legalAceptado });
+            pinResolver = r;
+          }
+          return cerrarPin(true);
+        }
         if (pinModo === "verificar") return cerrarPin(v);
         if (pinModo === "actual") { pinActual = v; return siguientePaso("nuevo"); }
         if (pinModo === "nuevo") { pinGuardado = v; return siguientePaso("nuevo2"); }
@@ -2216,7 +2288,10 @@
     async function asegurarAcceso() {
       let estado;
       try { estado = await api("/api/acceso/estado"); } catch (err) { mostrarToast(err.message, "error"); return false; }
+      legalVigente = estado.legal_version;
       if (!estado.sesion) {
+        // Registrar la tienda, o documentos nuevos: primero se leen y aceptan el aviso y los términos
+        if (!estado.legal_aceptado && !(await pedirAceptacionLegal(estado.configurado))) return false;
         const ok = await abrirPin(estado.configurado ? "entrar" : "crear");
         if (!ok) return false;
       }
@@ -2224,10 +2299,78 @@
       return true;
     }
     // Si la API dice que falta la sesión (ej. venció o se cambió el PIN en otro celular)
-    function pedirAcceso(modo) {
-      if (pinResolver || !$("bienvenida").classList.contains("hidden")) return;
-      abrirPin(modo).then((ok) => { if (ok) entrarALaApp(); });
+    let accesoEnCurso = false;
+    function pedirAcceso() {
+      if (accesoEnCurso || pinResolver || !$("bienvenida").classList.contains("hidden")) return;
+      accesoEnCurso = true;
+      asegurarAcceso().finally(() => { accesoEnCurso = false; });
     }
+
+    // ---------- Aviso de Privacidad y Términos: leerlos y aceptarlos ----------
+    let legalVigente = null, legalAceptado = null, legalResolver = null;
+    function pedirAceptacionLegal(actualizado = false) {
+      return new Promise((resolver) => {
+        legalResolver = resolver;
+        $("legalTitulo").textContent = actualizado ? "Actualizamos nuestros documentos" : "Antes de empezar";
+        $("legalSub").textContent = actualizado
+          ? "Para seguir usando STOCK, lee y acepta la versión nueva."
+          : "Lee cómo cuidamos tu información y las reglas de uso.";
+        $("legalCheck").checked = false;
+        $("legalAceptar").disabled = true;
+        $("legalAviso").classList.add("hidden");
+        $("pantallaLegal").classList.remove("hidden");
+        document.body.style.overflow = "hidden";
+      });
+    }
+    function cerrarLegal(ok) {
+      $("pantallaLegal").classList.add("hidden");
+      document.body.style.overflow = "";
+      if (ok) legalAceptado = legalVigente;
+      const r = legalResolver; legalResolver = null;
+      if (r) r(ok);
+    }
+    $("legalCheck").addEventListener("change", () => {
+      $("legalAceptar").disabled = !$("legalCheck").checked;
+      $("legalAviso").classList.add("hidden");
+    });
+    $("legalAceptar").addEventListener("click", () => { if ($("legalCheck").checked) cerrarLegal(true); });
+    $("legalNo").addEventListener("click", () => { $("legalAviso").classList.remove("hidden"); });
+
+    const documentosLegales = {};
+    async function abrirLector(cual) {
+      abrirMenu(false);
+      $("lectorLegal").classList.remove("hidden");
+      document.querySelectorAll(".doc-tab").forEach((b) => {
+        const activo = b.dataset.doc === cual;
+        b.className = `doc-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold cursor-pointer ${activo ? "bg-stock-gradient text-[#0d0e11]" : "text-[#d4d4d8] bg-white/5"}`;
+      });
+      const caja = $("lectorTexto");
+      caja.textContent = "Cargando…";
+      try {
+        if (!documentosLegales[cual]) {
+          const html = await fetch(`/${cual}`).then((r) => { if (!r.ok) throw new Error(); return r.text(); });
+          const doc = new DOMParser().parseFromString(html, "text/html");
+          const principal = doc.getElementById("documento");
+          principal.querySelectorAll(".volver, script, style").forEach((el) => el.remove());
+          documentosLegales[cual] = principal.innerHTML;  // documento propio del servidor (mismo origen)
+        }
+        caja.innerHTML = documentosLegales[cual];
+        caja.scrollTop = 0;
+        caja.focus();
+      } catch (_) {
+        caja.innerHTML = `<p>No pude cargar el documento. Ábrelo aquí: <a href="/${cual}" target="_blank" rel="noopener">stock-tienda.onrender.com/${cual}</a></p>`;
+      }
+    }
+    document.addEventListener("click", (e) => {
+      const leer = e.target.closest("[data-leer]");
+      if (leer) abrirLector(leer.dataset.leer);
+      const tab = e.target.closest(".doc-tab");
+      if (tab) abrirLector(tab.dataset.doc);
+    });
+    $("lectorCerrar").addEventListener("click", () => $("lectorLegal").classList.add("hidden"));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !$("lectorLegal").classList.contains("hidden")) { $("lectorLegal").classList.add("hidden"); e.stopPropagation(); }
+    }, true);
     async function cambiarPin() {
       if (await abrirPin("actual", { cancelable: true })) await cargarTablero();
     }

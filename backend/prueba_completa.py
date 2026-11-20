@@ -82,7 +82,8 @@ def texto(frase):
 
 # ------------------------------------------------------------------ Pruebas
 _estado = pedir("GET", "/api/acceso/estado")[1]
-_r = pedir("POST", "/api/acceso/entrar" if _estado["configurado"] else "/api/acceso/crear", {"pin": PIN})
+_r = pedir("POST", "/api/acceso/entrar" if _estado["configurado"] else "/api/acceso/crear",
+          {"pin": PIN, "acepto_legal": _estado["legal_version"]})
 assert _r[0] == 200, f"no pude entrar con el PIN de prueba: {_r}"
 pedir("POST", "/api/reset", {"modo": "demo", "pin": PIN})
 

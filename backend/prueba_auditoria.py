@@ -386,7 +386,8 @@ def _():
         r = anonimo.request(metodo, ruta, json={"texto": "vendí 1 coca", "producto_id": 1, "delta": -1, "pin": PIN})
         assert r.status_code == 401 and r.json().get("codigo") == "pin_requerido", (metodo, ruta, r.status_code, r.text[:80])
     assert anonimo.get("/api/salud").status_code == 200
-    assert anonimo.get("/api/acceso/estado").json() == {"configurado": True, "sesion": False}
+    estado = anonimo.get("/api/acceso/estado").json()
+    assert estado["configurado"] is True and estado["sesion"] is False, estado
     return f"{len(rutas)} rutas responden 401 sin PIN (incluido reiniciar con el PIN en el cuerpo)"
 
 
@@ -460,6 +461,25 @@ def _():
     r = httpx.post(BASE + "/api/acceso/crear", json={"pin": "857392"}, timeout=30)
     assert r.status_code == 409, "dejó crear otro PIN sobre el existente"
     return "cortos, largos, con letras, triviales y un segundo PIN: rechazados"
+
+
+@prueba("S26. Aviso de Privacidad y Términos publicados y aceptación registrada")
+def _():
+    priv = httpx.get(BASE + "/privacidad", timeout=60)
+    term = httpx.get(BASE + "/terminos", timeout=60)
+    assert priv.status_code == 200 and term.status_code == 200
+    for texto in ("Aviso de Privacidad Integral", "Responsable", "finalidades", "ARCO", "Revocar", "Cookies",
+                  "Cambios a este aviso", "Supabase", "Gemini", "escudo de privacidad"):
+        assert texto.lower() in priv.text.lower(), f"al aviso le falta: {texto}"
+    for texto in ("Términos y Condiciones", "PIN", "Inteligencia artificial", "no emite ni timbra", "Profeco",
+                  "cancelar en cualquier momento", "Ley aplicable"):
+        assert texto.lower() in term.text.lower(), f"a los términos les falta: {texto}"
+    assert priv.headers.get("content-security-policy") and priv.headers.get("x-frame-options") == "DENY"
+    estado = c.get("/api/acceso/estado").json()
+    assert estado["legal_aceptado"] is True and estado["legal_version"], estado
+    r = httpx.post(BASE + "/api/acceso/crear", json={"pin": "857392"}, timeout=30)
+    assert r.status_code == 409, "con tienda existente debe responder 409 antes que pedir la aceptación"
+    return f"/privacidad y /terminos completos; versión aceptada {estado['legal_version']}"
 
 
 # ------------------------------------------------------------------ Reporte

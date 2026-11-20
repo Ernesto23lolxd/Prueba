@@ -12,5 +12,5 @@ def entrar(cliente) -> None:
     """Inicia sesión en un httpx.Client (la cookie de sesión queda guardada en el cliente)."""
     estado = cliente.get("/api/acceso/estado").json()
     ruta = "/api/acceso/entrar" if estado["configurado"] else "/api/acceso/crear"
-    r = cliente.post(ruta, json={"pin": PIN})
+    r = cliente.post(ruta, json={"pin": PIN, "acepto_legal": estado["legal_version"]})
     assert r.status_code == 200, f"no pude entrar con el PIN de prueba ({r.status_code}): {r.text[:150]}"
