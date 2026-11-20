@@ -1,19 +1,21 @@
 # 🧪 STOCK: reporte de pruebas antes de la presentación
 
-**Fecha:** 20 de noviembre de 2026 · **Versión probada:** rama `main` (commit `43f40b0`)
+**Fecha:** 20 de noviembre de 2026 · **Versión probada:** rama `main` (commit `8bd537e`)
 **Dónde:** servidor local (SQLite) y la app publicada `https://stock-tienda.onrender.com` (Render + Supabase/Postgres)
 
 ## Resumen
 
 | Suite (archivo en `backend/`) | Qué prueba | Local | Nube |
 |---|---|---|---|
-| `prueba_completa.py` | Voz real, texto, predicción, lista y WhatsApp, Excel y CSV, facturas, deshacer, optimizador, promo, resumen del mes, reinicio | **32/32** | NUBE_COMPLETA |
-| `prueba_auditoria.py` | Ciberseguridad y robustez (20 ataques y entradas raras) | **20/20** | NUBE_AUDITORIA |
-| `prueba_cfdi.py` | 15 facturas CFDI generadas y subidas (XML 4.0 y 3.3, PDF, dólares, descuentos, servicios, notas de crédito…) | **15/15** | NUBE_CFDI |
+| `prueba_completa.py` | Voz real, texto, predicción, lista y WhatsApp, Excel y CSV, facturas, deshacer, optimizador, promo, resumen del mes, reinicio | **32/32** | **31/32** ¹ |
+| `prueba_auditoria.py` | Ciberseguridad y robustez (20 ataques y entradas raras) | **20/20** | **20/20** |
+| `prueba_cfdi.py` | 15 facturas CFDI generadas y subidas (XML 4.0 y 3.3, PDF, dólares, descuentos, servicios, notas de crédito…) | **15/15** | **15/15** |
 | `prueba_emparejamiento.py` | Emparejar lo que dicta el tendero o escribe el proveedor con el producto correcto | **35/35** | (no usa servidor) |
 | `prueba_interfaz.py` | La app completa en 12 dispositivos: bienvenida, 17 pasos del tutorial, 6 secciones, menú, botones y XSS | **12/12** | (local) |
 
-**Se encontraron y corrigieron 11 fallas.** Ninguna sigue abierta.
+¹ En la nube pasaron 31/32. La que falta es la del límite de peticiones: para correr las demás hubo que subir el límite a 400, así que nunca se alcanzó. Ya se regresó a 25; en la laptop sí pasó (32/32), pero en la nube **falta verificarla**.
+
+**Se encontraron y corrigieron 12 fallas.** Ninguna sigue abierta.
 
 ---
 
@@ -31,6 +33,7 @@
 | 8 | 🟡 Baja | **Las listas se salían de la pantalla** con nombres largos, y el inventario se veía apretado a 320 px. | Las listas usan una sola columna de ancho controlado; los nombres ocupan hasta 2 renglones. |
 | 9 | 🟡 Baja | **Ids absurdos** (como 99999999999999999999) provocaban un error 500. | Se validan los ids: responde 404 o 422, nunca 500. |
 | 10 | 🟡 Baja | Se podía guardar un **nombre de producto vacío** (espacios o caracteres invisibles). | Los nombres se limpian y validan. |
+| 12 | 🔴 Alta | **El mismo PDF subido dos veces se sumó dos veces** (solo pasó en la nube): la detección de duplicados dependía de que la IA leyera igual el folio fiscal, y la segunda lectura salió distinta. | Se guarda la **huella SHA-256 del archivo** y se revisa *antes* de llamar a la IA, lo que además ahorra una llamada. Si no hay folio legible, el id de la factura es la huella. |
 | 11 | 🟡 Baja | **Postgres:** cada consulta devolvía su conexión al pool con una transacción abierta, lo que llenaba los registros de avisos. Además faltaba el ícono de la pestaña (error 404). | Se cierra la transacción antes de devolver la conexión y se agregó el ícono. |
 
 ---
