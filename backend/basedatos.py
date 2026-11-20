@@ -94,7 +94,12 @@ class Conexion:
 
     def close(self):
         if self.es_postgres:
-            _pool_postgres().putconn(self._con)  # el pool deshace lo que no se haya confirmado
+            try:  # cierra la transacción de lectura antes de devolverla (sin esto el pool avisa en cada consulta)
+                if not self._con.closed and self._con.info.transaction_status != 0:  # 0 = IDLE
+                    self._con.rollback()
+            except Exception:  # noqa: BLE001 - si la conexión se cayó, el pool la descarta
+                pass
+            _pool_postgres().putconn(self._con)
         else:
             self._con.close()
 
