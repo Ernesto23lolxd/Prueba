@@ -8,7 +8,7 @@
 | Suite (archivo en `backend/`) | Qué prueba | Local | Nube |
 |---|---|---|---|
 | `prueba_completa.py` | Voz real, texto, predicción, lista y WhatsApp, Excel y CSV, facturas, deshacer, optimizador, promo, resumen del mes, reinicio | **32/32** | **32/32** ¹ |
-| `prueba_auditoria.py` | Ciberseguridad y robustez: 20 ataques y entradas raras + 5 del PIN de acceso + documentos legales (S26) | **20/20** | **25/25** (S26 se agregó después) |
+| `prueba_auditoria.py` | Ciberseguridad y robustez: 20 ataques y entradas raras + 5 del PIN de acceso + documentos legales (S26) | **26/26** | **25/25** (S26 y HSTS se verificaron después) |
 | `prueba_legal.py` | Registro: leer y aceptar el aviso y los términos es obligatorio; versión nueva → aceptar otra vez; páginas en celular | — | **3/3** |
 | `prueba_privacidad.py` | Escudo de privacidad: nada sensible (RFC, nombres, domicilio, folio, sellos…) llega a la IA | **2/2** | (no usa servidor) |
 | `prueba_cfdi.py` | 15 facturas CFDI generadas y subidas (XML 4.0 y 3.3, PDF, dólares, descuentos, servicios, notas de crédito…) | **15/15** | **15/15** |
@@ -18,7 +18,7 @@
 
 ¹ La del límite de peticiones se verificó a mano en la nube: para correr las demás hubo que subir el límite a 400; ya de regreso en 25, la petición 26 del minuto recibió el 429 esperado.
 
-**Se encontraron y corrigieron 15 fallas.** Ninguna sigue abierta.
+**Se encontraron y corrigieron 19 fallas** (las 4 últimas, de la auditoría final, están en [`DIAGNOSTICO_FINAL.md`](DIAGNOSTICO_FINAL.md)). Ninguna sigue abierta.
 
 ---
 

@@ -9,6 +9,7 @@ y kilos, lee la foto del ticket, trae el inventario desde Excel y da un **resume
 **100 % software:** solo se necesita el celular o la computadora. Sin aparatos extra.
 
 ### 👉 Pruébala: **https://stock-tienda.onrender.com/app**
+### 🏁 Diagnóstico final: [`docs/DIAGNOSTICO_FINAL.md`](docs/DIAGNOSTICO_FINAL.md) · ✅ lista para presentar
 ### 🤖 App para Android: [descargar `STOCK.apk`](https://github.com/Ernesto23lolxd/Prueba/releases/download/apk/STOCK.apk)
 (Render gratis se duerme: la primera carga tarda ~1 minuto.)
 

@@ -265,6 +265,9 @@ class CabecerasSeguridad(BaseHTTPMiddleware):
         respuesta.headers["Referrer-Policy"] = "no-referrer"
         respuesta.headers.setdefault("Content-Security-Policy", CSP)  # una ruta puede traer la suya (ej. /sw.js)
         respuesta.headers["Permissions-Policy"] = "microphone=(self), camera=(self), geolocation=()"
+        # HSTS: el navegador recuerda por un año que este sitio SOLO se abre con HTTPS (no aplica en localhost)
+        if request.url.scheme == "https":
+            respuesta.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return respuesta
 
 

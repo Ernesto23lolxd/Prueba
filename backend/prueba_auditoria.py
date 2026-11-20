@@ -67,6 +67,8 @@ def _():
         assert h.get("x-frame-options") == "DENY", ruta
         assert "frame-ancestors 'none'" in h.get("content-security-policy", ""), ruta
         assert h.get("referrer-policy") == "no-referrer", ruta
+        if BASE.startswith("https"):
+            assert "max-age=" in h.get("strict-transport-security", ""), f"falta HSTS en {ruta}"
         assert "server" not in h or "uvicorn" not in h.get("server", "").lower() or True
     return "nosniff, DENY, CSP y no-referrer en todas"
 
@@ -447,7 +449,11 @@ def _():
     if "127.0.0.1" in BASE or "localhost" in BASE:
         atacante = httpx.Client(base_url=BASE, timeout=60)
         codigos = [atacante.post("/api/acceso/entrar", json={"pin": f"90{k:04d}"}).status_code for k in range(7)]
-        assert codigos[:5] == [401] * 5 and codigos[5:] == [429, 429], codigos
+        # Puede bloquear antes del 6.º si la prueba S23 ya dejó un fallo de esta misma IP: lo que importa es que
+        # haya a lo más 5 fallos y que, ya bloqueado, siga bloqueado
+        primero = codigos.index(429) if 429 in codigos else None
+        assert primero is not None and 1 <= primero <= 5, codigos
+        assert set(codigos[:primero]) == {401} and set(codigos[primero:]) == {429}, codigos
         assert c.get("/api/inventario").status_code == 200, "la sesión del dueño debe seguir funcionando"
         detalle += f"; en vivo: {codigos}"
     return detalle
