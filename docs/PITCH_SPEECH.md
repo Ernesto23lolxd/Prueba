@@ -60,24 +60,25 @@ Y no es una maqueta: ya está publicado en internet, con su base de datos en la 
 ### Diapositiva 9 · 3:30 – 3:55
 ¿Cuál es el negocio? Una **suscripción con tres planes**.
 - **Barrio, gratis para siempre:** se sostiene con anuncios discretos de proveedores locales, que **nunca usan los datos de la tienda**.
-- **Tiendita, el plan principal: 149 pesos al mes**, o sea **menos de 5 pesos al día**. Es sin anuncios, con voz y fotos sin límite, facturas, predicción, pedidos por WhatsApp y escudo anti-inflación. Le **regalamos una tarjeta NFC** para que sus clientes le dejen reseñas en Google Maps y lo encuentren más fácil.
-- **Negocio Pro, 299 pesos**, para quien crece.
+- **Tiendita, el plan principal: 169 pesos al mes**, o sea **menos de 6 pesos al día**, menos que un refresco. Es sin anuncios, con voz y fotos sin límite, facturas, predicción, pedidos por WhatsApp y escudo anti-inflación. Le **regalamos una tarjeta NFC** para que sus clientes le dejen reseñas en Google Maps y lo encuentren más fácil.
+- **Negocio Pro, 329 pesos**, para quien crece.
 
 Se paga con **tarjeta, transferencia o en OXXO**, sin plazos forzosos.
 
 ### Diapositiva 10 · 3:55 – 4:15
-¿Cuánto nos cuesta? Atender una Tiendita nos cuesta **unos 33 pesos al mes**: 8 de inteligencia artificial, 10 de servidores, 9 de comisión de cobro y 6 de la tarjeta NFC repartida en seis meses. **De cada Tiendita nos quedan 116 pesos al mes**, un margen bruto de **78 %**. Del plan Pro nos quedan **223**. Y el plan gratuito **no nos cuesta**: se paga solo con los anuncios locales. Son estimaciones con las tarifas públicas de los servicios que ya usamos.
+¿Cuánto nos cuesta? Atender una Tiendita nos cuesta **unos 33 pesos al mes**: 8 de inteligencia artificial, 10 de servidores, 9 de comisión de cobro y 6 de la tarjeta NFC repartida en seis meses. **De cada Tiendita nos quedan 136 pesos al mes**, un margen bruto del **80 %**. Del plan Pro nos quedan **252**. Y el plan gratuito **no nos cuesta**: se paga solo con los anuncios locales. Son estimaciones con las tarifas públicas de los servicios que ya usamos.
 
 ### Diapositiva 11 · 4:15 – 4:40
-Y no prometemos de más.
-- Empezamos con un **piloto de tres meses** con costos fijos de **950 pesos**: con **9 tiendas** ya no perdemos.
-- Crecemos poco a poco, y solo contratamos a un promotor cuando ya hay cerca de cien tiendas.
-- La **inversión inicial, unos 1,900 pesos, se recupera en el quinto mes**.
+Y los números cierran rápido.
+- **Primer mes:** cada uno de los cuatro fundadores cierra **tres tiendas**. Con **12 tiendas ya ganamos dinero**, porque el piloto solo cuesta 950 pesos al mes y el equilibrio está en **7 tiendas**.
+- **Segundo mes:** con 22 tiendas, **recuperamos completa la inversión inicial de unos 1,900 pesos**. Desde ahí, **todos los meses dejan ganancia**.
+- Crecemos por etapas, y solo contratamos a un promotor cuando ya hay cerca de cien tiendas.
 
-Nuestra meta del primer año es **realista: 120 tiendas de paga**, apenas el **2.4 %** de las tienditas de la capital, más 300 en el plan gratis. Eso son unos **24 mil pesos de ingresos al mes** y unos **10 mil de utilidad**.
+La meta del primer año es **optimista pero realista: 150 tiendas de paga**, apenas el **3 %** de las tienditas de la capital, más 300 en el plan gratis. Eso son unos **32 mil pesos de ingresos al mes**, unos **17 mil de utilidad** y cerca de **98 mil pesos de utilidad en el año**.
 
 ¿Cómo llegamos a ellas?
-- Con los **distribuidores** que ya visitan las tiendas.
+- **Visitando tiendas nosotros mismos.**
+- Con los **distribuidores** que ya las visitan todos los días.
 - Con la **CANACOPE**.
 - Con las **reseñas en Google Maps** que trae la tarjeta NFC.
 - Regalando **un mes** a quien recomiende STOCK.
@@ -122,8 +123,8 @@ Gracias. Pueden probarlo ahora mismo en **stock-tienda.onrender.com**.
 | **¿Y si la IA se equivoca?** | Cada movimiento queda en el historial con un botón de **deshacer**. Validamos todo lo que responde la IA: no puede vender más de lo que hay, ni poner precios absurdos, ni inventar acciones. |
 | **¿Cuánto les cuesta la IA?** | Usamos un modelo ligero de Gemini. Con unos 30 comandos al día, son unos **8 pesos al mes por tienda** (estimación con precios públicos). |
 | **¿Y si no tienen internet?** | Hoy necesita datos móviles, como WhatsApp, y consume muy poco. En la siguiente fase: modo sin conexión que sincroniza después. |
-| **¿Quién paga 149 pesos?** | Son **menos de 5 pesos al día**. Una tienda que **deja de quedarse sin Coca o sin huevo un solo día**, o que detecta a tiempo una subida del proveedor, ya los recupera. Y el plan Barrio es gratis para que lo prueben. *(Recomendado: decir cuántos tenderos entrevistaron, si lo hicieron.)* |
-| **¿No son muy optimistas los números?** | Al contrario: la meta es **120 tiendas en el año, el 2.4 % de la capital**. Con 9 tiendas ya cubrimos los costos del piloto y la inversión inicial se recupera en el mes 5. |
+| **¿Quién paga 169 pesos?** | Son **menos de 6 pesos al día**. Una tienda que **deja de quedarse sin Coca o sin huevo un solo día**, o que detecta a tiempo una subida del proveedor, ya los recupera. Y el plan Barrio es gratis para que lo prueben. *(Recomendado: decir cuántos tenderos entrevistaron, si lo hicieron.)* |
+| **¿No son muy optimistas los números?** | La meta es **150 tiendas en el año, el 3 % de la capital**. El piloto cuesta solo $950 al mes: con **7 tiendas** ya no perdemos. Con las 12 del primer mes (3 por fundador) ganamos desde el inicio, y la inversión de ~$1,900 se recupera en el **mes 2**. |
 | **¿Para qué la tarjeta NFC?** | El cliente la acerca con su celular en el mostrador y le deja una **reseña en Google Maps** a la tienda: más visibilidad local sin que el tendero haga nada. Cuesta unos $35 y la repartimos en 6 meses del plan. |
 | **¿Dónde se guardan los datos?** | En Supabase (PostgreSQL), con cifrado y seguridad por filas. Los servidores están en EE. UU. y eso **se declara en el aviso de privacidad**, como pide la ley. |
 | **¿Usan los datos para algo más?** | No. No los vendemos ni los compartimos. Un posible ingreso futuro son **reportes agregados y anónimos** para distribuidores, pero solo con consentimiento explícito. |
@@ -131,6 +132,6 @@ Gracias. Pueden probarlo ahora mismo en **stock-tienda.onrender.com**.
 | **¿Ya tienen inicio de sesión?** | Todavía no: es una demo. Es lo primero antes de una tienda real, junto con el aviso de privacidad y los respaldos. |
 
 ## ⚠️ Antes de presentar
-- Revisen las **fuentes** en la última diapositiva. Los costos y la meta de 120 tiendas son **estimaciones**: díganlo así.
+- Revisen las **fuentes** en la última diapositiva. Los costos y la meta de 150 tiendas son **estimaciones**: díganlo así.
 - Si entrevistaron tenderos, agreguen una frase real en la diapositiva 4. A los jueces les encanta.
 - Ensayen con cronómetro: el total debe quedar por debajo del tiempo que les den. Si les dan 3 minutos, quiten las diapositivas 5, 10 y 14 y dejen el resto.
