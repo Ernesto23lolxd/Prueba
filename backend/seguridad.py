@@ -8,6 +8,7 @@ Medidas de seguridad de STOCK (defensa en profundidad), en un solo lugar para au
 5. Cabeceras HTTP de seguridad (nosniff, DENY, no-referrer, CSP).
 """
 import math
+import os
 import re
 import time
 from collections import defaultdict, deque
@@ -177,6 +178,17 @@ def validar_salida_ia(ia: dict) -> tuple[dict, list]:
 
 
 # ---------------------------------------------------------------- 4. Rate limiting
+def ip_cliente(request) -> str:
+    """IP real del cliente. Detrás de un proxy de confianza (Render, Railway…) con CONFIAR_PROXY=1 se usa la
+    primera IP de X-Forwarded-For; sin esa variable se ignora la cabecera (alguien podría falsificarla)."""
+    if (os.getenv("CONFIAR_PROXY") or "").strip() in ("1", "true", "si", "sí"):
+        reenviada = request.headers.get("x-forwarded-for", "")
+        if reenviada:
+            return reenviada.split(",")[0].strip()[:64]
+    return request.client.host if request.client else "desconocida"
+
+
+
 class LimitadorPorIP:
     """Ventana deslizante de 60 s por IP, en memoria (suficiente para una sola instancia)."""
 
@@ -227,7 +239,7 @@ class LimiteGemini(BaseHTTPMiddleware):
 
     async def dispatch(self, request, call_next):
         if request.method == "POST" and request.url.path.startswith(self.rutas):
-            ip = request.client.host if request.client else "desconocida"
+            ip = ip_cliente(request)
             if not self.limitador.permitir(ip):
                 return JSONResponse(
                     {"detail": "Vas muy rápido 😅. Espera un minutito y vuelve a intentarlo."}, status_code=429

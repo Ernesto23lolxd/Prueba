@@ -1,0 +1,34 @@
+# Despliegue de STOCK en Render (Blueprint). Render toma el código de GitHub (rama main) y lo publica.
+# Cada push a main vuelve a desplegar solo. La base de datos vive en Supabase (DATABASE_URL).
+services:
+  - type: web
+    name: stock-tienda
+    runtime: python
+    plan: free
+    region: oregon
+    branch: main
+    autoDeploy: true
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"
+    healthCheckPath: /api/salud
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      # Secretos: Render los pide al crear el servicio (nunca se guardan en GitHub)
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      # Render pone un proxy delante: así el límite por IP usa la IP real de cada usuario
+      - key: CONFIAR_PROXY
+        value: "1"
+      - key: RATE_LIMIT_POR_MINUTO
+        value: "25"
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
+      # La app se sirve desde el mismo dominio; si cambias el nombre del servicio, cambia esta URL
+      - key: ALLOWED_ORIGINS
+        value: https://stock-tienda.onrender.com
+      # Botón "↺ Demo" (reiniciar datos). Ponlo en "0" cuando ya no sea demo.
+      - key: PERMITIR_RESET
+        value: "1"

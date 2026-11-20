@@ -4,3 +4,5 @@ python-multipart
 google-genai
 openpyxl
 defusedxml
+psycopg[binary]
+psycopg-pool

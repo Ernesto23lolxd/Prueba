@@ -30,6 +30,7 @@ y kilos, lee la foto del ticket, trae el inventario desde Excel y da un **resume
 ```
 backend/   Python + FastAPI + SQLite + Gemini (IA)
   main.py             API, inventario, predicción, IA, lotes/deshacer, optimizador
+  basedatos.py        Postgres (Supabase) o SQLite local con la misma interfaz
   seguridad.py        archivos, prompt injection, validación de la IA, límite por IP y cabeceras HTTP
   cfdi.py             lectura segura de facturas XML (CFDI 3.3 y 4.0) con defusedxml
   importar.py         importación de Excel / CSV
@@ -40,12 +41,17 @@ demo/      Excel/CSV, audios y factura PDF de ejemplo para probar
 docs/      SEGURIDAD.md (medidas de ciberseguridad)
 ```
 
+## 🚀 Publicar en internet
+Supabase (base de datos) + Render (hosting desde GitHub): paso a paso en [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md).
+Sin `DATABASE_URL`, STOCK usa SQLite local como siempre.
+
 ## Variables en `backend/.env`
 ```
 GEMINI_API_KEY=AIza...                 # obligatoria (NO se sube a GitHub)
 GEMINI_MODEL=gemini-3.5-flash-lite     # opcional; ese es el valor por defecto
 ALLOWED_ORIGINS=http://localhost:8000  # opcional; agrega la URL del túnel si usas uno (separadas por coma)
 RATE_LIMIT_POR_MINUTO=25               # opcional; peticiones a la IA por minuto por IP
+DATABASE_URL=postgresql://...           # opcional; Supabase. Sin ella usa SQLite local
 ```
 
 ## Correr
@@ -92,6 +98,7 @@ El navegador solo deja usar el micrófono en **localhost** o con **HTTPS**. Para
 | GET | /api/lista-compras | Pedido agrupado por proveedor + enlaces de WhatsApp |
 | GET | /api/resumen | Valor del inventario, efectivo a apartar, dinero congelado |
 | GET | /api/movimientos | Historial |
+| GET | /api/salud | Estado del servidor y de la base de datos (lo usa Render) |
 | POST | /api/reset | Reinicia los datos de demo (también borra facturas y lotes) |
 
 ## Cómo se lee una factura

@@ -17,7 +17,6 @@ import math
 import os
 import random
 import re
-import sqlite3
 import unicodedata
 import uuid as uuidlib
 from datetime import datetime, timedelta
@@ -35,6 +34,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 import cfdi
 import importar
 import seguridad
+from basedatos import ES_POSTGRES, crear_esquema, db
 
 BASE_DIR = Path(__file__).resolve().parent
 APP_DIR = BASE_DIR.parent / "app"
@@ -50,7 +50,6 @@ if _env.exists():
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("stock")
 
-DB_PATH = BASE_DIR / "inventario.db"
 # Modelo estable y disponible para esta clave (gemini-2.5-flash ya no está disponible para cuentas nuevas).
 GEMINI_MODEL = os.getenv("GEMINI_MODEL") or "gemini-3.5-flash-lite"
 # Orígenes permitidos para CORS (la app se sirve desde el mismo servidor; agrega aquí la URL del túnel si usas uno)
@@ -87,10 +86,8 @@ async def _error_inesperado(request: Request, exc: Exception):
 
 
 # ---------------------------------------------------------------- Base de datos
-def db():
-    con = sqlite3.connect(DB_PATH)
-    con.row_factory = sqlite3.Row
-    return con
+# db() viene de basedatos.py: Postgres (Supabase) si hay DATABASE_URL; si no, SQLite local.
+log.info("Base de datos: %s", "Postgres (DATABASE_URL)" if ES_POSTGRES else "SQLite local (backend/inventario.db)")
 
 
 PRODUCTOS_DEMO = [
@@ -129,80 +126,18 @@ DIAS_HISTORIAL = 14
 COBERTURA_DIAS = {"Tortillería": 1, "Panadería": 2, "Lácteos": 3, "Salchichonería": 4}
 COBERTURA_DEFAULT = 7
 
-COLUMNAS_MOVIMIENTOS = {  # columnas agregadas para poder deshacer (migración de bases anteriores)
-    "lote_id": "TEXT", "antes": "REAL", "despues": "REAL", "creado_en_lote": "INTEGER DEFAULT 0",
-    "precio_antes": "REAL", "costo_antes": "REAL", "minimo_antes": "REAL", "nombre_antes": "TEXT",
-}
-
-
 def init_db(reset: bool = False):
     con = db()
-    if reset:
-        con.executescript(
-            "DROP TABLE IF EXISTS movimientos; DROP TABLE IF EXISTS productos; "
-            "DROP TABLE IF EXISTS cfdi_procesados; DROP TABLE IF EXISTS lotes;"
-        )
-    con.executescript(
-        """
-        CREATE TABLE IF NOT EXISTS productos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT UNIQUE NOT NULL,
-            unidad TEXT NOT NULL DEFAULT 'pieza',
-            cantidad REAL NOT NULL DEFAULT 0,
-            minimo REAL NOT NULL DEFAULT 0,
-            precio REAL,
-            categoria TEXT,
-            costo_compra REAL
-        );
-        CREATE TABLE IF NOT EXISTS movimientos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            producto_id INTEGER REFERENCES productos(id),
-            tipo TEXT NOT NULL,            -- entrada | venta | ajuste | alta | precio | minimo | edicion
-            cantidad REAL NOT NULL,
-            fecha TEXT NOT NULL,
-            texto_original TEXT,
-            lote_id TEXT,                  -- todos los cambios de una misma acción (para deshacer)
-            antes REAL, despues REAL,      -- existencia antes y después
-            creado_en_lote INTEGER DEFAULT 0,
-            precio_antes REAL, costo_antes REAL, minimo_antes REAL, nombre_antes TEXT
-        );
-        CREATE TABLE IF NOT EXISTS lotes (
-            id TEXT PRIMARY KEY,
-            origen TEXT,                   -- voz | texto | foto | cfdi_xml | cfdi_pdf | excel | manual | edicion
-            descripcion TEXT,
-            cfdi_uuid TEXT,
-            fecha TEXT,
-            revertido INTEGER DEFAULT 0
-        );
-        -- Facturas de proveedor ya cargadas (evita sumar dos veces la misma)
-        CREATE TABLE IF NOT EXISTS cfdi_procesados (
-            uuid TEXT PRIMARY KEY,
-            proveedor TEXT,
-            total REAL,
-            forma_pago TEXT,
-            fecha TEXT NOT NULL,
-            archivo TEXT
-        );
-        """
-    )
-    # Migración de bases creadas con versiones anteriores (nombres de columna fijos, sin datos del usuario)
-    cols_prod = {c["name"] for c in con.execute("PRAGMA table_info(productos)").fetchall()}
-    if "costo_compra" not in cols_prod:
-        con.execute("ALTER TABLE productos ADD COLUMN costo_compra REAL")
-        if "costo" in cols_prod:
-            con.execute("UPDATE productos SET costo_compra = costo")
-    cols_mov = {c["name"] for c in con.execute("PRAGMA table_info(movimientos)").fetchall()}
-    for columna, tipo in COLUMNAS_MOVIMIENTOS.items():
-        if columna not in cols_mov:
-            con.execute(f"ALTER TABLE movimientos ADD COLUMN {columna} {tipo}")  # nombres de una lista fija
-    con.executescript(
-        "CREATE INDEX IF NOT EXISTS idx_mov_lote ON movimientos(lote_id);"
-        "CREATE INDEX IF NOT EXISTS idx_mov_producto ON movimientos(producto_id);"
-    )
-    if con.execute("SELECT COUNT(*) FROM productos").fetchone()[0] == 0:
-        cargar_demo(con)
-    con.commit()
-    con.close()
+    try:
+        crear_esquema(con, reset)
+        if con.execute("SELECT COUNT(*) AS n FROM productos").fetchone()["n"] == 0:
+            cargar_demo(con)
+        con.commit()
+    except Exception:
+        con.rollback()
+        raise
+    finally:
+        con.close()
 
 
 def cargar_demo(con):
@@ -211,12 +146,12 @@ def cargar_demo(con):
     hoy = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     for nombre, unidad, cantidad, minimo, precio, categoria, diaria in PRODUCTOS_DEMO:
         costo = COSTO_DEMO.get(nombre, round(precio * 0.75, 2))
-        con.execute(
+        pid = con.insertar(
             "INSERT INTO productos (nombre, unidad, cantidad, minimo, precio, categoria, costo_compra) "
             "VALUES (?,?,?,?,?,?,?)",
             (nombre, unidad, cantidad, minimo, precio, categoria, costo),
         )
-        pid = con.execute("SELECT last_insert_rowid()").fetchone()[0]
+        ventas = []
         for atras in range(DIAS_HISTORIAL, 0, -1):
             dia = hoy - timedelta(days=atras)
             total = diaria * FACTOR_DIA[dia.weekday()] * rnd.uniform(0.75, 1.25)
@@ -229,10 +164,10 @@ def cargar_demo(con):
                 pasos -= bloque
                 cant = bloque * paso
                 momento = dia + timedelta(hours=rnd.randint(8, 21), minutes=rnd.randint(0, 59))
-                con.execute(
-                    "INSERT INTO movimientos (producto_id, tipo, cantidad, fecha, texto_original) VALUES (?,?,?,?,?)",
-                    (pid, "venta", cant, momento.isoformat(timespec="seconds"), "(historial de demo)"),
-                )
+                ventas.append((pid, "venta", cant, momento.isoformat(timespec="seconds"), "(historial de demo)"))
+        con.ejecutar_varios(
+            "INSERT INTO movimientos (producto_id, tipo, cantidad, fecha, texto_original) VALUES (?,?,?,?,?)", ventas
+        )
 
 
 init_db()
@@ -421,12 +356,11 @@ def aplicar_acciones(acciones: list, texto_original: str, lote_id: str | None = 
                 if tipo in ("entrada", "ajuste", "alta"):
                     nombre_nuevo = nombre.strip()[:80]
                     nombre_nuevo = nombre_nuevo[:1].upper() + nombre_nuevo[1:]
-                    con.execute(
+                    pid = con.insertar(
                         "INSERT INTO productos (nombre, unidad, cantidad, minimo, precio, categoria) VALUES (?,?,?,?,?,?)",
                         (nombre_nuevo, a.get("unidad") or "pieza", cantidad, float(a.get("minimo") or 0),
                          a.get("precio"), a.get("categoria")),
                     )
-                    pid = con.execute("SELECT last_insert_rowid()").fetchone()[0]
                     registrar_movimiento(con, pid, "alta", cantidad, texto_original, lote_id,
                                          antes=0, despues=cantidad, creado=True)
                     resultados.append({"producto": nombre_nuevo, "producto_id": pid, "tipo": "alta",
@@ -1068,8 +1002,8 @@ def deshacer_lote(lote_id: str):
         raise HTTPException(404, "No encontré ese cambio.")
     con = db()
     try:
-        con.execute("BEGIN IMMEDIATE")
-        lote = con.execute("SELECT * FROM lotes WHERE id=?", (lote_id,)).fetchone()
+        con.iniciar_escritura()
+        lote = con.execute("SELECT * FROM lotes WHERE id=?" + con.para_actualizar, (lote_id,)).fetchone()
         if not lote:
             raise HTTPException(404, "No encontré ese cambio.")
         if lote["revertido"]:
@@ -1082,9 +1016,9 @@ def deshacer_lote(lote_id: str):
                 continue
             if m["creado_en_lote"]:
                 otros = con.execute(
-                    "SELECT COUNT(*) FROM movimientos WHERE producto_id=? AND (lote_id IS NULL OR lote_id<>?)",
+                    "SELECT COUNT(*) AS n FROM movimientos WHERE producto_id=? AND (lote_id IS NULL OR lote_id<>?)",
                     (p["id"], lote_id),
-                ).fetchone()[0]
+                ).fetchone()["n"]
                 if otros == 0:  # lo creó este lote por error y nadie más lo usó: se borra completo
                     con.execute("DELETE FROM movimientos WHERE producto_id=?", (p["id"],))
                     con.execute("DELETE FROM productos WHERE id=?", (p["id"],))
@@ -1206,12 +1140,11 @@ async def importar_excel(archivo: UploadFile = File(...), confirmar: bool = Form
                                          costo_antes=actual["costo_compra"] if p["costo"] is not None else None,
                                          minimo_antes=actual["minimo"])
                 else:
-                    con.execute(
+                    pid = con.insertar(
                         "INSERT INTO productos (nombre, unidad, cantidad, minimo, precio, categoria, costo_compra) "
                         "VALUES (?,?,?,?,?,?,?)",
                         (p["nombre"], p["unidad"], p["cantidad"], p["minimo"], p["precio"], p["categoria"], p["costo"]),
                     )
-                    pid = con.execute("SELECT last_insert_rowid()").fetchone()[0]
                     registrar_movimiento(con, pid, "alta", p["cantidad"], f"(importado de {nombre})", lote_id,
                                          antes=0, despues=p["cantidad"], creado=True)
             con.commit()
@@ -1551,9 +1484,26 @@ def movimientos(limite: int = 30):
     return [dict(f) for f in filas]
 
 
+@app.get("/api/salud")
+def salud():
+    """Para el hosting (Render): confirma que el servidor y la base de datos responden."""
+    try:
+        con = db()
+        try:
+            con.execute("SELECT 1 AS ok").fetchone()
+        finally:
+            con.close()
+    except Exception:
+        log.exception("La base de datos no responde")
+        raise HTTPException(503, "La base de datos no responde.")
+    return {"ok": True, "base": "postgres" if ES_POSTGRES else "sqlite"}
+
+
 @app.post("/api/reset")
 def reset():
-    """Reinicia el inventario de demostración (útil antes de presentar)."""
+    """Reinicia el inventario de demostración (útil antes de presentar). Se apaga con PERMITIR_RESET=0."""
+    if (os.getenv("PERMITIR_RESET") or "1").strip() in ("0", "false", "no"):
+        raise HTTPException(403, "El reinicio de la demo está desactivado en este servidor.")
     init_db(reset=True)
     return {"ok": True}
 
