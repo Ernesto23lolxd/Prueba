@@ -6,3 +6,4 @@ openpyxl
 defusedxml
 psycopg[binary]
 psycopg-pool
+pymupdf

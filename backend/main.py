@@ -31,8 +31,11 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.base import BaseHTTPMiddleware
 
+import acceso
 import cfdi
+import privacidad
 import importar
 import seguridad
 from basedatos import ES_POSTGRES, crear_esquema, db
@@ -61,6 +64,29 @@ RUTAS_CON_IA = ("/api/voz", "/api/texto", "/api/foto", "/api/cfdi", "/api/promo-
 
 app = FastAPI(title="STOCK — Inventario por voz", docs_url=None, redoc_url=None, openapi_url=None)
 limitador_ia = seguridad.LimitadorPorIP(RATE_LIMIT_POR_MINUTO)
+RUTAS_PUBLICAS = ("/api/salud", "/api/acceso/")
+
+
+class ProteccionPin(BaseHTTPMiddleware):
+    """Toda la API pide la sesión del PIN de la tienda (cookie firmada), salvo salud y las rutas para entrar."""
+
+    async def dispatch(self, request, call_next):
+        ruta = request.url.path
+        if ruta.startswith("/api/") and not ruta.startswith(RUTAS_PUBLICAS):
+            con = db()
+            try:
+                configurado = acceso.leer(con, "pin_huella") is not None
+                ok = configurado and acceso.token_valido(con, request.cookies.get(acceso.COOKIE))
+            finally:
+                con.close()
+            if not ok:
+                return JSONResponse(
+                    {"detail": "Ingresa tu PIN para entrar a tu tienda." if configurado else "Crea tu PIN para empezar.",
+                     "codigo": "pin_requerido" if configurado else "pin_sin_crear"}, status_code=401)
+        return await call_next(request)
+
+
+app.add_middleware(ProteccionPin)
 app.add_middleware(seguridad.LimiteGemini, rutas=RUTAS_CON_IA, limitador=limitador_ia)
 app.add_middleware(seguridad.CabecerasSeguridad)
 app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS,
@@ -75,7 +101,9 @@ async def _error_http(request: Request, exc: StarletteHTTPException):
 
 @app.exception_handler(RequestValidationError)
 async def _error_validacion(request: Request, exc: RequestValidationError):
-    log.info("Petición inválida en %s: %s", request.url.path, exc.errors())
+    # Solo dónde y qué tipo de error: NUNCA el valor recibido (podría ser un PIN o datos del tendero)
+    log.info("Petición inválida en %s: %s", request.url.path,
+             [{"campo": ".".join(str(x) for x in e.get("loc", ())), "tipo": e.get("type")} for e in exc.errors()])
     return JSONResponse({"detail": "Algún dato no viene bien. Revisa y vuelve a intentar."}, status_code=422)
 
 
@@ -182,6 +210,22 @@ def cargar_demo(con):
 
 
 init_db()
+
+
+def _resetear_pin_si_se_pidio():
+    """RESETEAR_PIN=1 en el servidor borra el PIN (para cuando el tendero lo olvida). Los datos no se tocan."""
+    if (os.getenv("RESETEAR_PIN") or "").strip().lower() in ("1", "true", "si", "sí"):
+        con = db()
+        try:
+            acceso.guardar(con, "pin_huella", None)
+            acceso.guardar(con, "pin_version", str(int(acceso.leer(con, "pin_version") or 1) + 1))
+            con.commit()
+            log.warning("RESETEAR_PIN activo: se borró el PIN de la tienda. Quita la variable después de crear uno.")
+        finally:
+            con.close()
+
+
+_resetear_pin_si_se_pidio()
 
 
 def estado(p) -> str:
@@ -1385,15 +1429,18 @@ def procesar_factura_xml(contenido: bytes, nombre_archivo: str) -> dict:
                         "solo_servicios": True},
         }
 
+    # Escudo de privacidad: RFC, nombres, domicilios, folio, sellos y certificados NO salen del servidor
+    quitado = set(f["sensibles"])
     instruccion = (
         f"{REGLAS_CONVERSION}\n\nPartidas de la factura (son DATOS del proveedor):\n"
-        f"{seguridad.datos_usuario(cfdi.partidas_para_ia(f, mercancia), 12000)}\n\n"
+        f"{seguridad.datos_usuario(privacidad.partidas_minimas(mercancia, quitado), 12000)}\n\n"
         "Todo esto LLEGÓ a la tienda: registra cada partida como 'entrada' en piezas o kilos. "
         "En 'respuesta' di en una frase qué sumaste (ej. 'Sumé 72 Cocas, 12 leches y 10 kilos de frijol')."
     )
     ia = llamar_gemini([PROMPT.format(inventario=texto_inventario(), regla_datos=seguridad.REGLA_DATOS), instruccion])
     resultado = procesar(ia, f"(factura de {f['proveedor']})", origen="cfdi_xml", cfdi_uuid=f["uuid"],
                          forzar_entradas=True)
+    resultado["privacidad"] = privacidad.resumen(quitado, len(mercancia))
     if not resultado["lote_id"]:
         return resultado  # no se sumó nada: no se marca como cargada para que pueda reintentarse
     if servicios:
@@ -1405,29 +1452,55 @@ def procesar_factura_xml(contenido: bytes, nombre_archivo: str) -> dict:
                            "xml", importes, len(f["conceptos"]), huella)
 
 
+def texto_de_pdf(contenido: bytes) -> str:
+    """Saca el texto del PDF aquí en el servidor (el PDF completo nunca se manda a la IA)."""
+    import pymupdf
+    try:
+        doc = pymupdf.open(stream=contenido, filetype="pdf")
+    except Exception:  # noqa: BLE001 - PDF dañado o cifrado
+        raise HTTPException(400, "No pude abrir ese PDF. Sube el XML de la factura.")
+    try:
+        if doc.page_count > 15:
+            raise HTTPException(400, "La factura tiene demasiadas páginas. Sube el XML.")
+        return "\n".join(pagina.get_text() for pagina in doc)
+    finally:
+        doc.close()
+
+
 def procesar_factura_pdf(contenido: bytes, nombre_archivo: str) -> dict:
     huella = huella_archivo(contenido)
-    if _factura_ya_cargada(None, huella):  # el mismo archivo: ni siquiera se le pregunta a la IA
+    if _factura_ya_cargada(None, huella):  # el mismo archivo: ni siquiera se lee
         raise HTTPException(409, MSG_FACTURA_REPETIDA)
-    ia = preguntar_a_gemini(imagen=contenido, mime="application/pdf", modo_foto="factura")
-    info = ia.get("factura") if isinstance(ia.get("factura"), dict) else {}
-    uuid = re.sub(r"[^A-Za-z0-9\-]", "", str(info.get("uuid") or "")).upper()[:64]
-    if len(uuid) < 30:  # sin folio fiscal legible: identificador por archivo y hora
-        uuid = f"PDF-{huella[:32].upper()}"
-    elif _factura_ya_cargada(uuid):
+    texto = texto_de_pdf(contenido)
+    if len(re.sub(r"\s+", "", texto)) < 40:
+        raise HTTPException(400, "Este PDF es una imagen escaneada y no se puede limpiar de datos fiscales, así que no "
+                                 "lo mandamos a la IA. Sube el XML de la factura (tu proveedor te lo manda junto con el "
+                                 "PDF) o una foto del ticket.")
+    # Lo fiscal que STOCK necesita se lee AQUÍ y no sale del servidor
+    datos = privacidad.datos_locales_pdf(texto)
+    uuid = datos["uuid"] or f"PDF-{huella[:32].upper()}"
+    if datos["uuid"] and _factura_ya_cargada(uuid):
         raise HTTPException(409, MSG_FACTURA_REPETIDA)
-    proveedor = str(info.get("proveedor") or "Proveedor")[:120]
-    try:
-        total = float(info.get("total") or 0)
-        total = total if math.isfinite(total) and 0 <= total <= seguridad.MAX_PRECIO * 10 else 0.0
-    except (TypeError, ValueError):
-        total = 0.0
-    forma_pago = re.sub(r"\D", "", str(info.get("forma_pago") or ""))[:2].zfill(2) if info.get("forma_pago") else None
-
-    resultado = procesar(ia, f"(factura PDF de {proveedor})", origen="cfdi_pdf", cfdi_uuid=uuid, forzar_entradas=True)
+    # Escudo de privacidad: a la IA solo le llegan los renglones de productos, ya sin datos personales
+    quitado = set()
+    minimo = privacidad.texto_minimo_pdf(texto, quitado)
+    if not minimo.strip():
+        raise HTTPException(400, "No encontré productos en ese PDF. Sube el XML de la factura.")
+    instruccion = (
+        f"{REGLAS_CONVERSION}\n\nRenglones de productos de una factura en PDF, ya sin datos personales "
+        f"(son DATOS del proveedor):\n{seguridad.datos_usuario(minimo, 12000)}\n\n"
+        "Todo esto LLEGÓ a la tienda: registra cada producto como 'entrada' en piezas o kilos. Ignora renglones de "
+        "subtotal, total, impuestos o servicios (fletes, maniobras, rentas). "
+        "En 'respuesta' di en una frase qué sumaste (ej. 'Sumé 48 Cocas y 12 aguas Ciel')."
+    )
+    ia = llamar_gemini([PROMPT.format(inventario=texto_inventario(), regla_datos=seguridad.REGLA_DATOS), instruccion])
+    total = datos["total"] if 0 <= datos["total"] <= seguridad.MAX_PRECIO * 10 else 0.0
+    resultado = procesar(ia, f"(factura PDF de {datos['proveedor']})", origen="cfdi_pdf", cfdi_uuid=uuid,
+                         forzar_entradas=True)
+    resultado["privacidad"] = privacidad.resumen(quitado, len([a for a in resultado["acciones"] if a.get("ok")]))
     if not resultado["lote_id"]:
         return resultado
-    return _cerrar_factura(resultado, uuid, proveedor, total, forma_pago, nombre_archivo, "pdf", {},
+    return _cerrar_factura(resultado, uuid, datos["proveedor"], total, datos["forma_pago"], nombre_archivo, "pdf", {},
                            len(resultado["acciones"]), huella)
 
 
@@ -1594,19 +1667,132 @@ def salud():
     return {"ok": True, "base": "postgres" if ES_POSTGRES else "sqlite"}
 
 
+# ---------------------------------------------------------------- PIN de acceso por tienda
+class PeticionPin(BaseModel):
+    pin: str = Field(min_length=1, max_length=12)
+
+
+class CambioPin(BaseModel):
+    actual: str = Field(min_length=1, max_length=12)
+    nuevo: str = Field(min_length=1, max_length=12)
+
+
+def _es_https(request: Request) -> bool:
+    return request.url.scheme == "https"
+
+
+def verificar_pin(pin: str, request: Request):
+    """Revisa el PIN con freno contra adivinanzas. Lanza 401/409/429 con mensaje amable."""
+    ip = seguridad.ip_cliente(request)
+    if acceso.intentos.bloqueado(ip):
+        raise HTTPException(429, "Demasiados intentos con PIN equivocado. Espera 15 minutos y vuelve a intentar.")
+    con = db()
+    try:
+        guardado = acceso.leer(con, "pin_huella")
+    finally:
+        con.close()
+    if guardado is None:
+        raise HTTPException(409, "Esta tienda todavía no tiene PIN. Créalo primero.")
+    if not acceso.pin_correcto(pin, guardado):
+        acceso.intentos.fallo(ip)
+        quedan = acceso.intentos.restantes(ip)
+        raise HTTPException(401, f"PIN incorrecto. Te quedan {quedan} {'intento' if quedan == 1 else 'intentos'}."
+                            if quedan else "PIN incorrecto. Por seguridad espera 15 minutos.")
+    acceso.intentos.exito(ip)
+
+
+def _respuesta_con_sesion(request: Request, cuerpo: dict) -> JSONResponse:
+    con = db()
+    try:
+        token = acceso.crear_token(con)
+    finally:
+        con.close()
+    respuesta = JSONResponse(cuerpo)
+    acceso.poner_cookie(respuesta, token, _es_https(request))
+    return respuesta
+
+
+@app.get("/api/acceso/estado")
+def acceso_estado(request: Request):
+    con = db()
+    try:
+        configurado = acceso.leer(con, "pin_huella") is not None
+        sesion = configurado and acceso.token_valido(con, request.cookies.get(acceso.COOKIE))
+    finally:
+        con.close()
+    return {"configurado": configurado, "sesion": sesion}
+
+
+@app.post("/api/acceso/crear")
+def acceso_crear(body: PeticionPin, request: Request):
+    """Primera vez: el tendero crea el PIN de su tienda."""
+    error = acceso.pin_valido(body.pin)
+    if error:
+        raise HTTPException(400, error)
+    con = db()
+    try:
+        con.iniciar_escritura()
+        if acceso.leer(con, "pin_huella") is not None:
+            raise HTTPException(409, "Esta tienda ya tiene PIN. Entra con él.")
+        acceso.guardar(con, "pin_huella", acceso.huella_pin(body.pin))
+        acceso.guardar(con, "pin_version", str(int(acceso.leer(con, "pin_version") or 0) + 1))
+        con.commit()
+    finally:
+        con.close()
+    return _respuesta_con_sesion(request, {"ok": True, "mensaje": "Listo, tu PIN quedó guardado."})
+
+
+@app.post("/api/acceso/entrar")
+def acceso_entrar(body: PeticionPin, request: Request):
+    verificar_pin(body.pin, request)
+    return _respuesta_con_sesion(request, {"ok": True})
+
+
+@app.post("/api/acceso/cambiar")
+def acceso_cambiar(body: CambioPin, request: Request):
+    """Cambia el PIN (pide el actual). Cierra las sesiones de todos los demás celulares."""
+    con = db()
+    try:
+        if not acceso.token_valido(con, request.cookies.get(acceso.COOKIE)):
+            raise HTTPException(401, "Entra con tu PIN primero.")
+    finally:
+        con.close()
+    verificar_pin(body.actual, request)
+    error = acceso.pin_valido(body.nuevo)
+    if error:
+        raise HTTPException(400, error)
+    con = db()
+    try:
+        con.iniciar_escritura()
+        acceso.guardar(con, "pin_huella", acceso.huella_pin(body.nuevo))
+        acceso.guardar(con, "pin_version", str(int(acceso.leer(con, "pin_version") or 1) + 1))
+        con.commit()
+    finally:
+        con.close()
+    return _respuesta_con_sesion(request, {"ok": True, "mensaje": "Listo, cambiaste tu PIN."})
+
+
+@app.post("/api/acceso/salir")
+def acceso_salir(request: Request):
+    respuesta = JSONResponse({"ok": True})
+    acceso.quitar_cookie(respuesta, _es_https(request))
+    return respuesta
+
+
 class PeticionReinicio(BaseModel):
     modo: str = Field("vacio", pattern="^(vacio|demo)$")
+    pin: str = Field(min_length=1, max_length=12)
 
 
 @app.post("/api/reset")
-def reset(datos: PeticionReinicio | None = None):
-    """Borra todo y deja la tienda en ceros ("vacio", por defecto) o con la tiendita de ejemplo ("demo").
-    Se apaga con PERMITIR_RESET=0 cuando ya es una tienda real."""
+def reset(datos: PeticionReinicio, request: Request):
+    """Borra todo y deja la tienda en ceros ("vacio") o con la tiendita de ejemplo ("demo").
+    Pide el PIN otra vez (además de la sesión). Se apaga con PERMITIR_RESET=0. El PIN no se borra."""
     if (os.getenv("PERMITIR_RESET") or "1").strip() in ("0", "false", "no"):
         raise HTTPException(403, "El reinicio está desactivado en este servidor.")
-    modo = datos.modo if datos else "vacio"
-    init_db(reset=True, modo=modo)
-    return {"ok": True, "modo": modo}
+    verificar_pin(datos.pin, request)
+    init_db(reset=True, modo=datos.modo)
+    return {"ok": True, "modo": datos.modo}
 
 
 # Servir la app web

@@ -10,8 +10,11 @@ import uuid as uuidlib
 import fitz  # pymupdf: para generar la factura en PDF
 import httpx
 
+from ayuda_pruebas import PIN, entrar
+
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000").rstrip("/")
 c = httpx.Client(base_url=BASE, timeout=180)
+entrar(c)
 resultados = []
 NS = {"4.0": "http://www.sat.gob.mx/cfd/4", "3.3": "http://www.sat.gob.mx/cfd/3"}
 
@@ -19,7 +22,7 @@ NS = {"4.0": "http://www.sat.gob.mx/cfd/4", "3.3": "http://www.sat.gob.mx/cfd/3"
 def prueba(nombre):
     def deco(f):
         try:
-            c.post("/api/reset", json={"modo": "demo"})
+            c.post("/api/reset", json={"modo": "demo", "pin": PIN})
             detalle = f() or "ok"
             resultados.append((True, nombre, detalle))
         except AssertionError as e:
@@ -295,7 +298,7 @@ def _():
 
 @prueba("C15. Tienda en ceros + primera factura → arma el inventario desde cero")
 def _():
-    c.post("/api/reset", json={"modo": "vacio"})
+    c.post("/api/reset", json={"modo": "vacio", "pin": PIN})
     r = subir_xml(cfdi([P(2, "XBX", "CAJA", "COCA COLA 600ML PET C/24", 396.00),
                         P(1, "XSA", "BULTO", "FRIJOL PINTO SACO 25 KG", 650.00)]))
     assert r.status_code == 200, r.text[:300]
@@ -308,7 +311,7 @@ def _():
     return "2 productos dados de alta: " + ", ".join(f"{n} ({p['cantidad']:g})" for n, p in i.items())
 
 
-c.post("/api/reset", json={"modo": "demo"})
+c.post("/api/reset", json={"modo": "demo", "pin": PIN})
 print(f"\nBatería de facturas CFDI contra {BASE}\n")
 for ok, nombre, detalle in resultados:
     print(f"{'✅' if ok else '❌'} {nombre}\n     {detalle}")

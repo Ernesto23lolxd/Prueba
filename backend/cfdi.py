@@ -72,12 +72,27 @@ def leer_cfdi(contenido: bytes) -> dict:
 
     emisor = timbre = None
     conceptos = []
+    sensibles = set()  # qué datos personales o de verificación traía (nunca se mandan a la IA)
+    if _attr(raiz, "Sello") or _attr(raiz, "Certificado") or _attr(raiz, "NoCertificado"):
+        sensibles.add("sellos y certificados")
+    if _attr(raiz, "LugarExpedicion"):
+        sensibles.add("domicilio fiscal")
     for el in raiz.iter():
         nombre = _local(el.tag)
+        if nombre in ("Emisor", "Receptor"):
+            if _attr(el, "Rfc"):
+                sensibles.add("RFC")
+            if _attr(el, "Nombre"):
+                sensibles.add("nombres")
+            if _attr(el, "DomicilioFiscalReceptor"):
+                sensibles.add("domicilio fiscal")
+            if _attr(el, "RegimenFiscal", "RegimenFiscalReceptor", "UsoCFDI"):
+                sensibles.add("datos fiscales")
         if nombre == "Emisor" and emisor is None:
             emisor = el
         elif nombre == "TimbreFiscalDigital":
             timbre = el
+            sensibles.update({"folio fiscal", "sellos y certificados"})
         elif nombre == "Concepto":
             clave_unidad = (_attr(el, "ClaveUnidad") or "").strip().upper()
             unidad = (_attr(el, "Unidad") or clave_unidad or "")[:20]
@@ -118,16 +133,5 @@ def leer_cfdi(contenido: bytes) -> dict:
         "forma_pago": _attr(raiz, "FormaPago"),
         "fecha": _attr(raiz, "Fecha"),
         "conceptos": conceptos,
+        "sensibles": sensibles,
     }
-
-
-def partidas_para_ia(factura: dict, conceptos: list | None = None) -> str:
-    """Texto limpio de las partidas para que la IA convierta unidades y empareje productos."""
-    lineas = [f"Factura del proveedor {factura['proveedor']}:"]
-    for c in conceptos if conceptos is not None else factura["conceptos"]:
-        lineas.append(
-            f"Partida {c['partida']}: {c['cantidad']:g} {c['unidad']} de \"{c['descripcion']}\" "
-            f"(precio por {c['unidad'] or 'unidad'}: ${c['valor_unitario']:,.2f}, importe ${c['importe']:,.2f}"
-            + (f", ya con descuento de ${c['descuento']:,.2f}" if c.get("descuento") else "") + ")"
-        )
-    return "\n".join(lineas)

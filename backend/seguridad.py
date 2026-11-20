@@ -179,12 +179,17 @@ def validar_salida_ia(ia: dict) -> tuple[dict, list]:
 
 # ---------------------------------------------------------------- 4. Rate limiting
 def ip_cliente(request) -> str:
-    """IP real del cliente. Detrás de un proxy de confianza (Render, Railway…) con CONFIAR_PROXY=1 se usa la
-    primera IP de X-Forwarded-For; sin esa variable se ignora la cabecera (alguien podría falsificarla)."""
+    """IP real del cliente, sin dejar que el cliente la invente.
+    Con CONFIAR_PROXY=1 (Render, detrás de Cloudflare): primero CF-Connecting-IP (la pone Cloudflare y la
+    sobrescribe aunque el cliente la mande) y si no, el ÚLTIMO valor de X-Forwarded-For (el que agrega el proxy).
+    El PRIMER valor de X-Forwarded-For lo controla el cliente: usarlo permitiría saltarse los límites."""
     if (os.getenv("CONFIAR_PROXY") or "").strip() in ("1", "true", "si", "sí"):
-        reenviada = request.headers.get("x-forwarded-for", "")
+        cloudflare = request.headers.get("cf-connecting-ip", "").strip()
+        if cloudflare:
+            return cloudflare[:64]
+        reenviada = [x.strip() for x in request.headers.get("x-forwarded-for", "").split(",") if x.strip()]
         if reenviada:
-            return reenviada.split(",")[0].strip()[:64]
+            return reenviada[-1][:64]
     return request.client.host if request.client else "desconocida"
 
 

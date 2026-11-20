@@ -13,8 +13,11 @@ import zipfile
 
 import httpx
 
+from ayuda_pruebas import PIN, entrar
+
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000").rstrip("/")
 c = httpx.Client(base_url=BASE, timeout=120)
+entrar(c)
 resultados = []
 
 
@@ -39,7 +42,7 @@ def sin_fuga(r):
 
 
 def demo():
-    r = c.post("/api/reset", json={"modo": "demo"})
+    r = c.post("/api/reset", json={"modo": "demo", "pin": PIN})
     assert r.status_code == 200, r.text
 
 
@@ -285,7 +288,7 @@ def _():
     c.patch(f"/api/productos/{pid}", json={"cantidad": 10})
 
     def vender(_):
-        with httpx.Client(base_url=BASE, timeout=60) as cc:
+        with httpx.Client(base_url=BASE, timeout=60, cookies=c.cookies) as cc:
             return cc.post("/api/ajuste-rapido", json={"producto_id": pid, "delta": -1}).status_code
 
     with cf.ThreadPoolExecutor(25) as ex:
@@ -322,7 +325,7 @@ def _():
     lote = c.post("/api/ajuste-rapido", json={"producto_id": pid, "delta": 5}).json()["lote_id"]
 
     def deshacer(_):
-        with httpx.Client(base_url=BASE, timeout=60) as cc:
+        with httpx.Client(base_url=BASE, timeout=60, cookies=c.cookies) as cc:
             return cc.post(f"/api/lotes/{lote}/deshacer").status_code
 
     with cf.ThreadPoolExecutor(10) as ex:
@@ -371,8 +374,96 @@ def _():
     return "la factura solo sumó mercancía; instrucciones ignoradas"
 
 
+# ------------------------------------------------------------------ PIN de acceso
+@prueba("S21. Sin la sesión del PIN no se puede leer ni cambiar nada")
+def _():
+    anonimo = httpx.Client(base_url=BASE, timeout=60)
+    rutas = [("GET", "/api/inventario"), ("GET", "/api/tablero"), ("GET", "/api/movimientos"),
+             ("GET", "/api/resumen-mes/csv"), ("POST", "/api/texto"), ("POST", "/api/ajuste-rapido"),
+             ("PATCH", "/api/productos/1"), ("DELETE", "/api/productos/1"), ("POST", "/api/reset"),
+             ("POST", "/api/cfdi/demo"), ("POST", "/api/lotes/abc/deshacer")]
+    for metodo, ruta in rutas:
+        r = anonimo.request(metodo, ruta, json={"texto": "vendí 1 coca", "producto_id": 1, "delta": -1, "pin": PIN})
+        assert r.status_code == 401 and r.json().get("codigo") == "pin_requerido", (metodo, ruta, r.status_code, r.text[:80])
+    assert anonimo.get("/api/salud").status_code == 200
+    assert anonimo.get("/api/acceso/estado").json() == {"configurado": True, "sesion": False}
+    return f"{len(rutas)} rutas responden 401 sin PIN (incluido reiniciar con el PIN en el cuerpo)"
+
+
+@prueba("S22. Cookie de sesión protegida y sesiones falsificadas rechazadas")
+def _():
+    otro = httpx.Client(base_url=BASE, timeout=60)
+    r = otro.post("/api/acceso/entrar", json={"pin": PIN})
+    galleta = r.headers.get("set-cookie", "")
+    assert r.status_code == 200 and "stock_sesion=" in galleta, galleta
+    assert "httponly" in galleta.lower() and "samesite=strict" in galleta.lower(), galleta
+    if BASE.startswith("https"):
+        assert "secure" in galleta.lower(), "la cookie debe ser Secure en HTTPS"
+    valido = otro.cookies.get("stock_sesion")
+    vence, version, firma = valido.split(".")
+    falsas = [f"{int(vence) + 999999}.{version}.{firma}", f"{vence}.{int(version) + 1}.{firma}",
+              f"{vence}.{version}.{'0' * 64}", "1.1.abc", "basura", ""]
+    for falsa in falsas:
+        r = httpx.get(BASE + "/api/inventario", cookies={"stock_sesion": falsa}, timeout=30)
+        assert r.status_code == 401, (falsa[:30], r.status_code)
+    assert httpx.get(BASE + "/api/inventario", cookies={"stock_sesion": valido}, timeout=30).status_code == 200
+    return "HttpOnly + SameSite=Strict" + (" + Secure" if BASE.startswith("https") else "") + f"; {len(falsas)} falsificaciones rechazadas"
+
+
+@prueba("S23. Reiniciar exige el PIN aunque haya sesión")
+def _():
+    antes = len(inv())
+    assert c.post("/api/reset", json={"modo": "vacio"}).status_code == 422, "aceptó reiniciar sin PIN"
+    r = c.post("/api/reset", json={"modo": "vacio", "pin": "000001"})
+    assert r.status_code == 401, (r.status_code, r.text[:80])
+    assert len(inv()) == antes, "se borró la tienda con un PIN equivocado"
+    return "sin PIN → 422, PIN equivocado → 401, la tienda sigue intacta"
+
+
+@prueba("S24. Freno contra adivinar el PIN: bloqueo tras 5 intentos (y la IP no se puede falsificar)")
+def _():
+    import acceso
+    # 1) La lógica del freno, sin red (contra la nube no se prueba con intentos reales: bloquearía 15 minutos la
+    #    IP pública del evento, que comparten todos los del equipo)
+    freno = acceso.Intentos()
+    for _k in range(5):
+        assert not freno.bloqueado("1.2.3.4")
+        freno.fallo("1.2.3.4")
+    assert freno.bloqueado("1.2.3.4") and not freno.bloqueado("5.6.7.8"), "el bloqueo no es por IP"
+    for k in range(30):
+        freno.fallo(f"10.0.0.{k}")
+    assert freno.bloqueado("9.9.9.9"), "falta el freno global contra ataques desde muchas IPs"
+    # 2) La IP no se puede inventar con X-Forwarded-For
+    import os
+    import seguridad
+    os.environ["CONFIAR_PROXY"] = "1"
+    falsa = type("R", (), {"headers": {"x-forwarded-for": "6.6.6.6, 200.1.2.3"}, "client": None})()
+    assert seguridad.ip_cliente(falsa) == "200.1.2.3", "usa la IP que manda el cliente (falsificable)"
+    cf = type("R", (), {"headers": {"cf-connecting-ip": "200.9.9.9", "x-forwarded-for": "6.6.6.6"}, "client": None})()
+    assert seguridad.ip_cliente(cf) == "200.9.9.9"
+    detalle = "5 fallos por IP y 30 globales bloquean; X-Forwarded-For falsificado ignorado"
+    # 3) Intentos reales solo contra el servidor local
+    if "127.0.0.1" in BASE or "localhost" in BASE:
+        atacante = httpx.Client(base_url=BASE, timeout=60)
+        codigos = [atacante.post("/api/acceso/entrar", json={"pin": f"90{k:04d}"}).status_code for k in range(7)]
+        assert codigos[:5] == [401] * 5 and codigos[5:] == [429, 429], codigos
+        assert c.get("/api/inventario").status_code == 200, "la sesión del dueño debe seguir funcionando"
+        detalle += f"; en vivo: {codigos}"
+    return detalle
+
+
+@prueba("S25. Crear un PIN inválido o duplicado no se permite")
+def _():
+    for malo in ("12", "1234567", "12ab", "1234", "000000", "111111"):
+        r = httpx.post(BASE + "/api/acceso/crear", json={"pin": malo}, timeout=30)
+        assert r.status_code in (400, 409), (malo, r.status_code)
+    r = httpx.post(BASE + "/api/acceso/crear", json={"pin": "857392"}, timeout=30)
+    assert r.status_code == 409, "dejó crear otro PIN sobre el existente"
+    return "cortos, largos, con letras, triviales y un segundo PIN: rechazados"
+
+
 # ------------------------------------------------------------------ Reporte
-demo()
+c.post("/api/reset", json={"modo": "vacio", "pin": PIN})
 print(f"\nAuditoría de seguridad y robustez de STOCK contra {BASE}\n")
 for ok, nombre, detalle in resultados:
     print(f"{'✅' if ok else '❌'} {nombre}\n     {detalle}")

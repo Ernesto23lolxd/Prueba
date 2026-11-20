@@ -139,6 +139,7 @@ CREATE TABLE IF NOT EXISTS lotes (
 CREATE TABLE IF NOT EXISTS cfdi_procesados (
     uuid TEXT PRIMARY KEY, proveedor TEXT, total REAL, forma_pago TEXT, fecha TEXT NOT NULL, archivo TEXT
 );
+CREATE TABLE IF NOT EXISTS ajustes (clave TEXT PRIMARY KEY, valor TEXT);
 """
 
 # En Postgres: DOUBLE PRECISION (REAL sería de 4 bytes y perdería centavos) e identidades.
@@ -176,7 +177,9 @@ CREATE TABLE IF NOT EXISTS cfdi_procesados (
 ALTER TABLE productos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE movimientos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lotes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE cfdi_procesados ENABLE ROW LEVEL SECURITY
+ALTER TABLE cfdi_procesados ENABLE ROW LEVEL SECURITY;
+CREATE TABLE IF NOT EXISTS ajustes (clave TEXT PRIMARY KEY, valor TEXT);
+ALTER TABLE ajustes ENABLE ROW LEVEL SECURITY
 """
 # RLS activado sin políticas: la API pública de Supabase (anon key) no puede leer ni escribir estas tablas.
 # El backend entra con el usuario de la base (dueño de las tablas), que no está sujeto a RLS.

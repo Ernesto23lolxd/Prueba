@@ -15,11 +15,15 @@ import time
 import urllib.error
 import urllib.request
 import uuid
+from http.cookiejar import CookieJar
 from pathlib import Path
+
+from ayuda_pruebas import PIN
 
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000").rstrip("/")
 DEMO = Path(__file__).resolve().parent.parent / "demo"
 resultados = []
+NAVEGADOR = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(CookieJar()))  # guarda la sesión del PIN
 
 
 def pedir(metodo, ruta, json_body=None, archivos=None, campos=None, timeout=90):
@@ -41,7 +45,7 @@ def pedir(metodo, ruta, json_body=None, archivos=None, campos=None, timeout=90):
         headers["Content-Type"] = f"multipart/form-data; boundary={frontera}"
     req = urllib.request.Request(BASE + ruta, data=datos, headers=headers, method=metodo)
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        with NAVEGADOR.open(req, timeout=timeout) as r:
             cuerpo = r.read()
             return r.status, (json.loads(cuerpo) if "json" in r.headers.get("Content-Type", "") else cuerpo.decode())
     except urllib.error.HTTPError as e:
@@ -77,7 +81,10 @@ def texto(frase):
 
 
 # ------------------------------------------------------------------ Pruebas
-pedir("POST", "/api/reset", {"modo": "demo"})
+_estado = pedir("GET", "/api/acceso/estado")[1]
+_r = pedir("POST", "/api/acceso/entrar" if _estado["configurado"] else "/api/acceso/crear", {"pin": PIN})
+assert _r[0] == 200, f"no pude entrar con el PIN de prueba: {_r}"
+pedir("POST", "/api/reset", {"modo": "demo", "pin": PIN})
 
 
 @prueba("1. La página y sus archivos cargan")
@@ -228,7 +235,7 @@ def es_wa(url):
 
 @prueba("17. Factura XML: convierte cajas a piezas y dispara el escudo anti-inflación")
 def _():
-    pedir("POST", "/api/reset", {"modo": "demo"})
+    pedir("POST", "/api/reset", {"modo": "demo", "pin": PIN})
     antes = inv()
     xml = (BACKEND / "demo_cfdi.xml").read_bytes()
     codigo, d = pedir("POST", "/api/cfdi", archivos={"archivo": ("demo_cfdi.xml", xml, "text/xml")}, timeout=120)
@@ -412,7 +419,7 @@ def _():
 
 @prueba("29. Reinicio deja la base limpia para la demo")
 def _():
-    pedir("POST", "/api/reset", {"modo": "demo"})
+    pedir("POST", "/api/reset", {"modo": "demo", "pin": PIN})
     i = inv()
     assert len(i) == 20 and "Queso menonita" not in i and "Café Nescafé 42 g" in i
     _, m = pedir("GET", "/api/resumen-mes")
@@ -422,7 +429,7 @@ def _():
 
 @prueba("29b. Empezar de cero: tienda vacía y lista para inventariar")
 def _():
-    codigo, d = pedir("POST", "/api/reset")  # sin cuerpo = en ceros
+    codigo, d = pedir("POST", "/api/reset", {"pin": PIN})  # sin modo = en ceros
     assert codigo == 200 and d["modo"] == "vacio", d
     assert inv() == {}, "quedaron productos"
     codigo, t = pedir("GET", "/api/tablero")
@@ -433,9 +440,9 @@ def _():
     assert codigo == 200
     codigo, _ = pedir("GET", "/api/lista-compras")
     assert codigo == 200
-    codigo, d = pedir("POST", "/api/reset", {"modo": "otro"})
+    codigo, d = pedir("POST", "/api/reset", {"modo": "otro", "pin": PIN})
     assert codigo == 422, "aceptó un modo inválido"
-    pedir("POST", "/api/reset", {"modo": "demo"})  # deja la demo para la siguiente corrida
+    pedir("POST", "/api/reset", {"modo": "demo", "pin": PIN})  # deja la demo para la siguiente corrida
     return "0 productos, tablero, mes y CSV responden en ceros"
 
 

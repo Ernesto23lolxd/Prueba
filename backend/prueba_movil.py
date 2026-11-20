@@ -10,10 +10,20 @@ import sys
 import httpx
 from playwright.sync_api import sync_playwright
 
+from ayuda_pruebas import PIN, entrar
+
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "https://stock-tienda.onrender.com").rstrip("/")
 ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36"
 IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
 resultados = []
+
+
+def escribir_pin(page):
+    """Escribe el PIN en la pantalla del PIN (teclado físico) y espera a que se cierre."""
+    page.wait_for_selector("#pantallaPin:not(.hidden)", timeout=30000)
+    page.keyboard.type(PIN)
+    page.keyboard.press("Enter")
+    page.wait_for_selector("#pantallaPin.hidden", state="attached", timeout=30000)
 
 
 def prueba(nombre, f):
@@ -51,6 +61,8 @@ def service_worker_http():
     return "en la raíz, sin caché y con su propia CSP"
 
 
+entrar(httpx.Client(base_url=BASE, timeout=90))  # crea el PIN de prueba si la tienda no tiene
+
 with sync_playwright() as pw:
     nav = pw.chromium.launch(channel="msedge", headless=True)
 
@@ -62,6 +74,7 @@ with sync_playwright() as pw:
         errores = []
         page.on("pageerror", lambda e: errores.append(str(e)))
         page.goto(BASE + "/app", wait_until="networkidle", timeout=120000)
+        escribir_pin(page)
         page.evaluate("navigator.serviceWorker.ready.then(() => true)")
         page.reload(wait_until="networkidle")
         assert page.evaluate("!!navigator.serviceWorker.controller"), "el service worker no tomó el control"
@@ -90,6 +103,7 @@ with sync_playwright() as pw:
         ctx.add_init_script("localStorage.setItem('stock_bienvenida','1')")
         page = ctx.new_page()
         page.goto(BASE + "/app", wait_until="networkidle", timeout=120000)
+        escribir_pin(page)
         tam = page.evaluate("getComputedStyle(document.getElementById('inputTexto')).fontSize")
         assert tam == "16px", f"el campo de texto mide {tam}: iPhone haría zoom al escribir"
         assert page.evaluate("document.documentElement.scrollWidth") <= 390

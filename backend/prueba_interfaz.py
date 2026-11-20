@@ -12,6 +12,8 @@ from pathlib import Path
 import httpx
 from playwright.sync_api import sync_playwright
 
+from ayuda_pruebas import PIN, entrar
+
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000").rstrip("/")
 CAPTURAS = Path(sys.argv[2]) if len(sys.argv) > 2 else None
 if CAPTURAS:
@@ -37,7 +39,16 @@ DISPOSITIVOS = [
 ]
 
 api = httpx.Client(base_url=BASE, timeout=60)
+entrar(api)
 resultados = []
+
+
+def escribir_pin(page):
+    """Escribe el PIN en la pantalla del PIN (teclado físico) y espera a que se cierre."""
+    page.wait_for_selector("#pantallaPin:not(.hidden)", timeout=30000)
+    page.keyboard.type(PIN)
+    page.keyboard.press("Enter")
+    page.wait_for_selector("#pantallaPin.hidden", state="attached", timeout=30000)
 
 
 def reporte(ok, nombre, detalle):
@@ -81,7 +92,7 @@ def probar_dispositivo(pw_navegador, nombre, ancho, alto, escala, movil, ua):
     page.on("dialog", lambda d: (errores.append(f"diálogo inesperado: {d.message}"), d.dismiss()))
     corto = nombre.split(" ")[0] + "_" + str(ancho)
     try:
-        api.post("/api/reset", json={"modo": "vacio"})
+        api.post("/api/reset", json={"modo": "vacio", "pin": PIN})
         # 1. Portada
         page.goto(BASE + "/", wait_until="networkidle")
         sin_desborde(page, "portada")
@@ -99,6 +110,7 @@ def probar_dispositivo(pw_navegador, nombre, ancho, alto, escala, movil, ua):
         if CAPTURAS:
             page.screenshot(path=str(CAPTURAS / f"{corto}_bienvenida.png"))
         boton.click()
+        escribir_pin(page)  # después de la bienvenida se pide el PIN de la tienda
 
         # 3. Tutorial: los 17 pasos
         page.wait_for_selector("#tour:not(.hidden)")
@@ -152,6 +164,7 @@ def probar_dispositivo(pw_navegador, nombre, ancho, alto, escala, movil, ua):
         page.wait_for_selector("#confirmar:not(.hidden)")
         assert dentro(page.locator("#confirmar > div").bounding_box(), ancho, alto), "la confirmación se sale"
         page.click("#confSi")
+        escribir_pin(page)  # cargar la tienda de ejemplo pide el PIN otra vez
         page.wait_for_function("document.querySelectorAll('#inventario [data-campo], #inventario button').length > 0 || (tablero.prediccion||[]).length > 0", timeout=15000)
         assert not page.locator("#tiendaVacia").is_visible(), "sigue la guía de ceros con productos"
 
@@ -187,6 +200,7 @@ def probar_dispositivo(pw_navegador, nombre, ancho, alto, escala, movil, ua):
         page.click("#btnMenu")
         page.click("[data-menu='cero']")
         page.click("#confSi")
+        escribir_pin(page)  # empezar de cero pide el PIN otra vez
         page.wait_for_selector("#tiendaVacia:not(.hidden)", timeout=10000)
 
         # 9. El botón ? repite el tutorial
@@ -212,7 +226,7 @@ with sync_playwright() as pw:
         probar_dispositivo(navegador, *disp)
     navegador.close()
 
-api.post("/api/reset", json={"modo": "vacio"})
+api.post("/api/reset", json={"modo": "vacio", "pin": PIN})
 fallas = sum(not ok for ok, *_ in resultados)
 print(f"\n{len(resultados) - fallas}/{len(resultados)} dispositivos sin problemas")
 sys.exit(1 if fallas else 0)

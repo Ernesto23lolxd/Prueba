@@ -113,6 +113,19 @@
     }
     #avisoSinRed { padding-top: calc(.4rem + env(safe-area-inset-top)); }
 
+    /* ===== Pantalla del PIN ===== */
+    .pin-tecla { height: 4rem; border-radius: 1.1rem; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+                 color: #fff; font-size: 1.6rem; font-weight: 800; cursor: pointer; transition: transform .1s, background .15s; }
+    .pin-tecla:active { transform: scale(.94); background: rgba(255,255,255,.14); }
+    .pin-tecla:focus-visible { outline: 2px solid #0095E8; outline-offset: 2px; }
+    .pin-tecla.ok { background: var(--grad-stock); color: #0d0e11; border: 0; }
+    .pin-tecla.ok:disabled { opacity: .35; cursor: default; }
+    .pin-punto { width: 16px; height: 16px; border-radius: 9999px; border: 2px solid rgba(255,255,255,.35); transition: all .15s; }
+    .pin-punto.lleno { background: var(--grad-stock); border-color: transparent; transform: scale(1.15); }
+    .pin-punto.extra { opacity: .35; }
+    .pin-temblor { animation: pinTemblor .4s; }
+    @keyframes pinTemblor { 20%, 60% { transform: translateX(-8px) } 40%, 80% { transform: translateX(8px) } }
+
     /* ===== Menú ⋯ ===== */
     .menu-item { display: block; width: 100%; text-align: left; padding: .6rem .75rem; border-radius: .75rem; color: #e4e4e7; cursor: pointer; }
     .menu-item:hover, .menu-item:focus-visible { background: rgba(255,255,255,.07); outline: none; }
@@ -314,6 +327,9 @@
             <button type="button" role="menuitem" data-menu="factura-demo" class="menu-item">⚡ Probar con una factura de ejemplo</button>
             <button type="button" role="menuitem" data-menu="demo" class="menu-item">🧪 Cargar tienda de ejemplo</button>
             <button type="button" role="menuitem" data-menu="cero" class="menu-item text-red-300">🧹 Empezar de cero</button>
+            <div class="h-px bg-white/10 my-1"></div>
+            <button type="button" role="menuitem" data-menu="cambiar-pin" class="menu-item">🔑 Cambiar mi PIN</button>
+            <button type="button" role="menuitem" data-menu="bloquear" class="menu-item">🔒 Bloquear STOCK</button>
           </div>
         </div>
       </div>
@@ -367,6 +383,7 @@
           <li class="bv-in bv-fila" style="--d:4"><span class="bv-ico">🎙️</span><span><b>Háblale.</b> “Vendí 3 Cocas” y se descuenta solo.</span></li>
           <li class="bv-in bv-fila" style="--d:5"><span class="bv-ico">📄</span><span><b>Sube la factura.</b> Convierte cajas en piezas y te avisa si te subieron el precio.</span></li>
           <li class="bv-in bv-fila" style="--d:6"><span class="bv-ico">🛍️</span><span><b>Surte sin adivinar.</b> Te dice qué se acaba y arma tu pedido por WhatsApp.</span></li>
+          <li class="bv-in bv-fila" style="--d:7"><span class="bv-ico">🔒</span><span><b>Protegida con tu PIN.</b> Solo tú entras a tu tienda.</span></li>
         </ul>
         <label class="bv-in block text-left mt-6" style="--d:7">
           <span class="text-xs font-semibold text-[#a1a1aa]">¿Cómo se llama tu tienda? <span class="font-normal">(opcional)</span></span>
@@ -378,6 +395,36 @@
           <button id="bvSaltar" type="button" class="w-full py-3 rounded-xl border border-white/15 text-[#d4d4d8] font-semibold text-sm hover:bg-white/5 transition cursor-pointer">Empezar sin tutorial</button>
         </div>
         <p class="bv-in text-[11px] text-[#71717a] mt-4" style="--d:9">Puedes repetir el tutorial cuando quieras con el botón <b>?</b> de arriba.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PIN DE ACCESO DE LA TIENDA ================= -->
+  <div id="pantallaPin" class="hidden fixed inset-0 z-[88] overflow-y-auto bv-fondo" role="dialog" aria-modal="true" aria-labelledby="pinTitulo">
+    <div class="min-h-full flex items-center justify-center p-5">
+      <div class="w-full max-w-[330px] text-center">
+        <svg class="h-14 w-14 mx-auto" aria-hidden="true"><use href="#stock-box-icon" /></svg>
+        <h2 id="pinTitulo" class="text-2xl font-black text-white mt-3"></h2>
+        <p id="pinSub" class="text-sm text-[#a1a1aa] mt-1 min-h-[2.5rem]"></p>
+        <div id="pinPuntos" class="flex justify-center gap-3 mt-4" aria-hidden="true"></div>
+        <p id="pinLector" class="sr-only" aria-live="polite"></p>
+        <p id="pinError" role="alert" class="min-h-[2.5rem] text-sm font-semibold text-red-300 mt-3 px-2"></p>
+        <div id="pinTeclado" class="grid grid-cols-3 gap-3 mt-1">
+          <button type="button" class="pin-tecla" data-pin="1">1</button>
+          <button type="button" class="pin-tecla" data-pin="2">2</button>
+          <button type="button" class="pin-tecla" data-pin="3">3</button>
+          <button type="button" class="pin-tecla" data-pin="4">4</button>
+          <button type="button" class="pin-tecla" data-pin="5">5</button>
+          <button type="button" class="pin-tecla" data-pin="6">6</button>
+          <button type="button" class="pin-tecla" data-pin="7">7</button>
+          <button type="button" class="pin-tecla" data-pin="8">8</button>
+          <button type="button" class="pin-tecla" data-pin="9">9</button>
+          <button type="button" class="pin-tecla" data-pin="borrar" aria-label="Borrar">⌫</button>
+          <button type="button" class="pin-tecla" data-pin="0">0</button>
+          <button type="button" class="pin-tecla ok" id="pinOk" data-pin="ok" aria-label="Aceptar">✓</button>
+        </div>
+        <button type="button" id="pinCancelar" class="hidden mt-5 text-sm font-semibold text-[#a1a1aa] hover:text-white px-3 py-2 cursor-pointer">Cancelar</button>
+        <p class="text-[11px] text-[#71717a] mt-5">🔒 Tu PIN no se guarda tal cual: solo una huella cifrada.</p>
       </div>
     </div>
   </div>
@@ -761,6 +808,9 @@
           : "No pude conectarme con STOCK. Intenta de nuevo en un momento.");
       }
       const data = await res.json().catch(() => ({}));
+      if (res.status === 401 && (data.codigo === "pin_requerido" || data.codigo === "pin_sin_crear")) {
+        pedirAcceso(data.codigo === "pin_sin_crear" ? "crear" : "entrar");
+      }
       if (!res.ok) {
         const error = new Error(data.detail || `Error ${res.status}`);
         error.status = res.status;
@@ -838,8 +888,10 @@
 
     // modo "vacio" = tienda en ceros; "demo" = tiendita de ejemplo con 2 semanas de ventas
     async function reiniciarTienda(modo = "vacio") {
+      const pin = await abrirPin("verificar", { cancelable: true });
+      if (!pin) return;
       try {
-        await postJSON("/api/reset", { modo });
+        await postJSON("/api/reset", { modo, pin });
         productosResaltados.clear();
         $("chat").innerHTML = "";
         await cargarTablero();
@@ -962,6 +1014,10 @@
         }
         agregarMensaje("bot", r.respuesta || "Listo, ya sumé tu factura.",
           { acciones: r.acciones || [], lote_id: r.lote_id, alertas_precio: r.alertas_precio || [] });
+        if (r.privacidad && (r.privacidad.protegido || []).length) {
+          agregarMensaje("bot", `🔒 Antes de usar la IA quité de tu factura: ${r.privacidad.protegido.join(", ")}. `
+            + `A la IA solo le llegó ${r.privacidad.enviado_a_ia}.`);
+        }
         hablar((r.respuesta || "").replace(/💡/g, ""));
         productosResaltados = new Set((r.acciones || []).filter((a) => a.ok).map((a) => a.producto));
         if (productosResaltados.size) {
@@ -1767,6 +1823,8 @@
       else if (accion === "bienvenida") mostrarBienvenida();
       else if (accion === "instalar") instalarApp();
       else if (accion === "factura-demo") { mostrarVista("inicio"); enviarFactura(null); }
+      else if (accion === "cambiar-pin") cambiarPin();
+      else if (accion === "bloquear") bloquear();
       else if (accion === "demo") {
         if (await confirmar({ titulo: "¿Cargar la tienda de ejemplo?", texto: "Se borra lo que tengas y se carga una tiendita de Durango con 20 productos y 2 semanas de ventas, para ver todas las funciones.", si: "Cargar ejemplo" })) reiniciarTienda("demo");
       } else if (accion === "cero") {
@@ -1794,11 +1852,9 @@
       pintarNombreTienda();
       $("bienvenida").classList.add("hidden");
       document.body.style.overflow = "";
-      $("chat").innerHTML = "";
-      saludar();
     }
-    $("bvTutorial").addEventListener("click", () => { cerrarBienvenida(); iniciarTutorial(); });
-    $("bvSaltar").addEventListener("click", () => { cerrarBienvenida(); mostrarVista("inicio"); });
+    $("bvTutorial").addEventListener("click", async () => { cerrarBienvenida(); if (await asegurarAcceso()) iniciarTutorial(); });
+    $("bvSaltar").addEventListener("click", async () => { cerrarBienvenida(); mostrarVista("inicio"); await asegurarAcceso(); });
     $("bvNombre").addEventListener("keydown", (e) => { if (e.key === "Enter") $("bvTutorial").click(); });
 
     // =========================================================================
@@ -1863,7 +1919,7 @@
       { vista: "mes", el: "#secMovs", anim: "historial", titulo: "Todo queda anotado",
         texto: "Cada venta, entrada y cambio aparece aquí. Si algo salió mal, lo regresas como estaba con ↩️ Deshacer." },
       { vista: "inicio", el: "#btnTutorial", anim: "ayuda", titulo: "¿Se te olvidó algo?",
-        texto: "Con este botón ? repites el tutorial cuando quieras. En ⋯ puedes instalar STOCK en tu celular como una app o empezar de cero." },
+        texto: "Con este botón ? repites el tutorial cuando quieras. En ⋯ puedes instalar STOCK en tu celular, cambiar tu PIN, bloquear la app o empezar de cero." },
       { vista: "inicio", anim: "fin", titulo: "¡Listo para empezar!", final: true,
         texto: "Da de alta tus productos como te acomode: dicta “Llegaron 24 Cocas de 600 a 22 pesos”, sube la factura de tu proveedor o trae tu Excel." },
     ];
@@ -2048,12 +2104,144 @@
     window.addEventListener("offline", pintarRed);
     pintarRed();
 
-    // Arranque: muestra el inventario guardado (no lo reinicia) y la bienvenida la primera vez
-    pintarNombreTienda();
-    cargarTablero().then(() => {
-      saludar();
-      if (leerLS("stock_bienvenida") !== "1") mostrarBienvenida();
+    // =========================================================================
+    // 11. PIN DE ACCESO DE LA TIENDA (la sesión vive en una cookie HttpOnly que JavaScript no puede leer)
+    // =========================================================================
+    const PIN_TEXTOS = {
+      crear: ["Crea tu PIN", "De 4 a 6 números. STOCK lo pedirá para entrar a tu tienda."],
+      confirmar: ["Confirma tu PIN", "Escríbelo otra vez."],
+      entrar: ["Ingresa tu PIN", ""],
+      verificar: ["Escribe tu PIN", "Para confirmar esta acción."],
+      actual: ["Tu PIN actual", "Para poder cambiarlo."],
+      nuevo: ["Tu PIN nuevo", "De 4 a 6 números."],
+      nuevo2: ["Confirma tu PIN nuevo", "Escríbelo otra vez."],
+    };
+    let pinValor = "", pinModo = null, pinResolver = null, pinGuardado = "", pinActual = "", pinOcupado = false;
+
+    function textosPin() {
+      const [titulo, sub] = PIN_TEXTOS[pinModo];
+      $("pinTitulo").textContent = titulo;
+      const nombre = nombreTienda();
+      $("pinSub").textContent = pinModo === "entrar" ? (nombre ? `Tienda: ${nombre}` : "Para entrar a tu tienda.") : sub;
+    }
+    function pintarPin() {
+      const largo = Math.max(4, Math.min(6, pinValor.length + 1));
+      $("pinPuntos").innerHTML = Array.from({ length: Math.max(largo, pinValor.length) }, (_, i) =>
+        `<span class="pin-punto ${i < pinValor.length ? "lleno" : ""} ${i >= 4 && i >= pinValor.length ? "extra" : ""}"></span>`).join("");
+      $("pinOk").disabled = pinValor.length < 4 || pinOcupado;
+      $("pinLector").textContent = `${pinValor.length} de 6 números`;
+    }
+    function errorPin(mensaje) {
+      $("pinError").textContent = mensaje;
+      const puntos = $("pinPuntos");
+      puntos.classList.remove("pin-temblor"); void puntos.offsetWidth; puntos.classList.add("pin-temblor");
+      pinValor = "";
+      pintarPin();
+    }
+    function abrirPin(modo, { cancelable = false } = {}) {
+      return new Promise((resolver) => {
+        if (pinResolver) pinResolver(null);
+        pinResolver = resolver; pinModo = modo; pinValor = ""; pinOcupado = false;
+        $("pinError").textContent = "";
+        $("pinCancelar").classList.toggle("hidden", !cancelable);
+        textosPin(); pintarPin();
+        $("pantallaPin").classList.remove("hidden");
+        document.body.style.overflow = "hidden";
+        abrirMenu(false);
+      });
+    }
+    function cerrarPin(valor) {
+      $("pantallaPin").classList.add("hidden");
+      document.body.style.overflow = "";
+      const r = pinResolver; pinResolver = null; pinModo = null; pinValor = "";
+      if (r) r(valor);
+    }
+    function siguientePaso(modo) { pinModo = modo; pinValor = ""; $("pinError").textContent = ""; textosPin(); pintarPin(); }
+
+    async function enviarPin() {
+      if (pinValor.length < 4 || pinOcupado) return;
+      const v = pinValor;
+      try {
+        pinOcupado = true; pintarPin();
+        if (pinModo === "crear") return siguientePaso("confirmar"), (pinGuardado = v);
+        if (pinModo === "confirmar") {
+          if (v !== pinGuardado) { siguientePaso("crear"); return errorPin("No coinciden. Vuelve a crearlo."); }
+          await postJSON("/api/acceso/crear", { pin: v });
+          mostrarToast("Listo, tu tienda quedó protegida con tu PIN", "ok");
+          return cerrarPin(true);
+        }
+        if (pinModo === "entrar") { await postJSON("/api/acceso/entrar", { pin: v }); return cerrarPin(true); }
+        if (pinModo === "verificar") return cerrarPin(v);
+        if (pinModo === "actual") { pinActual = v; return siguientePaso("nuevo"); }
+        if (pinModo === "nuevo") { pinGuardado = v; return siguientePaso("nuevo2"); }
+        if (pinModo === "nuevo2") {
+          if (v !== pinGuardado) { siguientePaso("nuevo"); return errorPin("No coinciden. Escribe tu PIN nuevo otra vez."); }
+          await postJSON("/api/acceso/cambiar", { actual: pinActual, nuevo: v });
+          mostrarToast("Listo, cambiaste tu PIN. Los demás celulares tendrán que volver a entrar.", "ok");
+          return cerrarPin(true);
+        }
+      } catch (err) {
+        if (pinModo === "confirmar") siguientePaso("crear");
+        if (pinModo === "nuevo2") siguientePaso(err.status === 401 ? "actual" : "nuevo");
+        errorPin(err.message);
+      } finally {
+        pinOcupado = false; pintarPin();
+      }
+    }
+    function teclaPin(t) {
+      if (!pinModo || pinOcupado) return;
+      if (t === "borrar") pinValor = pinValor.slice(0, -1);
+      else if (t === "ok") return enviarPin();
+      else if (/^\d$/.test(t) && pinValor.length < 6) { pinValor += t; $("pinError").textContent = ""; }
+      pintarPin();
+    }
+    $("pinTeclado").addEventListener("click", (e) => { const b = e.target.closest("[data-pin]"); if (b) teclaPin(b.dataset.pin); });
+    $("pinCancelar").addEventListener("click", () => cerrarPin(null));
+    document.addEventListener("keydown", (e) => {
+      if ($("pantallaPin").classList.contains("hidden")) return;
+      if (/^\d$/.test(e.key)) teclaPin(e.key);
+      else if (e.key === "Backspace") teclaPin("borrar");
+      else if (e.key === "Enter") teclaPin("ok");
+      else if (e.key === "Escape" && !$("pinCancelar").classList.contains("hidden")) cerrarPin(null);
+      else return;
+      e.preventDefault();
     });
+
+    async function entrarALaApp() {
+      await cargarTablero();
+      $("chat").innerHTML = "";
+      saludar();
+    }
+    // Revisa la sesión; si no hay, pide crear o escribir el PIN. Regresa true cuando ya se puede usar la app.
+    async function asegurarAcceso() {
+      let estado;
+      try { estado = await api("/api/acceso/estado"); } catch (err) { mostrarToast(err.message, "error"); return false; }
+      if (!estado.sesion) {
+        const ok = await abrirPin(estado.configurado ? "entrar" : "crear");
+        if (!ok) return false;
+      }
+      await entrarALaApp();
+      return true;
+    }
+    // Si la API dice que falta la sesión (ej. venció o se cambió el PIN en otro celular)
+    function pedirAcceso(modo) {
+      if (pinResolver || !$("bienvenida").classList.contains("hidden")) return;
+      abrirPin(modo).then((ok) => { if (ok) entrarALaApp(); });
+    }
+    async function cambiarPin() {
+      if (await abrirPin("actual", { cancelable: true })) await cargarTablero();
+    }
+    async function bloquear() {
+      try { await postJSON("/api/acceso/salir", {}); } catch (_) {}
+      tablero = { prediccion: [], resumen: null, lista: null, movimientos: [] };
+      $("chat").innerHTML = "";
+      if (await abrirPin("entrar")) await entrarALaApp();
+    }
+
+    // Arranque: bienvenida la primera vez; después, PIN (crear o entrar) y la tienda
+    pintarNombreTienda();
+    if (leerLS("stock_bienvenida") !== "1") mostrarBienvenida();
+    else asegurarAcceso();
   </script>
 </body>
 </html>

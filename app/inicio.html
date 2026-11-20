@@ -1015,6 +1015,7 @@
     async function cargarTablero() {
       try {
         const res = await fetch('/api/tablero');
+        if (res.status === 401) { triggerDynamicIsland('🔒 Entra a la app con tu PIN'); return; }
         if (!res.ok) throw new Error();
         state.tablero = await res.json();
         renderTodo();
