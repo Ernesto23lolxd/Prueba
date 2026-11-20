@@ -2,6 +2,15 @@
 const API = ""; // mismo servidor que sirve la página
 
 const $ = (id) => document.getElementById(id);
+
+// Seguridad: escapar todo dato dinámico antes de meterlo en innerHTML
+function escapeHTML(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+// Seguridad: solo enlaces que vayan a WhatsApp
+const esWhatsappSeguro = (url) => typeof url === "string" && url.startsWith("https://wa.me/");
 const btnMic = $("btnMic");
 const estadoMic = $("estadoMic");
 const chat = $("chat");
@@ -74,11 +83,11 @@ async function manejarRespuesta(r) {
   }
   agregarMensaje("usuario", data.transcripcion);
   const detalle = (data.acciones || [])
-    .map((a) => (a.ok ? `✔ ${a.tipo} · ${a.producto} ${a.ahora !== undefined ? `(${a.antes} → ${a.ahora})` : ""}`
-                      : `✖ ${a.producto}: ${a.error}`))
+    .map((a) => (a.ok ? `✔ ${escapeHTML(a.tipo)} · ${escapeHTML(a.producto)} ${a.ahora !== undefined ? `(${escapeHTML(a.antes)} → ${escapeHTML(a.ahora)})` : ""}`
+                      : `✖ ${escapeHTML(a.producto)}: ${escapeHTML(a.error)}`))
     .join("<br>");
   agregarMensaje("bot", data.respuesta, detalle);
-  if (data.whatsapp_url) {
+  if (esWhatsappSeguro(data.whatsapp_url)) {
     // Botón dentro del chat: el navegador bloquea abrir WhatsApp solo, necesita un toque del usuario
     const a = Object.assign(document.createElement("a"), {
       href: data.whatsapp_url, target: "_blank", rel: "noopener",
@@ -119,8 +128,8 @@ function tarjetaProducto(p) {
   div.innerHTML = `
     <span class="punto"></span>
     <span class="nombre"></span>
-    <span class="cant">${p.cantidad} ${p.unidad}</span>
-    <span class="min">${p.se_acaba_texto ? `se acaba ${p.se_acaba_texto}` : `mín ${p.minimo}`}</span>`;
+    <span class="cant">${escapeHTML(p.cantidad)} ${escapeHTML(p.unidad)}</span>
+    <span class="min">${p.se_acaba_texto ? `se acaba ${escapeHTML(p.se_acaba_texto)}` : `mín ${escapeHTML(p.minimo)}`}</span>`;
   div.querySelector(".nombre").textContent = p.nombre;
   return div;
 }
@@ -167,7 +176,7 @@ async function cargarListaCompras() {
   }
   $("totalCompras").textContent = lista.items.length ? `Valor aprox. (a precio de venta): ${pesos(lista.total_estimado)}` : "";
   const btn = $("btnWhatsapp");
-  btn.href = lista.whatsapp_url;
+  btn.href = esWhatsappSeguro(lista.whatsapp_url) ? lista.whatsapp_url : "#";
   btn.classList.toggle("inactivo", !lista.items.length);
 }
 

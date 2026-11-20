@@ -4,7 +4,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd"
   Version="4.0" Serie="DGO" Folio="20481" Fecha="2026-11-19T09:15:00" FormaPago="01" MetodoPago="PUE"
-  SubTotal="2108.00" Moneda="MXN" Total="2298.08" TipoDeComprobante="I" Exportacion="01" LugarExpedicion="34000"
+  SubTotal="2552.00" Moneda="MXN" Total="2742.08" TipoDeComprobante="I" Exportacion="01" LugarExpedicion="34000"
   NoCertificado="00001000000500000001" Sello="EJEMPLO" Certificado="EJEMPLO">
   <cfdi:Emisor Rfc="DAG850101AB1" Nombre="DISTRIBUIDORA ABARROTERA DEL GUADIANA" RegimenFiscal="601"/>
   <cfdi:Receptor Rfc="XAXX010101000" Nombre="ABARROTES DE EJEMPLO" DomicilioFiscalReceptor="34000"
@@ -17,11 +17,13 @@
       </cfdi:Traslados></cfdi:Impuestos>
     </cfdi:Concepto>
     <cfdi:Concepto ClaveProdServ="50131700" NoIdentificacion="LALA1L-6" Cantidad="2" ClaveUnidad="XPK" Unidad="PAQ"
-      Descripcion="LECHE LALA ENTERA 1L C/6" ValorUnitario="150.00" Importe="300.00" ObjetoImp="01"/>
+      Descripcion="LECHE LALA ENTERA 1L C/6" ValorUnitario="138.00" Importe="276.00" ObjetoImp="01"/>
     <cfdi:Concepto ClaveProdServ="50221000" NoIdentificacion="FRIJ-PINTO-10" Cantidad="1" ClaveUnidad="XBG" Unidad="BULTO"
       Descripcion="FRIJOL PINTO SACO 10 KG" ValorUnitario="260.00" Importe="260.00" ObjetoImp="01"/>
     <cfdi:Concepto ClaveProdServ="50181900" NoIdentificacion="BIMBO-G-8" Cantidad="1" ClaveUnidad="XBX" Unidad="CAJA"
-      Descripcion="PAN BIMBO GRANDE C/8" ValorUnitario="360.00" Importe="360.00" ObjetoImp="01"/>
+      Descripcion="PAN BIMBO GRANDE C/8" ValorUnitario="336.00" Importe="336.00" ObjetoImp="01"/>
+    <cfdi:Concepto ClaveProdServ="50151513" NoIdentificacion="ACE123-12" Cantidad="1" ClaveUnidad="XBX" Unidad="CAJA"
+      Descripcion="ACEITE 1-2-3 1L C/12" ValorUnitario="492.00" Importe="492.00" ObjetoImp="01"/>
   </cfdi:Conceptos>
   <cfdi:Impuestos TotalImpuestosTrasladados="190.08">
     <cfdi:Traslados>

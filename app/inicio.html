@@ -1098,7 +1098,7 @@
         <span class="shrink-0 font-black text-white">${num(i.cantidad)} ${uni(i.unidad)}</span></div>`).join('')
         + (lista.items.length > 5 ? `<p class="text-center text-[10px] text-zinc-500">y ${lista.items.length - 5} más…</p>` : '');
       const btn = document.getElementById('pedidoWhatsapp');
-      btn.href = lista.whatsapp_url;
+      btn.href = String(lista.whatsapp_url || '').startsWith('https://wa.me/') ? lista.whatsapp_url : '#';
       btn.classList.toggle('pointer-events-none', !lista.items.length);
       btn.classList.toggle('opacity-40', !lista.items.length);
       document.getElementById('pedidoCongelado').textContent = dinero(state.tablero.resumen.capital_congelado);
