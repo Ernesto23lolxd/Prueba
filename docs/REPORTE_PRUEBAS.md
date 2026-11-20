@@ -8,7 +8,8 @@
 | Suite (archivo en `backend/`) | Qué prueba | Local | Nube |
 |---|---|---|---|
 | `prueba_completa.py` | Voz real, texto, predicción, lista y WhatsApp, Excel y CSV, facturas, deshacer, optimizador, promo, resumen del mes, reinicio | **32/32** | **32/32** ¹ |
-| `prueba_auditoria.py` | Ciberseguridad y robustez: 20 ataques y entradas raras + 5 del PIN de acceso | **20/20** | **25/25** |
+| `prueba_auditoria.py` | Ciberseguridad y robustez: 20 ataques y entradas raras + 5 del PIN de acceso + documentos legales (S26) | **20/20** | **25/25** (S26 se agregó después) |
+| `prueba_legal.py` | Registro: leer y aceptar el aviso y los términos es obligatorio; versión nueva → aceptar otra vez; páginas en celular | — | **3/3** |
 | `prueba_privacidad.py` | Escudo de privacidad: nada sensible (RFC, nombres, domicilio, folio, sellos…) llega a la IA | **2/2** | (no usa servidor) |
 | `prueba_cfdi.py` | 15 facturas CFDI generadas y subidas (XML 4.0 y 3.3, PDF, dólares, descuentos, servicios, notas de crédito…) | **15/15** | **15/15** |
 | `prueba_emparejamiento.py` | Emparejar lo que dicta el tendero o escribe el proveedor con el producto correcto | **35/35** | (no usa servidor) |

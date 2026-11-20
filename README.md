@@ -21,6 +21,7 @@ y kilos, lee la foto del ticket, trae el inventario desde Excel y da un **resume
 - Funciona en **Android, iPhone, iPad y computadora**: probada en 12 tamaños, de 320 px a 2560 px y con el
   celular acostado.
 - **🔑 Protegida con PIN por tienda** (sesión segura, freno contra adivinanzas; empezar de cero pide el PIN).
+- **📜 Aviso de Privacidad y Términos y Condiciones** ([`/privacidad`](https://stock-tienda.onrender.com/privacidad) · [`/terminos`](https://stock-tienda.onrender.com/terminos)): al registrar la tienda hay que leerlos y aceptarlos; se guarda la versión aceptada y la fecha.
 - **🛡️ Escudo de privacidad:** antes de usar la IA, la factura se limpia de RFC, nombres, domicilios, correos,
   folio y sellos; a la IA solo le llegan cantidades, descripciones y precios. Detalle: [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md).
 - **Se instala como app en el celular** (PWA): ícono en la pantalla de inicio, pantalla completa y abre aunque
@@ -60,6 +61,7 @@ backend/   Python + FastAPI + SQLite + Gemini (IA)
   prueba_interfaz.py        la app completa en 12 dispositivos (Playwright)
   prueba_movil.py           app instalable: manifiesto, service worker, sin internet, iPhone
   prueba_privacidad.py      escudo de privacidad: nada sensible llega a la IA (sin servidor)
+  prueba_legal.py           registro con aceptación obligatoria del aviso y los términos (Playwright)
   (las suites entran con el PIN de prueba: variable STOCK_PIN, por defecto 246810)
 app/       inicio.html (portada) · index.html (la app) · clasico.html (respaldo)
 demo/      Excel/CSV, audios y factura PDF de ejemplo para probar
