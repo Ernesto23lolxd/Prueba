@@ -1,133 +1,70 @@
-# 🎤 STOCK: speech del pitch (≈ 5:45 min)
+# Guion del pitch (unos 5:45 min)
 
-Diapositivas: https://claude.ai/artifact/TuLvE6exPzUJa3QWM8Lrxz (cada diapositiva trae este mismo texto en sus notas).
-App en vivo: **https://stock-tienda.onrender.com/app**. Ábranla **2 minutos antes** porque Render gratis tarda en despertar.
+App en vivo: https://stock-tienda.onrender.com/app (abrirla 2 minutos antes).
 
-**Reparto sugerido** (cámbienlo si quieren):
+Reparto: Ernesto (problemática, 0:00 a 2:00), Braulio y Sebas (solución y demo, 2:00 a 3:30), Jorge (negocio, 3:30 a
+4:35), Sebas (datos, ética y cierre, 4:35 a 5:45).
 
-| Parte | Quién | Tiempo |
-|---|---|---|
-| Portada + 1. Problemática | Ernesto | 0:00 – 2:00 |
-| 2. Solución + demo en vivo | Braulio (habla) · Sebas (maneja el celular) | 2:00 – 3:30 |
-| 3. El negocio | Jorge | 3:30 – 4:35 |
-| 4. Datos, ética + cierre | Sebas | 4:35 – 5:45 |
+Hablar despacio, mirar al jurado y decir cada número una vez. Si falla el internet en la demo, mostrar las capturas y
+seguir.
 
-> Reglas de oro: hablar despacio, **mirar al jurado y no a la pantalla**, decir cada número una sola vez y fuerte.
-> Si se cae el internet en la demo: "les mostramos las capturas" y seguir sin pedir disculpas.
+## Portada
+Buenos días. Somos STOCK: Braulio, Jorge, Ernesto y Sebas. Les vamos a contar por qué cierran las tienditas de
+Durango, cómo lo resolvemos, cómo esto se vuelve un negocio y cómo cuidamos los datos de cada tienda.
 
----
+## 1. Problemática
+En Durango hay más de 61 mil micronegocios, el 95 % de todos los negocios. Ahí trabaja casi la mitad de la gente con
+empleo, pero generan solo una quinta parte de los ingresos (INEGI, Censos Económicos 2024).
 
-## Portada · 0:00 – 0:15
-Buenos días. Somos STOCK: Braulio, Jorge, Ernesto y Sebas. En los próximos minutos les vamos a contar por qué cierran las tienditas de Durango, cómo lo resolvemos, cómo esto se vuelve un negocio y cómo cuidamos los datos de cada tienda.
+Además cierran: entre 2019 y 2021 cerró el 35.5 % de los negocios de Durango, más que el 32.6 % nacional. Este año, el
+censo del Centro Histórico encontró cerrado uno de cada cinco locales.
 
-## 1. LA PROBLEMÁTICA
+¿Por qué? Lo dicen los propios comerciantes: dinero atorado en mercancía que no se vende, robo hormiga y merma, costos
+que suben y ventas que bajan hasta 40 o 50 %.
 
-### Diapositiva 2 · 0:15 – 0:40
-En Durango hay **más de 61 mil micronegocios**: son el **95 %** de todos los negocios del estado. Ahí trabaja casi la mitad de la gente que tiene empleo, pero esos negocios solo generan **una quinta parte de los ingresos**. Trabajan muchísimo y les rinde poco. Lo dice el INEGI en sus Censos Económicos 2024.
+La raíz: operan a ciegas. Solo un tercio usa internet y el 84.5 % cobra en efectivo, así que no queda registro de
+nada. Cuando se dan cuenta, ya perdieron dinero.
 
-### Diapositiva 3 · 0:40 – 1:05
-Y además cierran. Entre 2019 y 2021 cerró el **35.5 %** de los negocios de Durango, más que el promedio nacional de 32.6 %. Un comercio en México vive en promedio **6.6 años**. Y esto no es historia: este año, el censo del Centro Histórico encontró cerrado **uno de cada cinco locales**.
+## 2. Solución
+STOCK es un asistente de inventario que funciona hablando. El tendero dice "vendí 3 Cocas y 2 Sabritas" y el
+inventario se descuenta solo. Sube la factura del proveedor y STOCK convierte cajas en piezas. Funciona en el celular
+que ya tiene.
 
-### Diapositiva 4 · 1:05 – 1:40
-¿Por qué quiebran? No lo inventamos: lo dicen este año los propios comerciantes de Durango.
-- **Uno:** se quedan sin dinero que circule. Los ahorros se quedan atorados en mercancía que no se vende.
-- **Dos:** robo hormiga y merma. Producto que desaparece o caduca, y nadie lo nota.
-- **Tres:** los costos suben. Las rentas pasaron de 12 a 17 mil pesos y cada trabajador cuesta hasta 30 % más.
-- **Cuatro:** las ventas bajan hasta 40 o 50 % en el centro.
+Cada causa de cierre tiene respuesta:
+- Falta de dinero: muestra qué productos tienen el dinero congelado y arma la compra con lo que hay.
+- Robo hormiga: cada movimiento queda registrado.
+- Costos que suben: avisa cuando el proveedor sube el precio.
+- Ventas perdidas: avisa qué se acaba y deja el pedido armado.
 
-### Diapositiva 5 · 1:40 – 2:00
-Y la raíz de todo: **operan a ciegas**. Solo un tercio de los negocios usa internet, y de esos, apenas el **1.3 %** usa inteligencia artificial. El **84.5 %** cobra en efectivo, así que no queda registro de nada. Sin datos no ven venir el producto agotado, la merma ni la subida del proveedor. Cuando se dan cuenta, ya perdieron dinero.
+Demo (30 segundos): decir "vendí 3 Cocas y 2 Sabritas" y luego "tengo mil pesos, ¿qué compro?".
 
-## 2. LA SOLUCIÓN
+## 3. Negocio
+Suscripción con cuatro planes: Barrio gratis con anuncios locales; Tiendita, el principal, a 169 pesos al mes, con una
+tarjeta NFC para reseñas en Google Maps; Negocio Pro a 329; y Ultra a 649 para minisúpers y cadenas.
 
-### Diapositiva 6 · 2:00 – 2:25
-Por eso creamos **STOCK**, un asistente de inventario que funciona hablando. El tendero dice *"vendí 3 Cocas y 2 Sabritas"* y el inventario se descuenta solo. Sube la factura de su proveedor, en XML o PDF, y STOCK convierte las cajas en piezas. O le toma foto al ticket. No necesita computadora ni equipo nuevo: funciona **en el celular que ya tiene**.
+Una Tiendita nos cuesta unos 33 pesos y nos deja 136, un 80 % de margen. Recuperamos la inversión inicial de 1,900
+pesos en el mes 2. Al cierre del año: 310 tiendas de paga, el 6 % de la capital, y unos 236 mil pesos de utilidad. El
+segundo año, Gómez Palacio y Lerdo.
 
-### Diapositiva 7 · 2:25 – 3:00
-Aquí está la clave: **cada causa de cierre que vimos tiene una respuesta en STOCK.**
-- **¿Falta dinero?** STOCK le dice qué productos tienen su dinero congelado. Si le dice *"nomás tengo mil pesos"*, le arma la compra para no quedarse sin lo que sí se vende.
-- **¿Robo hormiga?** Cada movimiento queda registrado. Si algo no cuadra, lo ve ese mismo día.
-- **¿Suben los costos?** Cuando el proveedor sube el precio, STOCK le avisa y el tendero ajusta su precio en un clic.
-- **¿Ventas perdidas?** Le dice *"el huevo se te acaba mañana"* y le deja el pedido armado por proveedor.
+## 4. Datos, privacidad y ética
+Los datos de la tienda son de la tienda. Cumplimos la Ley Federal de Protección de Datos Personales, no vendemos ni
+compartimos datos, las facturas solo se leen y el cobro es claro, sin plazos forzosos.
 
-### Diapositiva 8 · 3:00 – 3:30 · DEMO EN VIVO (máximo 30 s)
-Y no es una maqueta: ya está publicado en internet, con su base de datos en la nube.
-1. Tocar el micrófono y decir **"Vendí 3 Cocas y 2 Sabritas"**. Mostrar cómo bajan.
-2. Escribir o decir **"Tengo mil pesos, ¿qué compro?"**. Mostrar la compra optimizada.
+La seguridad está en el código: todo viaja cifrado, la base está cerrada al público, revisamos cada archivo y cada
+respuesta del modelo antes de tocar el inventario, y cualquier cambio se puede deshacer.
 
-## 3. EL NEGOCIO (breve, tipo Shark Tank)
+Nuestra regla: el sistema propone y el tendero decide. Es incluyente porque funciona hablando.
 
-### Diapositiva 9 · 3:30 – 3:45
-El negocio: **suscripción con cuatro planes**.
-- **Barrio** es gratis y se paga con anuncios locales.
-- **Tiendita**, el principal: **169 pesos al mes**, menos de 6 pesos al día. Sin límites ni anuncios, y con una **tarjeta NFC** para que sus clientes le dejen reseñas en Google Maps.
-- **Negocio Pro**, 329.
-- **Ultra, 649 pesos**, para minisúpers y cadenas: inteligencia artificial de mayor capacidad, **cinco veces más peticiones**, varias sucursales y soporte dedicado.
+## Cierre
+Una tiendita cierra por cosas que se pueden ver venir. STOCK hace que las vea a tiempo, solo con hablarle. Que ninguna
+tiendita de Durango cierre por no saber lo que tiene. Gracias.
 
-### Diapositiva 10 · 3:45 – 4:00
-¿Cuánto ganamos? Una Tiendita nos cuesta **unos 33 pesos** al mes y nos deja **136**: **80 % de margen**. El Pro nos deja **252** y el Ultra **530**. Hasta el plan gratuito deja ganancia gracias a los anuncios.
-
-### Diapositiva 11 · 4:00 – 4:20
-Y es **rentable desde el mes 2**.
-- **Mes 1:** cada fundador cierra **tres tiendas**.
-- **Mes 2:** ya **recuperamos la inversión inicial de 1,900 pesos**.
-- **Desde ahí:** cada mes gana más que el anterior.
-
-**Al cierre del primer año:**
-- **310 tiendas de paga**, apenas el **6 %** de la capital.
-- **80 mil pesos de ingresos** al mes y **49 mil de utilidad**.
-- Cerca de **236 mil pesos de utilidad** en el año.
-
-El segundo año: **Gómez Palacio y Lerdo**.
-
-## 4. DATOS, PRIVACIDAD, LEGALIDAD Y ÉTICA
-
-### Diapositiva 12 · 4:35 – 4:55
-Cuarto: los datos. **Los datos de la tienda son de la tienda.**
-- Cumplimos la **Ley Federal de Protección de Datos Personales en Posesión de los Particulares**: aviso de privacidad, consentimiento y derechos ARCO.
-- **No vendemos ni compartimos** sus datos con nadie, y la inteligencia artificial no se entrena con sus ventas.
-- Las facturas **solo se leen**: no timbramos ni entramos al SAT.
-- El cobro es claro, como lo pide **Profeco**: sin plazos forzosos, y cancela cuando quiera.
-
-### Diapositiva 13 · 4:55 – 5:15
-Y la seguridad no es solo una promesa: **está en el código**.
-- Todo viaja cifrado y la base de datos está cerrada al público.
-- La inteligencia artificial está blindada: si alguien intenta engañarla con un mensaje o una factura con instrucciones ocultas, no le hace caso. Además, revisamos cada respuesta antes de que toque el inventario.
-- Revisamos cada archivo, limitamos el abuso y cualquier cambio se puede deshacer.
-
-Lo probamos con **31 pruebas automáticas**, incluidos ataques, contra la app publicada.
-
-### Diapositiva 14 · 5:15 – 5:30
-En lo ético, nuestra regla es simple: **la IA propone, el tendero decide.**
-- Todo lo que hace la IA se ve y se puede deshacer.
-- Es incluyente: funciona hablando, para quien no sabe de computadoras.
-- Somos honestos con lo que sigue: antes de la primera tienda real, agregamos **cuentas con contraseña**, publicamos el **aviso de privacidad** y activamos **respaldos diarios**.
-
-## Cierre · 5:30 – 5:45
-En Durango, una tiendita cierra por cosas que se pueden ver venir: el dinero atorado, la merma, el proveedor que sube, el producto que se acaba. STOCK hace que las vea a tiempo, solo con hablarle.
-**Que ninguna tiendita de Durango cierre por no saber lo que tiene.**
-Gracias. Pueden probarlo ahora mismo en **stock-tienda.onrender.com**.
-
----
-
-# ❓ Preguntas probables del jurado (respuestas cortas)
-
-| Pregunta | Respuesta |
-|---|---|
-| **¿En qué se diferencia de un punto de venta o de Excel?** | Un punto de venta te pide capturar todo y comprar equipo. STOCK funciona hablando, en el celular que ya tienes, y además **te dice qué hacer**: qué surtir, qué no volver a pedir y cuándo subir el precio. |
-| **¿Y si la IA se equivoca?** | Cada movimiento queda en el historial con un botón de **deshacer**. Validamos todo lo que responde la IA: no puede vender más de lo que hay, ni poner precios absurdos, ni inventar acciones. |
-| **¿Cuánto les cuesta la IA?** | Usamos un modelo ligero de Gemini. Con unos 30 comandos al día, son unos **8 pesos al mes por tienda** (estimación con precios públicos). |
-| **¿Y si no tienen internet?** | Hoy necesita datos móviles, como WhatsApp, y consume muy poco. En la siguiente fase: modo sin conexión que sincroniza después. |
-| **¿Quién paga 169 pesos?** | Son **menos de 6 pesos al día**. Una tienda que **deja de quedarse sin Coca o sin huevo un solo día**, o que detecta a tiempo una subida del proveedor, ya los recupera. Y el plan Barrio es gratis para que lo prueben. *(Recomendado: decir cuántos tenderos entrevistaron, si lo hicieron.)* |
-| **¿No son muy optimistas los números?** | La meta es **310 tiendas en el año, el 6 % de la capital**. El piloto cuesta solo $950 al mes: con **7 tiendas** ya no perdemos. Con las 12 del primer mes (3 por fundador) ganamos desde el inicio y la inversión de ~$1,900 se recupera en el **mes 2**. Los promotores se contratan con las mismas ganancias. |
-| **¿Qué tiene el plan Ultra?** | Para minisúpers y cadenas: un modelo de IA de mayor capacidad (no el más caro), 5× más peticiones, varias sucursales, reportes, soporte dedicado y 3 tarjetas NFC. Nos cuesta ≈ $119 al mes y deja **+$530 (82 %)**. |
-| **¿Para qué la tarjeta NFC?** | El cliente la acerca con su celular en el mostrador y le deja una **reseña en Google Maps** a la tienda: más visibilidad local sin que el tendero haga nada. Cuesta unos $35 y la repartimos en 6 meses del plan. |
-| **¿Dónde se guardan los datos?** | En Supabase (PostgreSQL), con cifrado y seguridad por filas. Los servidores están en EE. UU. y eso **se declara en el aviso de privacidad**, como pide la ley. |
-| **¿Usan los datos para algo más?** | No. No los vendemos ni los compartimos. Un posible ingreso futuro son **reportes agregados y anónimos** para distribuidores, pero solo con consentimiento explícito. |
-| **¿Por qué no usan sensores?** | Los evaluamos. Encarecían la solución y la tiendita no los necesita: **la voz y la factura ya cuentan el inventario**. |
-| **¿Ya tienen inicio de sesión?** | Todavía no: es una demo. Es lo primero antes de una tienda real, junto con el aviso de privacidad y los respaldos. |
-
-## ⚠️ Antes de presentar
-- Revisen las **fuentes** en la última diapositiva. Los costos y la meta de 310 tiendas son **estimaciones**: díganlo así.
-- Si entrevistaron tenderos, agreguen una frase real en la diapositiva 4. A los jueces les encanta.
-- Ensayen con cronómetro: el total debe quedar por debajo del tiempo que les den. Si les dan 3 minutos, quiten las diapositivas 5, 10 y 14 y dejen el resto.
+## Preguntas probables
+- Diferencia con un punto de venta: no pide capturar todo ni comprar equipo, y dice qué hacer.
+- Si el modelo se equivoca: todo se valida y se puede deshacer.
+- Costo del modelo: unos 8 pesos al mes por tienda.
+- Sin internet: hoy necesita datos móviles; después habrá modo sin conexión.
+- Quién paga 169 pesos: son menos de 6 pesos al día y se recuperan con no quedarse sin producto un solo día.
+- Números optimistas: con 7 tiendas ya no perdemos; la meta es el 6 % de la capital.
+- Dónde están los datos: Supabase en EE. UU., declarado en el aviso de privacidad.
+- Uso de los datos: ninguno fuera de la tienda; reportes anónimos solo con consentimiento.
