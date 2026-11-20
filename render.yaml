@@ -29,6 +29,9 @@ services:
       # La app se sirve desde el mismo dominio; si cambias el nombre del servicio, cambia esta URL
       - key: ALLOWED_ORIGINS
         value: https://stock-tienda.onrender.com
-      # Botón "↺ Demo" (reiniciar datos). Ponlo en "0" cuando ya no sea demo.
+      # La tienda arranca en ceros ("vacio"). Con "demo" arranca con la tiendita de ejemplo.
+      - key: INVENTARIO_INICIAL
+        value: vacio
+      # Menú ⋯ → "Empezar de cero" / "Cargar tienda de ejemplo". Ponlo en "0" cuando sea una tienda real.
       - key: PERMITIR_RESET
         value: "1"

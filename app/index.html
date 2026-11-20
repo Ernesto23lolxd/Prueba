@@ -85,6 +85,92 @@
     .nav-stock .tab.activo .icono { transform: translateY(-1px) scale(1.08); }
     [data-ir] { cursor: pointer; transition: transform .15s ease, border-color .15s ease; }
     [data-ir]:hover { transform: translateY(-2px); }
+
+    /* ===== Menú ⋯ ===== */
+    .menu-item { display: block; width: 100%; text-align: left; padding: .6rem .75rem; border-radius: .75rem; color: #e4e4e7; cursor: pointer; }
+    .menu-item:hover, .menu-item:focus-visible { background: rgba(255,255,255,.07); outline: none; }
+    .paso-num { flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 9999px; background: var(--grad-stock); color: #0d0e11;
+                font-weight: 800; font-size: .75rem; display: inline-flex; align-items: center; justify-content: center; }
+
+    /* ===== Bienvenida ===== */
+    .bv-fondo { background:
+        radial-gradient(circle at 20% 15%, rgba(0,149,232,.22) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(246,197,142,.18) 0%, transparent 45%),
+        rgba(13,14,17,.97); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .bv-logo { animation: bvFlota 3.2s ease-in-out infinite, bvEntra .8s cubic-bezier(.2,.8,.2,1) both; filter: drop-shadow(0 18px 30px rgba(0,149,232,.35)); }
+    @keyframes bvFlota { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+    @keyframes bvEntra { from { opacity: 0; transform: scale(.6) rotate(-8deg) } to { opacity: 1; transform: none } }
+    .bv-in { animation: bvSube .6s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--d, 0) * 110ms); }
+    @keyframes bvSube { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: none } }
+    .bv-fila { display: flex; gap: .75rem; align-items: flex-start; padding: .8rem .9rem; border-radius: 1rem;
+               background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); font-size: .9rem; color: #d4d4d8; line-height: 1.4; }
+    .bv-fila b { color: #fff; }
+    .bv-ico { font-size: 1.4rem; line-height: 1; }
+
+    /* ===== Tutorial ===== */
+    .tour-foco { position: fixed; border-radius: 18px; pointer-events: none; z-index: 1;
+                 box-shadow: 0 0 0 9999px rgba(5,6,8,.78), 0 0 0 3px rgba(0,149,232,.95), 0 0 28px 6px rgba(0,149,232,.45);
+                 transition: top .45s cubic-bezier(.2,.8,.2,1), left .45s cubic-bezier(.2,.8,.2,1), width .45s cubic-bezier(.2,.8,.2,1), height .45s cubic-bezier(.2,.8,.2,1), opacity .3s; }
+    .tour-foco::after { content: ""; position: absolute; inset: -6px; border-radius: 22px; border: 2px solid rgba(246,197,142,.8); animation: tourPulso 1.8s ease-out infinite; }
+    .tour-foco.centro { box-shadow: 0 0 0 9999px rgba(5,6,8,.85); }
+    .tour-foco.centro::after { display: none; }
+    @keyframes tourPulso { 0% { opacity: .9; transform: scale(1) } 100% { opacity: 0; transform: scale(1.06) } }
+    .tour-tarjeta { position: fixed; z-index: 2; left: 50%; width: min(92vw, 420px); max-height: calc(100vh - 32px); overflow-y: auto; transform: translateX(-50%);
+                    background: #1a1c22; border: 1px solid rgba(255,255,255,.12); border-radius: 22px; padding: 1rem 1.1rem 1.1rem;
+                    box-shadow: 0 30px 60px -12px rgba(0,0,0,.7); }
+    .tour-tarjeta.cambia { animation: tourTarjeta .45s cubic-bezier(.2,.8,.2,1); }
+    @keyframes tourTarjeta { from { opacity: 0; transform: translate(-50%, 10px) } to { opacity: 1; transform: translate(-50%, 0) } }
+    .tour-anim { margin: .8rem 0 .7rem; min-height: 86px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+                 display: flex; align-items: center; justify-content: center; gap: .6rem; padding: .7rem; overflow: hidden; position: relative; }
+    .tour-anim:empty { display: none; }
+    /* Piezas de las mini animaciones */
+    .ta-burbuja { background: rgba(0,149,232,.18); border: 1px solid rgba(0,149,232,.45); color: #e0f2fe; font-size: .82rem; font-weight: 600;
+                  padding: .45rem .7rem; border-radius: 14px 14px 14px 4px; white-space: nowrap; overflow: hidden; }
+    .ta-escribe { display: inline-block; overflow: hidden; white-space: nowrap; vertical-align: bottom; width: 0;
+                  animation: taEscribe 1.6s steps(28, end) .5s forwards; border-right: 2px solid #7dd3fc; }
+    @keyframes taEscribe { to { width: 100% } }
+    .ta-mic { width: 54px; height: 54px; border-radius: 9999px; background: var(--grad-stock); display: flex; align-items: center; justify-content: center;
+              font-size: 1.5rem; flex-shrink: 0; position: relative; }
+    .ta-mic::before { content: ""; position: absolute; inset: 0; border-radius: 9999px; background: rgba(220,38,38,.5); animation: taOnda 1.4s ease-out infinite; }
+    @keyframes taOnda { from { transform: scale(1); opacity: .8 } to { transform: scale(1.7); opacity: 0 } }
+    .ta-chip { font-size: .75rem; font-weight: 800; padding: .3rem .55rem; border-radius: 9999px; opacity: 0; animation: taPop .4s cubic-bezier(.3,1.6,.5,1) forwards; }
+    .ta-chip.menos { background: rgba(245,158,11,.2); color: #fcd34d; }
+    .ta-chip.mas { background: rgba(16,185,129,.2); color: #6ee7b7; }
+    .ta-chip.alerta { background: rgba(239,68,68,.2); color: #fca5a5; }
+    @keyframes taPop { from { opacity: 0; transform: scale(.4) } to { opacity: 1; transform: scale(1) } }
+    .ta-col { display: flex; flex-direction: column; gap: .35rem; align-items: flex-start; min-width: 0; }
+    .ta-doc { width: 56px; height: 70px; border-radius: 8px; background: #f5f5f4; color: #18181b; font-size: .55rem; font-weight: 800; padding: .35rem;
+              display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; animation: taDoc 2.4s ease-in-out infinite; }
+    .ta-doc i { display: block; height: 4px; border-radius: 2px; background: #d4d4d8; }
+    @keyframes taDoc { 0%,100% { transform: translateY(0) rotate(-3deg) } 50% { transform: translateY(-4px) rotate(2deg) } }
+    .ta-flecha { font-size: 1.3rem; color: #7dd3fc; animation: taFlecha 1s ease-in-out infinite; }
+    @keyframes taFlecha { 0%,100% { transform: translateX(0) } 50% { transform: translateX(5px) } }
+    .ta-foto { width: 64px; height: 64px; border-radius: 14px; background: rgba(255,255,255,.08); display: flex; align-items: center; justify-content: center;
+               font-size: 1.8rem; position: relative; overflow: hidden; }
+    .ta-foto::after { content: ""; position: absolute; inset: 0; background: #fff; opacity: 0; animation: taFlash 2.2s ease-out infinite; }
+    @keyframes taFlash { 0%, 60% { opacity: 0 } 64% { opacity: .9 } 100% { opacity: 0 } }
+    .ta-semaforo { display: flex; gap: .5rem; }
+    .ta-semaforo span { width: 26px; height: 26px; border-radius: 9999px; opacity: .25; animation: taLuz 2.4s infinite; }
+    .ta-semaforo span:nth-child(1) { background: #16a34a; }
+    .ta-semaforo span:nth-child(2) { background: #d97706; animation-delay: .8s; }
+    .ta-semaforo span:nth-child(3) { background: #dc2626; animation-delay: 1.6s; }
+    @keyframes taLuz { 0%, 30% { opacity: 1; transform: scale(1.1) } 34%, 100% { opacity: .25; transform: scale(1) } }
+    .ta-barras { display: flex; align-items: flex-end; gap: 6px; height: 56px; }
+    .ta-barras span { width: 16px; border-radius: 5px 5px 2px 2px; background: var(--grad-stock); transform-origin: bottom; animation: taCrece .8s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes taCrece { from { transform: scaleY(0) } to { transform: scaleY(1) } }
+    .ta-wa { background: #25d366; color: #fff; font-weight: 800; font-size: .8rem; padding: .5rem .8rem; border-radius: 12px; animation: taToque 1.8s ease-in-out infinite; }
+    @keyframes taToque { 0%, 70%, 100% { transform: scale(1) } 78% { transform: scale(.9) } 86% { transform: scale(1.04) } }
+    .ta-deshacer { border: 1px solid rgba(255,255,255,.2); color: #e4e4e7; font-size: .75rem; font-weight: 800; padding: .35rem .6rem; border-radius: 9px; animation: taToque 2s ease-in-out infinite .6s; }
+    .ta-hielo { font-size: 2rem; animation: taDoc 2.6s ease-in-out infinite; }
+    .ta-tachar { position: relative; font-size: .8rem; color: #a1a1aa; }
+    .ta-tachar::after { content: ""; position: absolute; left: 0; top: 50%; height: 2px; width: 0; background: #fca5a5; animation: taTacha .8s ease-out .6s forwards; }
+    @keyframes taTacha { to { width: 100% } }
+    .ta-grande { font-size: 2.2rem; animation: bvEntra .7s cubic-bezier(.2,.8,.2,1) both; }
+    @media (prefers-reduced-motion: reduce) {
+      .bv-logo, .bv-in, .tour-foco::after, .tour-tarjeta.cambia, .tour-anim * { animation: none !important; }
+      .ta-escribe { width: auto; border: 0; } .ta-chip { opacity: 1; }
+      .tour-foco, .tour-tarjeta { transition: none; }
+    }
     [data-vista] { animation: entrarVista .25s ease both; }
     @keyframes entrarVista { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   </style>
@@ -163,7 +249,7 @@
           <svg class="h-8 w-8 shrink-0" aria-hidden="true"><use href="#stock-box-icon" /></svg>
           <h1 class="text-xl sm:text-2xl font-black tracking-tight leading-tight text-stock-gradient">STOCK</h1>
         </a>
-        <p class="text-xs sm:text-sm text-teal-100 truncate">Tu inventario por voz y foto</p>
+        <p id="subtituloTienda" class="text-xs sm:text-sm text-teal-100 truncate">Tu inventario por voz y foto</p>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <button id="btnVozOut" type="button"
@@ -171,11 +257,23 @@
           title="Activar o silenciar respuestas habladas">
           🔊 Voz
         </button>
-        <button id="btnReset" type="button"
-          class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-white/15 hover:bg-white/25 active:scale-95 border border-white/30 transition cursor-pointer"
-          title="Reiniciar datos iniciales de demo">
-          ↺ Demo
-        </button>
+        <button id="btnTutorial" type="button" aria-label="Ver el tutorial"
+          class="w-8 h-8 rounded-full text-sm font-bold bg-white/15 hover:bg-white/25 active:scale-95 border border-white/30 transition cursor-pointer"
+          title="Ver el tutorial">?</button>
+        <div class="relative">
+          <button id="btnMenu" type="button" aria-label="Más opciones" aria-haspopup="true" aria-expanded="false"
+            class="w-8 h-8 rounded-full text-base font-bold bg-white/15 hover:bg-white/25 active:scale-95 border border-white/30 transition cursor-pointer leading-none"
+            title="Más opciones">⋯</button>
+          <div id="menuOpciones" role="menu"
+            class="hidden absolute right-0 mt-2 w-64 rounded-2xl border border-white/10 bg-[#1a1c22] shadow-2xl p-1.5 text-sm z-50">
+            <button type="button" role="menuitem" data-menu="tutorial" class="menu-item">❔ Ver tutorial</button>
+            <button type="button" role="menuitem" data-menu="bienvenida" class="menu-item">👋 Ver bienvenida</button>
+            <div class="h-px bg-white/10 my-1"></div>
+            <button type="button" role="menuitem" data-menu="factura-demo" class="menu-item">⚡ Probar con una factura de ejemplo</button>
+            <button type="button" role="menuitem" data-menu="demo" class="menu-item">🧪 Cargar tienda de ejemplo</button>
+            <button type="button" role="menuitem" data-menu="cero" class="menu-item text-red-300">🧹 Empezar de cero</button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -214,6 +312,66 @@
     </div>
   </nav>
 
+
+  <!-- ================= BIENVENIDA (primera vez) ================= -->
+  <div id="bienvenida" class="hidden fixed inset-0 z-[70] overflow-y-auto bv-fondo" role="dialog" aria-modal="true" aria-labelledby="bvTitulo">
+    <div class="min-h-full flex items-center justify-center p-5">
+      <div class="w-full max-w-[440px] text-center">
+        <svg class="bv-logo h-24 w-24 mx-auto" aria-hidden="true"><use href="#stock-box-icon" /></svg>
+        <p class="bv-in text-xs font-bold tracking-[.25em] text-[#a1a1aa] mt-4" style="--d:1">BIENVENIDO A</p>
+        <h2 id="bvTitulo" class="bv-in text-5xl font-black tracking-tight text-stock-gradient" style="--d:2">STOCK</h2>
+        <p class="bv-in text-base text-[#d4d4d8] mt-2" style="--d:3">Tu inventario se lleva solo: <b class="text-white">le hablas y STOCK lleva la cuenta.</b></p>
+        <ul class="mt-6 grid gap-2.5 text-left">
+          <li class="bv-in bv-fila" style="--d:4"><span class="bv-ico">🎙️</span><span><b>Háblale.</b> “Vendí 3 Cocas” y se descuenta solo.</span></li>
+          <li class="bv-in bv-fila" style="--d:5"><span class="bv-ico">📄</span><span><b>Sube la factura.</b> Convierte cajas en piezas y te avisa si te subieron el precio.</span></li>
+          <li class="bv-in bv-fila" style="--d:6"><span class="bv-ico">🛍️</span><span><b>Surte sin adivinar.</b> Te dice qué se acaba y arma tu pedido por WhatsApp.</span></li>
+        </ul>
+        <label class="bv-in block text-left mt-6" style="--d:7">
+          <span class="text-xs font-semibold text-[#a1a1aa]">¿Cómo se llama tu tienda? <span class="font-normal">(opcional)</span></span>
+          <input id="bvNombre" type="text" maxlength="40" autocomplete="off" placeholder="Ej. Abarrotes Lupita"
+            class="mt-1.5 w-full px-4 py-3 rounded-xl border border-white/15 bg-white/5 text-base text-white focus:outline-none focus:ring-2 focus:ring-[#0095E8]">
+        </label>
+        <div class="bv-in mt-5 grid gap-2.5" style="--d:8">
+          <button id="bvTutorial" type="button" class="w-full py-3.5 rounded-xl bg-stock-gradient text-[#0d0e11] font-extrabold text-base active:scale-[.98] transition cursor-pointer">▶ Ver el tutorial (2 min)</button>
+          <button id="bvSaltar" type="button" class="w-full py-3 rounded-xl border border-white/15 text-[#d4d4d8] font-semibold text-sm hover:bg-white/5 transition cursor-pointer">Empezar sin tutorial</button>
+        </div>
+        <p class="bv-in text-[11px] text-[#71717a] mt-4" style="--d:9">Puedes repetir el tutorial cuando quieras con el botón <b>?</b> de arriba.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TUTORIAL GUIADO ================= -->
+  <div id="tour" class="hidden fixed inset-0 z-[80]" role="dialog" aria-modal="true" aria-labelledby="tourTitulo">
+    <div id="tourBloqueo" class="absolute inset-0"></div>
+    <div id="tourFoco" class="tour-foco"></div>
+    <div id="tourTarjeta" class="tour-tarjeta">
+      <div class="flex items-center justify-between gap-3">
+        <span id="tourPaso" class="text-[11px] font-bold tracking-wider text-[#a1a1aa]"></span>
+        <button id="tourCerrar" type="button" class="text-xs font-semibold text-[#a1a1aa] hover:text-white px-2 py-1 rounded-lg cursor-pointer">Salir ✕</button>
+      </div>
+      <div class="h-1 rounded-full bg-white/10 mt-2 overflow-hidden"><div id="tourBarra" class="h-full bg-stock-gradient rounded-full transition-all duration-500"></div></div>
+      <div id="tourAnim" class="tour-anim"></div>
+      <h3 id="tourTitulo" class="text-lg font-extrabold text-white leading-snug"></h3>
+      <p id="tourTexto" class="text-sm text-[#d4d4d8] mt-1.5 leading-relaxed"></p>
+      <div class="flex items-center justify-between gap-2 mt-4">
+        <button id="tourAtras" type="button" class="px-3.5 py-2 rounded-xl border border-white/15 text-sm font-semibold text-[#d4d4d8] hover:bg-white/5 cursor-pointer disabled:opacity-30 disabled:cursor-default">← Atrás</button>
+        <button id="tourSig" type="button" class="px-5 py-2 rounded-xl bg-stock-gradient text-[#0d0e11] text-sm font-extrabold active:scale-95 transition cursor-pointer">Siguiente →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CONFIRMACIÓN (sin confirm() del navegador) ================= -->
+  <div id="confirmar" class="hidden fixed inset-0 z-[90] bg-black/70 flex items-center justify-center p-5" role="alertdialog" aria-modal="true" aria-labelledby="confTitulo">
+    <div class="w-full max-w-[380px] rounded-2xl border border-white/10 bg-[#1a1c22] p-5 shadow-2xl">
+      <h3 id="confTitulo" class="text-lg font-extrabold text-white"></h3>
+      <p id="confTexto" class="text-sm text-[#d4d4d8] mt-2 leading-relaxed"></p>
+      <div class="flex justify-end gap-2 mt-5">
+        <button id="confNo" type="button" class="px-4 py-2 rounded-xl border border-white/15 text-sm font-semibold text-[#d4d4d8] hover:bg-white/5 cursor-pointer">Cancelar</button>
+        <button id="confSi" type="button" class="px-4 py-2 rounded-xl text-sm font-extrabold cursor-pointer"></button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast discreto de notificaciones (sin alert/confirm) -->
   <div id="toastContainer" class="fixed bottom-24 sm:bottom-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[420px] pointer-events-none flex flex-col gap-2"></div>
 
@@ -221,7 +379,18 @@
   <main class="max-w-[820px] mx-auto px-3 sm:px-4 pt-4 space-y-4">
 
     <!-- 1. Tarjeta de 3 KPIs financieros -->
-    <section data-vista="inicio" aria-label="Indicadores financieros" class="bg-white rounded-[14px] p-3.5 sm:p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="inicio" data-solo-ceros id="tiendaVacia" aria-label="Tu tienda está en ceros" class="hidden rounded-[14px] p-4 sm:p-5 border border-primario/40 bg-teal-50">
+      <h2 class="text-base sm:text-lg font-extrabold text-[#1f2328]">🏁 Tu tienda está en ceros. ¡Vamos a llenarla!</h2>
+      <p class="text-xs sm:text-sm text-[#6b7280] mt-1">Elige la forma que más te acomode para dar de alta tus productos:</p>
+      <ol class="mt-3 grid gap-2 text-sm text-[#1f2328]">
+        <li class="flex gap-2.5 items-start"><span class="paso-num">1</span><span><b>Díctalo:</b> toca 🎙️ y di “Llegaron 24 Cocas de 600 a 22 pesos cada una”.</span></li>
+        <li class="flex gap-2.5 items-start"><span class="paso-num">2</span><span><b>Sube la factura</b> de tu proveedor (XML o PDF) y se suma todo solito.</span></li>
+        <li class="flex gap-2.5 items-start"><span class="paso-num">3</span><span><b>¿Lo tienes en Excel?</b> <button type="button" data-ir="inventario" class="underline font-semibold text-primario">Súbelo aquí</button> y la IA acomoda tus columnas.</span></li>
+      </ol>
+      <button type="button" data-tutorial class="mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stock-gradient text-[#0d0e11] font-bold text-xs sm:text-sm cursor-pointer active:scale-95 transition">▶ Ver cómo funciona (2 min)</button>
+    </section>
+
+    <section data-vista="inicio" id="secKpis" aria-label="Indicadores financieros" class="bg-white rounded-[14px] p-3.5 sm:p-4 shadow-sm border border-[#e5e7eb]">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
         <!-- Valor total del inventario -->
         <div data-ir="inventario" role="button" tabindex="0" title="Ver mi inventario" class="rounded-xl p-3 bg-slate-50 border border-slate-200 text-center">
@@ -280,7 +449,7 @@
         </p>
 
         <!-- Botones de cámara y simulador de ticket -->
-        <div class="flex flex-wrap items-center justify-center gap-2 mt-3.5">
+        <div id="filaFotos" class="flex flex-wrap items-center justify-center gap-2 mt-3.5">
           <label for="inputTicket"
             class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-primario bg-teal-50 hover:bg-teal-100 text-primario font-semibold text-xs sm:text-sm cursor-pointer transition active:scale-95">
             <span>🧾</span><span>Foto ticket</span>
@@ -291,18 +460,26 @@
             <span>📸</span><span>Foto anaquel</span>
             <input id="inputAnaquel" type="file" accept="image/*" capture="environment" class="hidden">
           </label>
-          <button id="btnFacturaDemo" type="button"
-            class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium text-xs sm:text-sm cursor-pointer transition active:scale-95">
-            <span>⚡</span><span>Probar con factura de ejemplo</span>
+        </div>
+
+        <!-- Chips para la tienda en ceros: dar de alta los primeros productos -->
+        <div id="chipsArranque" class="hidden flex flex-wrap items-center justify-center gap-1.5 mt-3.5">
+          <button type="button" data-q="Llegaron 24 Cocas de 600 ml, las vendo a 22 pesos cada una"
+            class="atajo px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-teal-50 hover:text-primario border border-slate-200 hover:border-primario/40 transition cursor-pointer">
+            Llegaron 24 Cocas de 600 a $22
           </button>
-          <button id="btnSimularTicket" type="button"
-            class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium text-xs sm:text-sm cursor-pointer transition active:scale-95">
-            <span>✨</span><span>Simular ticket demo</span>
+          <button type="button" data-q="Tengo 10 kilos de frijol pinto, lo vendo a 32 pesos el kilo"
+            class="atajo px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-teal-50 hover:text-primario border border-slate-200 hover:border-primario/40 transition cursor-pointer">
+            Tengo 10 kilos de frijol a $32
+          </button>
+          <button type="button" data-q="Llegaron 12 leches Lala de litro, las vendo a 29 pesos"
+            class="atajo px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-teal-50 hover:text-primario border border-slate-200 hover:border-primario/40 transition cursor-pointer">
+            Llegaron 12 leches Lala a $29
           </button>
         </div>
 
-        <!-- Chips de atajos rápidos -->
-        <div class="flex flex-wrap items-center justify-center gap-1.5 mt-3.5">
+        <!-- Chips de atajos rápidos (cuando ya hay productos) -->
+        <div id="chipsOperacion" class="flex flex-wrap items-center justify-center gap-1.5 mt-3.5">
           <button type="button" data-q="¿Qué tengo que surtir hoy y qué NO debo pedir?"
             class="atajo px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-teal-50 hover:text-primario border border-slate-200 hover:border-primario/40 transition cursor-pointer">
             ¿Qué surto y qué no?
@@ -342,7 +519,7 @@
     </section>
 
     <!-- 3. Sección: Se está acabando -->
-    <section data-vista="alertas" aria-label="Productos bajos o agotados" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="alertas" id="secAlertas" aria-label="Productos bajos o agotados" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <div class="flex items-center justify-between gap-2 mb-2.5">
         <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">⚠️ Se está acabando</h2>
         <span id="badgeAlertas" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-100 text-bajo">0 críticos</span>
@@ -351,7 +528,7 @@
     </section>
 
     <!-- 4. Sección: Dinero congelado (Escudo anti-preventista) -->
-    <section data-vista="parado" aria-label="Capital congelado" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="parado" id="secParado" aria-label="Capital congelado" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <div class="flex items-center justify-between gap-2 mb-1">
         <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">🧊 Dinero congelado (no resurtir)</h2>
         <span id="badgeLentos" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-100 text-congelado">0 lentos</span>
@@ -363,7 +540,7 @@
     </section>
 
     <!-- 5. Sección: Lista de surtido agrupada por proveedor -->
-    <section data-vista="surtir" aria-label="Lista de compras por proveedor" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="surtir" id="secSurtir" aria-label="Lista de compras por proveedor" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
         <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">🛍️ Lista de surtido por proveedor</h2>
         <label class="inline-flex items-center gap-1.5 text-xs text-[#6b7280] cursor-pointer select-none">
@@ -374,7 +551,7 @@
       <p class="text-xs sm:text-sm text-[#6b7280] mb-3">
         Calculada con tus ventas diarias y factor de fin de semana (perecederos para 1–4 días, abarrotes para 1 semana).
       </p>
-      <div class="rounded-xl border-2 border-dashed border-primario/50 bg-teal-50 p-3 mb-3">
+      <div id="cajaPresupuesto" class="rounded-xl border-2 border-dashed border-primario/50 bg-teal-50 p-3 mb-3">
         <label for="inputPresupuesto" class="block text-sm font-bold text-[#1f2328] mb-2">💵 ¿Cuánto efectivo tienes hoy para surtir?</label>
         <form id="formPresupuesto" class="flex gap-2">
           <input id="inputPresupuesto" type="number" inputmode="decimal" min="1" max="1000000" step="1" placeholder="Ej. 1000"
@@ -393,7 +570,7 @@
     </section>
 
     <!-- 5b. Sección: Tu mes en resumen (sin lenguaje contable) -->
-    <section data-vista="mes" aria-label="Tu mes en resumen" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="mes" id="secMes" aria-label="Tu mes en resumen" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <div class="flex items-center justify-between gap-2 mb-1">
         <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">📅 Tu mes en resumen</h2>
         <span id="mesNombre" class="text-xs font-semibold text-[#6b7280]"></span>
@@ -424,7 +601,7 @@
     </section>
 
     <!-- 6. Sección: Inventario completo con buscador y controles rápidos -->
-    <section data-vista="inventario" aria-label="Inventario completo" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="inventario" id="secInventario" aria-label="Inventario completo" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div>
           <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">📦 Inventario</h2>
@@ -437,7 +614,7 @@
     </section>
 
     <!-- 6b. Sección: Importar inventario desde Excel -->
-    <section data-vista="inventario" aria-label="Importar inventario desde Excel" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="inventario" id="secExcel" aria-label="Importar inventario desde Excel" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <h2 class="text-base sm:text-lg font-bold text-[#1f2328]">📥 Traer mi inventario desde Excel</h2>
       <p class="text-xs sm:text-sm text-[#6b7280] mt-1 mb-3">
         ¿Ya llevas tu inventario en Excel? Súbelo y STOCK reconoce tus columnas con IA. No tienes que capturar producto por producto.
@@ -451,7 +628,7 @@
     </section>
 
     <!-- 7. Sección: Últimos movimientos -->
-    <section data-vista="mes" aria-label="Últimos movimientos" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
+    <section data-vista="mes" id="secMovs" aria-label="Últimos movimientos" class="bg-white rounded-[14px] p-4 shadow-sm border border-[#e5e7eb]">
       <h2 class="text-base sm:text-lg font-bold text-[#1f2328] mb-2.5">🕑 Últimos movimientos</h2>
       <ul id="movimientos" class="divide-y divide-[#e5e7eb] text-xs sm:text-sm"></ul>
     </section>
@@ -610,17 +787,29 @@
       }
     }
 
-    async function reiniciarDemo(silencioso = false) {
+    // modo "vacio" = tienda en ceros; "demo" = tiendita de ejemplo con 2 semanas de ventas
+    async function reiniciarTienda(modo = "vacio") {
       try {
-        await api("/api/reset", { method: "POST" });
+        await postJSON("/api/reset", { modo });
         productosResaltados.clear();
         $("chat").innerHTML = "";
-        agregarMensaje("bot", "¡Hola! Soy STOCK. Ya cargué los productos de tu tiendita en Durango. Dime qué vendiste, sube la foto de un ticket o pregúntame qué surtir hoy.");
         await cargarTablero();
-        if (!silencioso) mostrarToast("Inventario de demo reiniciado", "ok");
+        saludar();
+        mostrarToast(modo === "demo" ? "Cargué la tienda de ejemplo" : "Listo: tu tienda está en ceros", "ok");
       } catch (err) {
         mostrarToast(err.message, "error");
       }
+    }
+
+    // true solo cuando ya cargó el tablero y no hay ni un producto
+    function tiendaEnCeros() { return !!tablero.resumen && !(tablero.prediccion || []).length; }
+
+    function saludar() {
+      const nombre = nombreTienda();
+      const hola = nombre ? `¡Hola, ${nombre}!` : "¡Hola!";
+      agregarMensaje("bot", tiendaEnCeros()
+        ? `${hola} Soy STOCK y tu tienda está en ceros. Empecemos: dime qué productos tienes (ej. “Llegaron 24 Cocas de 600 a 22 pesos”), sube la factura de tu proveedor o tu Excel.`
+        : `${hola} Soy STOCK. Dime qué vendiste, sube la factura de tu proveedor o pregúntame qué surtir hoy.`);
     }
 
     // =========================================================================
@@ -647,8 +836,6 @@
     function setCargando(activo, mensaje) {
       $("btnMic").disabled = activo;
       $("btnEnviarTexto").disabled = activo;
-      $("btnSimularTicket").disabled = activo;
-      $("btnFacturaDemo").disabled = activo;
       $("btnFactura").classList.toggle("pointer-events-none", activo);
       $("btnFactura").classList.toggle("opacity-50", activo);
       if (mensaje) $("estadoMic").textContent = mensaje;
@@ -876,7 +1063,8 @@
     function mostrarVista(nombre, { guardar = true, subir = true } = {}) {
       if (!VISTAS.includes(nombre)) nombre = "inicio";
       vistaActual = nombre;
-      document.querySelectorAll("[data-vista]").forEach((el) => el.classList.toggle("hidden", el.dataset.vista !== nombre));
+      document.querySelectorAll("[data-vista]").forEach((el) => el.classList.toggle("hidden",
+        el.dataset.vista !== nombre || ("soloCeros" in el.dataset && !tiendaEnCeros())));
       document.querySelectorAll("[data-vista-btn]").forEach((b) => {
         const activo = b.dataset.vistaBtn === nombre;
         b.classList.toggle("activo", activo);
@@ -1002,9 +1190,15 @@
       const lista = tablero.lista;
       if (!resumen || !lista) return;
 
+      // 0. Tienda en ceros: guía para dar de alta los primeros productos
+      const enCeros = !pred.length;
+      $("tiendaVacia").classList.toggle("hidden", !enCeros || vistaActual !== "inicio");
+      $("chipsArranque").classList.toggle("hidden", !enCeros);
+      $("chipsOperacion").classList.toggle("hidden", enCeros);
+
       // 1. KPIs
       $("kpiValor").textContent = fmtDinero(resumen.valor_inventario);
-      $("kpiSalud").textContent = `Salud de stock: ${resumen.salud_porcentaje}%`;
+      $("kpiSalud").textContent = enCeros ? "Aún sin productos" : `Salud de stock: ${resumen.salud_porcentaje}%`;
       $("kpiApartar").textContent = fmtDinero(resumen.efectivo_apartar);
       $("kpiUrgentes").textContent = `${resumen.urgentes_lista} productos por surtir`;
       $("kpiCongelado").textContent = fmtDinero(resumen.capital_congelado);
@@ -1023,7 +1217,7 @@
               </div>
               <div class="text-right font-bold text-sm text-bajo tabular-nums shrink-0">${fmtNum(p.cantidad)} ${unidadCorta(p.unidad)}</div>
             </div>`).join("")
-        : `<p class="text-sm text-[#6b7280] py-1">¡Excelente! Ningún producto está agotado ni bajo su mínimo.</p>`;
+        : `<p class="text-sm text-[#6b7280] py-1">${pred.length ? "¡Excelente! Ningún producto está agotado ni bajo su mínimo." : "Aquí te aviso qué se está acabando y cuándo, en cuanto tengas productos."}</p>`;
 
       // 3. Dinero congelado
       const lentos = resumen.no_pedir || [];
@@ -1043,13 +1237,13 @@
               </div>
             </div>
             <div id="promo-${Number(p.id)}"></div>`).join("")
-        : `<p class="text-sm text-[#6b7280] py-1">No tienes productos estancados hoy.</p>`;
+        : `<p class="text-sm text-[#6b7280] py-1">${pred.length ? "No tienes productos estancados hoy." : "Aquí verás el dinero que se te queda atorado en lo que casi no se vende."}</p>`;
 
       // 4. Lista de surtido por proveedor
       const contProv = $("listaProveedores");
       const btnWa = $("btnWhatsapp");
       if (!lista.por_proveedor.length) {
-        contProv.innerHTML = `<p class="text-sm text-[#6b7280] py-1">No hay compras urgentes por ahora.</p>`;
+        contProv.innerHTML = `<p class="text-sm text-[#6b7280] py-1">${tiendaEnCeros() ? "Cuando tengas productos y ventas, aquí aparece tu pedido armado por proveedor." : "No hay compras urgentes por ahora."}</p>`;
         $("totalCompras").textContent = "";
         btnWa.classList.add("opacity-40", "pointer-events-none");
         btnWa.href = "#";
@@ -1120,6 +1314,10 @@
         : lista;
 
       const cont = $("inventario");
+      if (!lista.length) {
+        cont.innerHTML = `<p class="text-sm text-[#6b7280] py-1">Aún no tienes productos. Díctalos con 🎙️ en Inicio, sube la factura de tu proveedor o trae tu Excel aquí abajo 👇</p>`;
+        return;
+      }
       if (!filtrados.length) {
         cont.innerHTML = `<p class="text-sm text-[#6b7280] py-1">Sin coincidencias para esa búsqueda.</p>`;
         return;
@@ -1192,7 +1390,7 @@
       const cont = $("movimientos");
       const movs = tablero.movimientos || [];
       if (!movs.length) {
-        cont.innerHTML = `<li class="py-2 text-[#6b7280]">Sin movimientos registrados.</li>`;
+        cont.innerHTML = `<li class="py-2 text-[#6b7280]">Aún no hay movimientos. Aquí verás cada venta, entrada y cambio, con su botón para deshacer.</li>`;
         return;
       }
       const badges = {
@@ -1446,8 +1644,6 @@
       e.target.value = "";
     });
 
-    $("btnSimularTicket").addEventListener("click", simularTicketDemo);
-    $("btnFacturaDemo").addEventListener("click", () => enviarFactura(null));
     $("inputFactura").addEventListener("change", (e) => {
       const archivo = e.target.files && e.target.files[0];
       e.target.value = "";
@@ -1468,7 +1664,6 @@
       mostrarToast(vozActiva ? "Respuestas por voz activadas" : "Voz silenciada");
     });
 
-    $("btnReset").addEventListener("click", () => reiniciarDemo(false));
 
     // Arranque: abre el sector del enlace (ej. /app#inventario) o el último que usó
     ajustarAltoHeader();
@@ -1478,9 +1673,239 @@
     }
     mostrarVista(vistaInicial, { subir: false });
 
-    // Arranque: muestra el inventario guardado (no lo reinicia)
-    agregarMensaje("bot", "¡Hola! Soy STOCK. Dime qué vendiste, sube la foto de un ticket o pregúntame qué surtir hoy.");
-    cargarTablero();
+    // =========================================================================
+    // 7. NOMBRE DE LA TIENDA, MENÚ ⋯ Y CONFIRMACIONES
+    // =========================================================================
+    function leerLS(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
+    function guardarLS(k, v) { try { localStorage.setItem(k, v); } catch (_) {} }
+    function nombreTienda() { return (leerLS("stock_tienda") || "").trim(); }
+    function pintarNombreTienda() {
+      const n = nombreTienda();
+      $("subtituloTienda").textContent = n ? `${n} · inventario por voz` : "Tu inventario por voz y foto";
+    }
+
+    function confirmar({ titulo, texto, si, peligro = false }) {
+      return new Promise((resolver) => {
+        $("confTitulo").textContent = titulo;
+        $("confTexto").textContent = texto;
+        const bSi = $("confSi");
+        bSi.textContent = si;
+        bSi.className = `px-4 py-2 rounded-xl text-sm font-extrabold cursor-pointer ${peligro ? "bg-red-600 text-white hover:bg-red-500" : "bg-stock-gradient text-[#0d0e11]"}`;
+        const caja = $("confirmar");
+        caja.classList.remove("hidden");
+        $("confNo").focus();
+        const cerrar = (r) => { caja.classList.add("hidden"); bSi.onclick = null; $("confNo").onclick = null; resolver(r); };
+        bSi.onclick = () => cerrar(true);
+        $("confNo").onclick = () => cerrar(false);
+      });
+    }
+
+    const menu = $("menuOpciones");
+    function abrirMenu(abrir) {
+      menu.classList.toggle("hidden", !abrir);
+      $("btnMenu").setAttribute("aria-expanded", String(abrir));
+    }
+    $("btnMenu").addEventListener("click", (e) => { e.stopPropagation(); abrirMenu(menu.classList.contains("hidden")); });
+    document.addEventListener("click", (e) => { if (!e.target.closest("#menuOpciones")) abrirMenu(false); });
+    menu.addEventListener("click", async (e) => {
+      const item = e.target.closest("[data-menu]");
+      if (!item) return;
+      abrirMenu(false);
+      const accion = item.dataset.menu;
+      if (accion === "tutorial") iniciarTutorial();
+      else if (accion === "bienvenida") mostrarBienvenida();
+      else if (accion === "factura-demo") { mostrarVista("inicio"); enviarFactura(null); }
+      else if (accion === "demo") {
+        if (await confirmar({ titulo: "¿Cargar la tienda de ejemplo?", texto: "Se borra lo que tengas y se carga una tiendita de Durango con 20 productos y 2 semanas de ventas, para ver todas las funciones.", si: "Cargar ejemplo" })) reiniciarTienda("demo");
+      } else if (accion === "cero") {
+        if (await confirmar({ titulo: "¿Empezar de cero?", texto: "Se borran todos tus productos, ventas, facturas y movimientos. Esto no se puede deshacer.", si: "Sí, borrar todo", peligro: true })) reiniciarTienda("vacio");
+      }
+    });
+    $("btnTutorial").addEventListener("click", () => iniciarTutorial());
+    document.addEventListener("click", (e) => { if (e.target.closest("[data-tutorial]")) iniciarTutorial(); });
+
+    // =========================================================================
+    // 8. BIENVENIDA (solo la primera vez; se repite desde ⋯)
+    // =========================================================================
+    function mostrarBienvenida() {
+      const caja = $("bienvenida");
+      $("bvNombre").value = nombreTienda();
+      // reinicia las animaciones de entrada
+      caja.querySelectorAll(".bv-in, .bv-logo").forEach((el) => { el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; });
+      caja.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    }
+    function cerrarBienvenida() {
+      const nombre = $("bvNombre").value.replace(/[<>]/g, "").trim().slice(0, 40);
+      guardarLS("stock_tienda", nombre);
+      guardarLS("stock_bienvenida", "1");
+      pintarNombreTienda();
+      $("bienvenida").classList.add("hidden");
+      document.body.style.overflow = "";
+      $("chat").innerHTML = "";
+      saludar();
+    }
+    $("bvTutorial").addEventListener("click", () => { cerrarBienvenida(); iniciarTutorial(); });
+    $("bvSaltar").addEventListener("click", () => { cerrarBienvenida(); mostrarVista("inicio"); });
+    $("bvNombre").addEventListener("keydown", (e) => { if (e.key === "Enter") $("bvTutorial").click(); });
+
+    // =========================================================================
+    // 9. TUTORIAL GUIADO: recorre toda la app resaltando cada parte
+    // =========================================================================
+    const ANIM = {
+      voz: `<div class="ta-mic">🎙️</div><div class="ta-col"><div class="ta-burbuja"><span class="ta-escribe">“Vendí 3 Cocas y 2 Sabritas”</span></div>
+            <div class="flex gap-1.5"><span class="ta-chip menos" style="animation-delay:2.2s">Coca −3</span><span class="ta-chip menos" style="animation-delay:2.45s">Sabritas −2</span></div></div>`,
+      factura: `<div class="ta-doc">CFDI<i></i><i></i><i style="width:70%"></i><b style="font-size:.5rem">CAJA C/24 ×2</b><i></i></div><span class="ta-flecha">➜</span>
+            <div class="ta-col"><span class="ta-chip mas" style="animation-delay:.5s">+48 Cocas</span><span class="ta-chip alerta" style="animation-delay:1s">🚨 Te la subieron 6 %</span></div>`,
+      foto: `<div class="ta-foto">🧾</div><span class="ta-flecha">➜</span><div class="ta-col"><span class="ta-chip mas" style="animation-delay:1.5s">+12 leches</span><span class="ta-chip mas" style="animation-delay:1.75s">+6 panes</span></div>`,
+      texto: `<div class="ta-col"><div class="ta-burbuja"><span class="ta-escribe">me quedan 2 aceites</span></div>
+            <div class="flex items-center gap-2"><span class="ta-chip mas" style="animation-delay:2.1s">Aceite = 2</span><span class="ta-deshacer">↩️ Deshacer</span></div></div>`,
+      secciones: `<div class="flex gap-2 text-2xl"><span class="ta-chip" style="animation-delay:.1s">🏠</span><span class="ta-chip" style="animation-delay:.25s">⚠️</span><span class="ta-chip" style="animation-delay:.4s">🛍️</span><span class="ta-chip" style="animation-delay:.55s">🧊</span><span class="ta-chip" style="animation-delay:.7s">📦</span><span class="ta-chip" style="animation-delay:.85s">📅</span></div>`,
+      numeros: `<div class="ta-col" style="align-items:stretch;width:100%"><span class="ta-chip mas" style="animation-delay:.2s">💰 Lo que vale tu inventario</span><span class="ta-chip menos" style="animation-delay:.5s">🛍️ Lo que debes apartar para surtir</span><span class="ta-chip" style="animation-delay:.8s;background:rgba(14,165,233,.2);color:#7dd3fc">🧊 Tu dinero congelado</span></div>`,
+      semaforo: `<div class="ta-semaforo"><span></span><span></span><span></span></div><div class="ta-col"><span class="ta-chip alerta" style="animation-delay:.6s">Huevo: se acaba mañana</span></div>`,
+      presupuesto: `<div class="ta-col"><span class="ta-chip mas" style="animation-delay:.1s;font-size:.9rem">💵 $1,000</span></div><span class="ta-flecha">➜</span>
+            <div class="ta-barras"><span style="height:90%;animation-delay:.5s"></span><span style="height:65%;animation-delay:.65s"></span><span style="height:45%;animation-delay:.8s"></span><span style="height:25%;animation-delay:.95s"></span></div>`,
+      whatsapp: `<div class="ta-col"><span class="ta-chip menos" style="animation-delay:.1s">Coca · 48 pzas</span><span class="ta-chip menos" style="animation-delay:.3s">Leche · 12 pzas</span></div><span class="ta-flecha">➜</span><span class="ta-wa">📲 WhatsApp</span>`,
+      hielo: `<span class="ta-hielo">🧊</span><div class="ta-col"><span class="ta-tachar">Volver a pedir Jabón Zote</span><span class="ta-chip mas" style="animation-delay:1.3s">🔥 Promo 2×$30</span></div>`,
+      inventario: `<div class="ta-col" style="width:100%"><div class="flex items-center gap-2 w-full"><span class="w-3 h-3 rounded-full bg-[#16a34a]"></span><span class="text-xs text-white flex-1">Coca-Cola 600 ml</span><span class="ta-deshacer">−</span><span class="ta-chip mas" style="animation-delay:.4s">28</span><span class="ta-deshacer">+</span></div>
+            <div class="flex items-center gap-2 w-full"><span class="w-3 h-3 rounded-full bg-[#dc2626]"></span><span class="text-xs text-white flex-1">Huevo</span><span class="ta-chip alerta" style="animation-delay:.7s">✏️ Corregir</span></div></div>`,
+      excel: `<div class="ta-doc" style="background:#dcfce7">XLSX<i style="background:#86efac"></i><i style="background:#86efac"></i><i style="background:#86efac"></i><i style="background:#86efac"></i></div><span class="ta-flecha">➜</span>
+            <div class="ta-col"><span class="ta-chip mas" style="animation-delay:.6s">“Lo que vendo” → Producto</span><span class="ta-chip mas" style="animation-delay:1s">“Cuántos me quedan” → Cantidad</span></div>`,
+      mes: `<div class="ta-barras"><span style="height:40%;animation-delay:.1s"></span><span style="height:60%;animation-delay:.2s"></span><span style="height:50%;animation-delay:.3s"></span><span style="height:85%;animation-delay:.4s"></span><span style="height:70%;animation-delay:.5s"></span></div>
+            <span class="ta-chip mas" style="animation-delay:1s">📤 CSV para tu contador</span>`,
+      historial: `<div class="ta-col"><span class="ta-chip menos" style="animation-delay:.1s">VENTA · 2 Cocas</span><span class="ta-chip mas" style="animation-delay:.3s">ENTRADA · 48 Cocas</span></div><span class="ta-deshacer">↩️ Deshacer</span>`,
+      inicio: `<svg class="h-16 w-16 bv-logo" aria-hidden="true"><use href="#stock-box-icon" /></svg>`,
+      fin: `<span class="ta-grande">🚀</span><div class="ta-col"><span class="ta-chip mas" style="animation-delay:.4s">🎙️ Díctalo</span><span class="ta-chip mas" style="animation-delay:.6s">📄 Sube tu factura</span><span class="ta-chip mas" style="animation-delay:.8s">📥 O tu Excel</span></div>`,
+      ayuda: `<span class="ta-grande" style="width:52px;height:52px;border-radius:9999px;border:2px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:#fff">?</span>`,
+    };
+
+    const PASOS = [
+      { anim: "inicio", titulo: "Te enseño STOCK en 2 minutos",
+        texto: "Te voy a llevar por toda la app. Usa “Siguiente” (o las flechas del teclado). Puedes salir cuando quieras." },
+      { vista: "inicio", el: "#secKpis", anim: "numeros", titulo: "Tu tienda en 3 números",
+        texto: "Cuánto vale lo que tienes, cuánto debes apartar para surtir y cuánto dinero tienes congelado en lo que no se vende. Toca cualquiera para ver el detalle." },
+      { vista: "inicio", el: "#btnMic", anim: "voz", titulo: "Háblale como a tu ayudante",
+        texto: "Toca el micrófono, di lo que pasó y vuelve a tocarlo. Ventas, lo que te llegó o preguntas: “¿qué se me acaba?”. STOCK lo anota solo." },
+      { vista: "inicio", el: "#btnFactura", anim: "factura", titulo: "Sube la factura del proveedor",
+        texto: "El XML o PDF que te manda. STOCK convierte cajas en piezas, lo suma a tu inventario y te avisa si te subieron el precio." },
+      { vista: "inicio", el: "#filaFotos", anim: "foto", titulo: "¿Sin factura? Tómale foto",
+        texto: "Foto del ticket: suma lo que te llegó. Foto del anaquel: cuenta lo que tienes en el estante." },
+      { vista: "inicio", el: "#formTexto", anim: "texto", titulo: "¿No puedes hablar? Escríbelo",
+        texto: "Funciona igual que la voz. STOCK te contesta abajo y cada cambio trae un botón ↩️ Deshacer por si algo no quedó bien." },
+      { vista: "inicio", el: "#navSectores", anim: "secciones", titulo: "Tu tienda en 6 secciones",
+        texto: "Inicio, Se acaba, Surtir, Parado, Inventario y Mi mes. Los numeritos de colores te avisan cuando algo necesita tu atención. Vamos a verlas." },
+      { vista: "alertas", el: "#secAlertas", anim: "semaforo", titulo: "⚠️ Se acaba",
+        texto: "Lo que ya llegó a su mínimo o se agotó, y el día en que se te va a terminar según cómo vendes. Verde va bien, amarillo ojo, rojo urge." },
+      { vista: "surtir", el: "#cajaPresupuesto", anim: "presupuesto", titulo: "🛍️ ¿Cuánto efectivo tienes hoy?",
+        texto: "Escribe cuánto traes para surtir y STOCK lo reparte en lo más urgente primero, sin pasarse ni un peso." },
+      { vista: "surtir", el: "#listaProveedores", anim: "whatsapp", titulo: "Tu pedido, ya armado",
+        texto: "La lista de lo que hay que comprar, agrupada por proveedor y con cuánto pedir. Un toque y se la mandas por WhatsApp." },
+      { vista: "parado", el: "#secParado", anim: "hielo", titulo: "🧊 Dinero parado",
+        texto: "Lo que casi no se vende y te tiene el dinero atorado. No lo vuelvas a pedir: STOCK te arma una promo para sacarlo hoy." },
+      { vista: "inventario", el: "#secInventario", anim: "inventario", titulo: "📦 Tu inventario",
+        texto: "Todos tus productos con su semáforo. Usa − y + para ajustar rápido, o ✏️ Corregir para cambiar precio, mínimo o nombre." },
+      { vista: "inventario", el: "#secExcel", anim: "excel", titulo: "¿Ya lo tienes en Excel?",
+        texto: "Súbelo tal como está. La IA entiende tus columnas, te enseña una vista previa y lo guardas todo de un jalón." },
+      { vista: "mes", el: "#secMes", anim: "mes", titulo: "📅 Tu mes en resumen",
+        texto: "Lo que vendiste, lo que te llegó con facturas y el dinero parado. Descárgalo en un archivo para tu contador." },
+      { vista: "mes", el: "#secMovs", anim: "historial", titulo: "Todo queda anotado",
+        texto: "Cada venta, entrada y cambio aparece aquí. Si algo salió mal, lo regresas como estaba con ↩️ Deshacer." },
+      { vista: "inicio", el: "#btnTutorial", anim: "ayuda", titulo: "¿Se te olvidó algo?",
+        texto: "Con este botón ? repites el tutorial cuando quieras. En ⋯ hay más opciones, como empezar de cero." },
+      { vista: "inicio", anim: "fin", titulo: "¡Listo para empezar!", final: true,
+        texto: "Da de alta tus productos como te acomode: dicta “Llegaron 24 Cocas de 600 a 22 pesos”, sube la factura de tu proveedor o trae tu Excel." },
+    ];
+
+    let tourPaso = 0;
+    let tourActivo = false;
+    let tourRaf = null;
+    let tourDestino = null;
+
+    function iniciarTutorial() {
+      abrirMenu(false);
+      tourActivo = true;
+      tourPaso = 0;
+      $("tour").classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+      pintarPaso();
+      seguirFoco();
+      $("tourSig").focus();
+    }
+
+    function cerrarTutorial() {
+      tourActivo = false;
+      cancelAnimationFrame(tourRaf);
+      $("tour").classList.add("hidden");
+      document.body.style.overflow = "";
+      guardarLS("stock_tutorial", "1");
+      mostrarVista("inicio");
+    }
+
+    function pintarPaso() {
+      const paso = PASOS[tourPaso];
+      if (paso.vista) mostrarVista(paso.vista, { guardar: false, subir: false });
+      tourDestino = paso.el ? document.querySelector(paso.el) : null;
+      if (tourDestino) tourDestino.scrollIntoView({ block: "center", behavior: "smooth" });
+      else window.scrollTo({ top: 0, behavior: "smooth" });
+
+      $("tourPaso").textContent = `PASO ${tourPaso + 1} DE ${PASOS.length}`;
+      $("tourBarra").style.width = `${((tourPaso + 1) / PASOS.length) * 100}%`;
+      $("tourTitulo").textContent = paso.titulo;
+      $("tourTexto").textContent = paso.texto;
+      $("tourAnim").innerHTML = ANIM[paso.anim] || "";  // HTML fijo del propio código, sin datos del usuario
+      $("tourAtras").disabled = tourPaso === 0;
+      $("tourSig").textContent = paso.final ? "¡Empezar! 🚀" : (tourPaso === 0 ? "Empezar →" : "Siguiente →");
+      const t = $("tourTarjeta");
+      t.classList.remove("cambia"); void t.offsetWidth; t.classList.add("cambia");
+    }
+
+    // Sigue al elemento resaltado en cada cuadro (scroll, cambio de tamaño, contenido que carga)
+    function seguirFoco() {
+      if (!tourActivo) return;
+      const foco = $("tourFoco");
+      const tarjeta = $("tourTarjeta");
+      const alto = window.innerHeight;
+      if (tourDestino && tourDestino.getClientRects().length) {  // también sirve para la barra fija de abajo
+        const r = tourDestino.getBoundingClientRect();
+        const m = 8;
+        const top = Math.max(6, r.top - m), left = Math.max(6, r.left - m);
+        const bottom = Math.min(alto - 6, r.bottom + m), right = Math.min(window.innerWidth - 6, r.right + m);
+        foco.classList.remove("centro");
+        Object.assign(foco.style, { top: `${top}px`, left: `${left}px`, width: `${Math.max(0, right - left)}px`, height: `${Math.max(0, bottom - top)}px` });
+        // La tarjeta va del lado contrario al elemento resaltado
+        const centro = (top + bottom) / 2;
+        if (centro > alto / 2) { tarjeta.style.top = "16px"; tarjeta.style.bottom = "auto"; }
+        else { tarjeta.style.top = "auto"; tarjeta.style.bottom = "16px"; }
+      } else {
+        foco.classList.add("centro");
+        Object.assign(foco.style, { top: `${alto / 2}px`, left: `${window.innerWidth / 2}px`, width: "0px", height: "0px" });
+        tarjeta.style.top = "auto";
+        tarjeta.style.bottom = `${Math.max(16, (alto - tarjeta.offsetHeight) / 2)}px`;
+      }
+      tourRaf = requestAnimationFrame(seguirFoco);
+    }
+
+    function moverTutorial(delta) {
+      if (delta > 0 && PASOS[tourPaso].final) return cerrarTutorial();
+      tourPaso = Math.min(PASOS.length - 1, Math.max(0, tourPaso + delta));
+      pintarPaso();
+    }
+    $("tourSig").addEventListener("click", () => moverTutorial(1));
+    $("tourAtras").addEventListener("click", () => moverTutorial(-1));
+    $("tourCerrar").addEventListener("click", cerrarTutorial);
+    document.addEventListener("keydown", (e) => {
+      if (!tourActivo) return;
+      if (e.key === "Escape") cerrarTutorial();
+      else if (e.key === "ArrowRight") moverTutorial(1);
+      else if (e.key === "ArrowLeft") moverTutorial(-1);
+    });
+
+    // Arranque: muestra el inventario guardado (no lo reinicia) y la bienvenida la primera vez
+    pintarNombreTienda();
+    cargarTablero().then(() => {
+      saludar();
+      if (leerLS("stock_bienvenida") !== "1") mostrarBienvenida();
+    });
   </script>
 </body>
 </html>

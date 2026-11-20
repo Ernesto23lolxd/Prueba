@@ -50,8 +50,9 @@ Sin `DATABASE_URL` todo sigue funcionando igual que antes con SQLite local (úti
 - **Render gratis se duerme** tras ~15 min sin visitas: la primera carga tarda ~1 minuto. Ábrelo 2 minutos
   antes de presentar.
 - **Supabase gratis se pausa** tras ~7 días sin uso: si pasa, entra al panel y dale *Restore*.
-- **El botón ↺ Demo** borra y recarga los datos de ejemplo. Cuando sea una tienda real, pon
-  `PERMITIR_RESET=0` en Render.
+- **La app arranca en ceros** y la primera vez muestra la bienvenida y el tutorial (se repite con el botón **?**).
+- **Menú ⋯** → *Cargar tienda de ejemplo* (20 productos con 2 semanas de ventas, para presumir predicción, alertas y
+  dinero parado ante el jurado) o *Empezar de cero*. Cuando sea una tienda real, pon `PERMITIR_RESET=0` en Render.
 - **Sin cuentas de usuario todavía:** cualquiera con el enlace puede usar la app. Para la demo está bien; para
   una tienda real, el siguiente paso es agregar inicio de sesión.
 
@@ -64,5 +65,6 @@ Sin `DATABASE_URL` todo sigue funcionando igual que antes con SQLite local (úti
 | `ALLOWED_ORIGINS` | Dominios permitidos (CORS), separados por coma | `render.yaml` |
 | `CONFIAR_PROXY` | `1` en Render: el límite por IP usa la IP real del usuario | `render.yaml` |
 | `RATE_LIMIT_POR_MINUTO` | Peticiones a la IA por minuto por IP (25) | `render.yaml` |
-| `PERMITIR_RESET` | `0` desactiva el botón de reiniciar demo | `render.yaml` |
+| `INVENTARIO_INICIAL` | `vacio` (por defecto): la tienda arranca en ceros · `demo`: con la tiendita de ejemplo | `render.yaml` |
+| `PERMITIR_RESET` | `0` desactiva "Empezar de cero" y "Cargar tienda de ejemplo" | `render.yaml` |
 | `DB_POOL_MAX` | Conexiones máximas a Postgres (5) | opcional |

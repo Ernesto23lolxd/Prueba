@@ -126,11 +126,21 @@ DIAS_HISTORIAL = 14
 COBERTURA_DIAS = {"Tortillería": 1, "Panadería": 2, "Lácteos": 3, "Salchichonería": 4}
 COBERTURA_DEFAULT = 7
 
-def init_db(reset: bool = False):
+def modo_inicial() -> str:
+    """'vacio' (por defecto): la tienda arranca en ceros, lista para inventariar.
+    'demo': arranca con la tiendita de ejemplo y 2 semanas de ventas (útil para presentar)."""
+    return "demo" if (os.getenv("INVENTARIO_INICIAL") or "").strip().lower() == "demo" else "vacio"
+
+
+def init_db(reset: bool = False, modo: str | None = None):
+    """Crea las tablas. Con reset=True borra todo y deja la tienda vacía o con la demo, según `modo`."""
+    modo = modo or modo_inicial()
     con = db()
     try:
         crear_esquema(con, reset)
-        if con.execute("SELECT COUNT(*) AS n FROM productos").fetchone()["n"] == 0:
+        vacia = con.execute("SELECT COUNT(*) AS n FROM productos").fetchone()["n"] == 0
+        # Al arrancar sin reset solo se carga la demo si así se pidió y la base nunca se ha usado
+        if vacia and modo == "demo":
             cargar_demo(con)
         con.commit()
     except Exception:
@@ -1499,13 +1509,19 @@ def salud():
     return {"ok": True, "base": "postgres" if ES_POSTGRES else "sqlite"}
 
 
+class PeticionReinicio(BaseModel):
+    modo: str = Field("vacio", pattern="^(vacio|demo)$")
+
+
 @app.post("/api/reset")
-def reset():
-    """Reinicia el inventario de demostración (útil antes de presentar). Se apaga con PERMITIR_RESET=0."""
+def reset(datos: PeticionReinicio | None = None):
+    """Borra todo y deja la tienda en ceros ("vacio", por defecto) o con la tiendita de ejemplo ("demo").
+    Se apaga con PERMITIR_RESET=0 cuando ya es una tienda real."""
     if (os.getenv("PERMITIR_RESET") or "1").strip() in ("0", "false", "no"):
-        raise HTTPException(403, "El reinicio de la demo está desactivado en este servidor.")
-    init_db(reset=True)
-    return {"ok": True}
+        raise HTTPException(403, "El reinicio está desactivado en este servidor.")
+    modo = datos.modo if datos else "vacio"
+    init_db(reset=True, modo=modo)
+    return {"ok": True, "modo": modo}
 
 
 # Servir la app web

@@ -77,7 +77,7 @@ def texto(frase):
 
 
 # ------------------------------------------------------------------ Pruebas
-pedir("POST", "/api/reset")
+pedir("POST", "/api/reset", {"modo": "demo"})
 
 
 @prueba("1. La página y sus archivos cargan")
@@ -228,7 +228,7 @@ def es_wa(url):
 
 @prueba("17. Factura XML: convierte cajas a piezas y dispara el escudo anti-inflación")
 def _():
-    pedir("POST", "/api/reset")
+    pedir("POST", "/api/reset", {"modo": "demo"})
     antes = inv()
     xml = (BACKEND / "demo_cfdi.xml").read_bytes()
     codigo, d = pedir("POST", "/api/cfdi", archivos={"archivo": ("demo_cfdi.xml", xml, "text/xml")}, timeout=120)
@@ -412,12 +412,31 @@ def _():
 
 @prueba("29. Reinicio deja la base limpia para la demo")
 def _():
-    pedir("POST", "/api/reset")
+    pedir("POST", "/api/reset", {"modo": "demo"})
     i = inv()
     assert len(i) == 20 and "Queso menonita" not in i and "Café Nescafé 42 g" in i
     _, m = pedir("GET", "/api/resumen-mes")
     assert m["surtido"]["facturas"] == 0, "quedaron facturas tras el reinicio"
     return "20 productos, 0 facturas"
+
+
+@prueba("29b. Empezar de cero: tienda vacía y lista para inventariar")
+def _():
+    codigo, d = pedir("POST", "/api/reset")  # sin cuerpo = en ceros
+    assert codigo == 200 and d["modo"] == "vacio", d
+    assert inv() == {}, "quedaron productos"
+    codigo, t = pedir("GET", "/api/tablero")
+    assert codigo == 200 and t["resumen"]["valor_inventario"] == 0 and not t["movimientos"], t["resumen"]
+    codigo, m = pedir("GET", "/api/resumen-mes")
+    assert codigo == 200 and m["vendido"]["monto"] == 0
+    codigo, csv_txt = pedir("GET", "/api/resumen-mes/csv")
+    assert codigo == 200
+    codigo, _ = pedir("GET", "/api/lista-compras")
+    assert codigo == 200
+    codigo, d = pedir("POST", "/api/reset", {"modo": "otro"})
+    assert codigo == 422, "aceptó un modo inválido"
+    pedir("POST", "/api/reset", {"modo": "demo"})  # deja la demo para la siguiente corrida
+    return "0 productos, tablero, mes y CSV responden en ceros"
 
 
 @prueba("30. Límite de peticiones a la IA → 429 amable (al final, para no frenar las demás)")
