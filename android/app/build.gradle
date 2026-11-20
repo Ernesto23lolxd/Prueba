@@ -1,0 +1,46 @@
+// STOCK para Android: Trusted Web Activity (TWA). Abre https://stock-tienda.onrender.com/app a pantalla
+// completa con el motor de Chrome del celular (micrófono, cámara y subir facturas funcionan igual que en la web).
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'mx.stock.tienda'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'mx.stock.tienda'
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+
+    // Llave de DEMOSTRACIÓN (contraseña pública "android", como la de depuración de Android).
+    // Sirve para instalar el APK directo. Para Play Store se crea una llave privada que NO se sube a GitHub.
+    signingConfigs {
+        demo {
+            storeFile file('../stock-demo.keystore')
+            storePassword 'android'
+            keyAlias 'stock'
+            keyPassword 'android'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.demo
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}

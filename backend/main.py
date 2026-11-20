@@ -1627,6 +1627,20 @@ def service_worker():
                                  "Content-Security-Policy": seguridad.CSP_SERVICE_WORKER})
 
 
+# Verificación de la app de Android (TWA): con esto, el APK abre STOCK sin barra de navegador
+HUELLA_APK = ("96:93:62:72:30:D2:E4:3D:E1:4F:1F:01:E3:A7:FD:9C:5B:4B:5B:DA:"
+              "4A:B7:28:D8:B8:2F:52:99:36:5B:25:7B")
+
+
+@app.get("/.well-known/assetlinks.json")
+def assetlinks():
+    return JSONResponse([{
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target": {"namespace": "android_app", "package_name": "mx.stock.tienda",
+                   "sha256_cert_fingerprints": [HUELLA_APK]},
+    }])
+
+
 @app.get("/manifest.webmanifest")
 def manifiesto():
     """Datos para instalar STOCK como app (nombre, ícono, colores)."""
