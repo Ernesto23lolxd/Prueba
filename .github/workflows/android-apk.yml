@@ -1,0 +1,53 @@
+# Compila el APK de STOCK para Android en los servidores de GitHub y lo publica en Releases.
+# Descarga fija: https://github.com/Ernesto23lolxd/Prueba/releases/download/apk/STOCK.apk
+name: APK Android
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['android/**', '.github/workflows/android-apk.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Compilar APK firmado
+        run: gradle -p android assembleRelease --no-daemon --stacktrace
+
+      - name: Revisar firma
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk STOCK.apk
+          "$ANDROID_HOME"/build-tools/$(ls "$ANDROID_HOME"/build-tools | sort -V | tail -1)/apksigner verify --print-certs STOCK.apk
+          ls -la STOCK.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: STOCK-apk
+          path: STOCK.apk
+
+      - name: Publicar en Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk
+          name: STOCK para Android
+          make_latest: true
+          files: STOCK.apk
+          body: |
+            📲 **STOCK para Android**: descarga `STOCK.apk`, ábrelo en el celular y permite "Instalar apps de esta fuente".
+            Abre STOCK a pantalla completa (necesita Chrome instalado, que viene en casi todos los Android).
+            Firmado con llave de demostración del hackatón.
