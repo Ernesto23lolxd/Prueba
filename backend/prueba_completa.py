@@ -326,7 +326,8 @@ def _():
     xxe = (b'<?xml version="1.0"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>'
            b'<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4">&xxe;</cfdi:Comprobante>')
     c1, d1 = pedir("POST", "/api/cfdi", archivos={"archivo": ("malo.xml", xxe, "text/xml")})
-    assert c1 == 400 and "seguridad" in d1["detail"].lower(), (c1, d1)
+    # 400 = lo rechazó STOCK; 403 = el firewall del hosting (p. ej. Render) lo bloqueó antes de llegar a la app
+    assert (c1 == 400 and "seguridad" in d1["detail"].lower()) or c1 == 403, (c1, str(d1)[:120])
     c2, _ = pedir("POST", "/api/cfdi", archivos={"archivo": ("factura.pdf", b"soy texto, no un PDF", "application/pdf")})
     assert c2 == 400, f"PDF falso debe dar 400 ({c2})"
     c3, _ = pedir("POST", "/api/cfdi", archivos={"archivo": ("grande.xml", b"<" + b"a" * (5 * 1024 * 1024 + 10), "text/xml")})
