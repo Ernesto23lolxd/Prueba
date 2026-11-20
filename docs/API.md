@@ -32,7 +32,7 @@ Todas las rutas `/api/...` (salvo `/api/salud` y `/api/acceso/*`) exigen la **se
 |---|---|---|
 | GET | /api/tablero | Todo lo de la pantalla en una llamada: predicción, KPIs, lista y movimientos |
 | GET | /api/prediccion | Cuándo se acaba cada producto y cuánto comprar |
-| GET | /api/lista-compras | Pedido agrupado por proveedor + enlaces de WhatsApp |
+| GET | /api/lista-compras | Pedido agrupado por proveedor |
 | POST | /api/optimizar-presupuesto | `{"presupuesto": 1000}` → qué comprar sin pasarse, sobrante y qué NO comprar |
 | POST | /api/promo-rescate | `{"producto_id": 18}` → promo para WhatsApp de lo que no se vende |
 | GET | /api/resumen | Valor del inventario, efectivo a apartar, dinero congelado |

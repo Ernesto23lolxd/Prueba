@@ -40,7 +40,7 @@ def simular(page, configurado: bool, enviados: list):
         {"prediccion": [], "resumen": {"valor_inventario": 0, "efectivo_apartar": 0, "capital_congelado": 0,
                                        "productos_criticos": 0, "productos_lentos": 0, "urgentes_lista": 0,
                                        "salud_porcentaje": 0, "no_pedir": []},
-         "lista": {"items": [], "por_proveedor": [], "total_estimado": 0, "whatsapp_url": None}, "movimientos": []})))
+         "lista": {"items": [], "por_proveedor": [], "total_estimado": 0}, "movimientos": []})))
     page.route("**/api/resumen-mes", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps(
         {"mes": "noviembre 2026", "vendido": {"monto": 0, "movimientos": 0}, "surtido": {"monto": 0, "facturas": 0},
          "dinero_parado": {"monto": 0}, "ultimas_facturas": []})))

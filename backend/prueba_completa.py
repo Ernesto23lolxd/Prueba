@@ -5,7 +5,7 @@ Prueba completa de STOCK (correr con el servidor encendido):
     python prueba_completa.py                # contra http://localhost:8000
     python prueba_completa.py http://IP:8000 # contra otra máquina
 
-Prueba: página y archivos, inventario, predicción, lista de compras, WhatsApp,
+Prueba: página y archivos, inventario, predicción, lista de compras por proveedor,
 voz con audio real, texto con Gemini, protecciones, importación de Excel/CSV y reinicio.
 Al final deja los datos de demo como al principio.
 """
@@ -112,10 +112,10 @@ def _():
     return f"huevo: {huevo['venta_diaria']}/día, se acaba {huevo['se_acaba_texto']}"
 
 
-@prueba("4. Lista de compras + enlace de WhatsApp")
+@prueba("4. Lista de compras agrupada por proveedor")
 def _():
     _, l = pedir("GET", "/api/lista-compras")
-    assert l["items"] and l["whatsapp_url"].startswith("https://wa.me/?text="), l
+    assert l["items"] and l["por_proveedor"] and "whatsapp_url" not in l, l
     tortillas = next((x for x in l["items"] if x["nombre"] == "Tortillas"), None)
     assert not tortillas or tortillas["cantidad"] < 10, "tortilla perecedera: compra de pocos días"
     return f"{len(l['items'])} productos, ${l['total_estimado']:,.0f}"
@@ -147,12 +147,13 @@ def _():
     return f"“{d['respuesta'][:70]}…”"
 
 
-@prueba("8. Texto: 'mándale la lista al proveedor' da botón de WhatsApp")
+@prueba("8. Texto: 'mándale la lista al proveedor' no envía nada y no inventa")
 def _():
-    d = texto("mándale la lista al proveedor por WhatsApp")
-    assert d.get("whatsapp_url"), "no regresó whatsapp_url"
+    d = texto("mándale la lista al proveedor")
+    assert "whatsapp_url" not in d, "ya no debe haber enlace de WhatsApp"
     assert "mandé" not in d["respuesta"].lower(), f"no debe decir que ya lo envió: {d['respuesta']}"
-    return "botón presente"
+    assert not any(a["ok"] for a in d["acciones"]), "no debe cambiar el inventario"
+    return d["respuesta"][:90]
 
 
 @prueba("9. Protección: no vender más de lo que hay")
@@ -390,12 +391,12 @@ def _():
     resultados = []
     for monto in (1000, 300, 50):
         codigo, o = pedir("POST", "/api/optimizar-presupuesto", {"presupuesto": monto})
-        assert codigo == 200 and o["total"] <= monto and es_wa(o["whatsapp_url"]), (monto, o.get("total"))
+        assert codigo == 200 and o["total"] <= monto and "whatsapp_url" not in o, (monto, o.get("total"))
         assert abs(o["total"] + o["sobrante"] - monto) < 0.01, "total + sobrante ≠ presupuesto"
         resultados.append(f"${monto}: gasta ${o['total']:g}, sobra ${o['sobrante']:g}, {len(o['comprar'])} productos")
     assert pedir("POST", "/api/optimizar-presupuesto", {"presupuesto": 0})[0] == 422
     d = texto("Tengo 1,000 pesos hoy, ¿qué compro?")
-    assert d.get("presupuesto") and d["presupuesto"]["total"] <= 1000 and es_wa(d["whatsapp_url"]), d.get("respuesta")
+    assert d.get("presupuesto") and d["presupuesto"]["total"] <= 1000, d.get("respuesta")
     return " · ".join(resultados) + " · por voz OK"
 
 

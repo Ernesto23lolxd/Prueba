@@ -192,9 +192,7 @@ def _():
     r = c.patch(f"/api/productos/{i['Atún Dolores']['id']}", json={"nombre": "Atún 🐟 Dolores ñandú"})
     assert r.status_code == 200
     t = c.get("/api/tablero").json()
-    url = t["lista"]["whatsapp_url"]
-    assert url.startswith("https://wa.me/"), url
-    assert "<img" not in url, "el HTML llegó sin codificar al enlace de WhatsApp"
+    assert "whatsapp_url" not in t["lista"], "la lista ya no lleva enlace de WhatsApp"
     return "se guardan tal cual; la interfaz los escapa (se verifica en la prueba de navegador)"
 
 

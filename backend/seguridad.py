@@ -127,7 +127,7 @@ REGLA_DATOS = (
 # ---------------------------------------------------------------- 3. Salida de la IA
 # 👉 Las únicas acciones que aceptamos de la IA; cualquier otra se ignora
 TIPOS_PERMITIDOS = {"entrada", "venta", "ajuste", "alta", "minimo", "precio", "consultar",
-                    "enviar_lista", "optimizar_presupuesto"}
+                    "optimizar_presupuesto"}
 # 👉 Tope de cantidades (nadie tiene 100 mil Cocas)
 MAX_CANTIDAD = 100_000
 # 👉 Tope de precios

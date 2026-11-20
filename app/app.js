@@ -9,8 +9,6 @@ function escapeHTML(str) {
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
-// Seguridad: solo enlaces que vayan a WhatsApp
-const esWhatsappSeguro = (url) => typeof url === "string" && url.startsWith("https://wa.me/");
 const btnMic = $("btnMic");
 const estadoMic = $("estadoMic");
 const chat = $("chat");
@@ -87,14 +85,6 @@ async function manejarRespuesta(r) {
                       : `✖ ${escapeHTML(a.producto)}: ${escapeHTML(a.error)}`))
     .join("<br>");
   agregarMensaje("bot", data.respuesta, detalle);
-  if (esWhatsappSeguro(data.whatsapp_url)) {
-    // Botón dentro del chat: el navegador bloquea abrir WhatsApp solo, necesita un toque del usuario
-    const a = Object.assign(document.createElement("a"), {
-      href: data.whatsapp_url, target: "_blank", rel: "noopener",
-      className: "whatsapp", textContent: "📲 Abrir WhatsApp con el pedido",
-    });
-    chat.firstChild.appendChild(a);
-  }
   hablar(data.respuesta);
   ultimosCambios = new Set((data.acciones || []).map((a) => a.producto));
   await cargarInventario();
@@ -175,9 +165,6 @@ async function cargarListaCompras() {
     );
   }
   $("totalCompras").textContent = lista.items.length ? `Valor aprox. (a precio de venta): ${pesos(lista.total_estimado)}` : "";
-  const btn = $("btnWhatsapp");
-  btn.href = esWhatsappSeguro(lista.whatsapp_url) ? lista.whatsapp_url : "#";
-  btn.classList.toggle("inactivo", !lista.items.length);
 }
 
 async function cargarMovimientos() {

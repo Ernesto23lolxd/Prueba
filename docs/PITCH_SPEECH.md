@@ -48,7 +48,7 @@ Aquí está la clave: **cada causa de cierre que vimos tiene una respuesta en ST
 - **¿Falta dinero?** STOCK le dice qué productos tienen su dinero congelado. Si le dice *"nomás tengo mil pesos"*, le arma la compra para no quedarse sin lo que sí se vende.
 - **¿Robo hormiga?** Cada movimiento queda registrado. Si algo no cuadra, lo ve ese mismo día.
 - **¿Suben los costos?** Cuando el proveedor sube el precio, STOCK le avisa y el tendero ajusta su precio en un clic.
-- **¿Ventas perdidas?** Le dice *"el huevo se te acaba mañana"* y le manda el pedido al proveedor por WhatsApp.
+- **¿Ventas perdidas?** Le dice *"el huevo se te acaba mañana"* y le deja el pedido armado por proveedor.
 
 ### Diapositiva 8 · 3:00 – 3:30 · DEMO EN VIVO (máximo 30 s)
 Y no es una maqueta: ya está publicado en internet, con su base de datos en la nube.

@@ -4,7 +4,7 @@
 
 <h1 align="center">STOCK</h1>
 <p align="center"><strong>El asistente de inventario por voz para la tiendita de barrio.</strong><br>
-Le hablas y STOCK lleva la cuenta: te dice qué se acaba, qué no volver a pedir y arma tu pedido por WhatsApp.</p>
+Le hablas y STOCK lleva la cuenta: te dice qué se acaba, qué no volver a pedir y te arma el pedido por proveedor.</p>
 
 <p align="center">
   <a href="https://stock-tienda.onrender.com/app"><b>▶ Abrir la app</b></a> ·
@@ -36,7 +36,7 @@ Le hablas y STOCK lleva la cuenta: te dice qué se acaba, qué no volver a pedir
 | 📸 toma foto al ticket o al anaquel | suma lo que llegó o cuenta lo que hay |
 | 📥 sube su Excel tal como lo tiene | entiende sus columnas con IA |
 | ⚠️ quiere saber qué se acaba | predice el día en que se termina cada producto |
-| 🛍️ va a surtir | arma el pedido por proveedor y lo manda por WhatsApp |
+| 🛍️ va a surtir | arma el pedido por proveedor, con cuánto pedir de cada cosa |
 | 💵 dice *"nomás tengo $1,000"* | reparte el dinero en lo más urgente sin pasarse ni un peso |
 | 🧊 tiene mercancía que no sale | le dice qué no volver a pedir y le arma una promo |
 | ↩️ se equivoca | deshace cualquier acción completa con un toque |
@@ -81,7 +81,7 @@ Detalle: [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md).
 | Plan | Precio | Incluye |
 |---|---|---|
 | **Barrio** | $0 · con anuncios locales | Inventario, semáforo, lista de surtido, 5 comandos de voz al día |
-| **Tiendita** (principal) | **$169/mes** (menos de $6 al día) | Sin anuncios, voz y fotos sin límite, facturas, predicción, WhatsApp, escudo anti-inflación, 🎁 1 tarjeta NFC para reseñas en Google Maps |
+| **Tiendita** (principal) | **$169/mes** (menos de $6 al día) | Sin anuncios, voz y fotos sin límite, facturas, predicción, pedido por proveedor, escudo anti-inflación, 🎁 1 tarjeta NFC para reseñas en Google Maps |
 | **Negocio Pro** | $329/mes | Todo lo anterior + IA avanzada, resumen para el contador, soporte prioritario, 🎁 2 tarjetas NFC |
 | **Ultra** | $649/mes | Para minisúpers y cadenas: IA de mayor capacidad, 5× peticiones, sucursales, reportes, soporte dedicado, 🎁 3 tarjetas NFC |
 

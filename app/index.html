@@ -214,7 +214,6 @@
     .ta-barras { display: flex; align-items: flex-end; gap: 6px; height: 56px; }
     .ta-barras span { width: 16px; border-radius: 5px 5px 2px 2px; background: var(--grad-stock); transform-origin: bottom; animation: taCrece .8s cubic-bezier(.2,.8,.2,1) both; }
     @keyframes taCrece { from { transform: scaleY(0) } to { transform: scaleY(1) } }
-    .ta-wa { background: #25d366; color: #fff; font-weight: 800; font-size: .8rem; padding: .5rem .8rem; border-radius: 12px; animation: taToque 1.8s ease-in-out infinite; }
     @keyframes taToque { 0%, 70%, 100% { transform: scale(1) } 78% { transform: scale(.9) } 86% { transform: scale(1.04) } }
     .ta-deshacer { border: 1px solid rgba(255,255,255,.2); color: #e4e4e7; font-size: .75rem; font-weight: 800; padding: .35rem .6rem; border-radius: 9px; animation: taToque 2s ease-in-out infinite .6s; }
     .ta-hielo { font-size: 2rem; animation: taDoc 2.6s ease-in-out infinite; }
@@ -400,7 +399,7 @@
         <ul class="mt-6 grid gap-2.5 text-left">
           <li class="bv-in bv-fila" style="--d:4"><span class="bv-ico">🎙️</span><span><b>Háblale.</b> “Vendí 3 Cocas” y se descuenta solo.</span></li>
           <li class="bv-in bv-fila" style="--d:5"><span class="bv-ico">📄</span><span><b>Sube la factura.</b> Convierte cajas en piezas y te avisa si te subieron el precio.</span></li>
-          <li class="bv-in bv-fila" style="--d:6"><span class="bv-ico">🛍️</span><span><b>Surte sin adivinar.</b> Te dice qué se acaba y arma tu pedido por WhatsApp.</span></li>
+          <li class="bv-in bv-fila" style="--d:6"><span class="bv-ico">🛍️</span><span><b>Surte sin adivinar.</b> Te dice qué se acaba y te arma el pedido por proveedor.</span></li>
           <li class="bv-in bv-fila" style="--d:7"><span class="bv-ico">🔒</span><span><b>Protegida con tu PIN.</b> Solo tú entras a tu tienda.</span></li>
         </ul>
         <label class="bv-in block text-left mt-6" style="--d:7">
@@ -651,9 +650,9 @@
             class="atajo px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-teal-50 hover:text-primario border border-slate-200 hover:border-primario/40 transition cursor-pointer">
             💵 Tengo $1,000, ¿qué compro?
           </button>
-          <button type="button" data-q="Mándame la lista de compras por WhatsApp"
+          <button type="button" data-q="¿Qué tengo que surtir?"
             class="atajo px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-teal-50 hover:text-primario border border-slate-200 hover:border-primario/40 transition cursor-pointer">
-            Lista por WhatsApp
+            🛍️ ¿Qué tengo que surtir?
           </button>
         </div>
       </div>
@@ -718,10 +717,6 @@
       </div>
       <div id="listaProveedores" class="grid gap-2.5"></div>
       <p id="totalCompras" class="text-sm sm:text-base font-bold text-right text-[#1f2328] mt-3"></p>
-      <a id="btnWhatsapp" href="#" target="_blank" rel="noopener noreferrer"
-        class="mt-2.5 flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-whatsapp hover:brightness-95 active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-sm transition">
-        <span>📲 Enviar pedido completo por WhatsApp</span>
-      </a>
     </section>
 
     <!-- 5b. Sección: Tu mes en resumen (sin lenguaje contable) -->
@@ -906,10 +901,6 @@
     function esWhatsappSeguro(url) {
       return typeof url === "string" && url.startsWith("https://wa.me/");
     }
-    // 👉 Regresa el enlace de WhatsApp si es seguro, si no '#'
-    function hrefWhatsapp(url) {
-      return esWhatsappSeguro(url) ? url : "#";
-    }
 
     // 👉 Crea un botón con texto y su clic (sin innerHTML, más seguro)
     function boton(texto, clases, alClic) {
@@ -1003,10 +994,10 @@
     // =========================================================================
     // 3. RESPUESTAS DE LA IA (texto, voz y fotos pasan por el backend)
     // =========================================================================
-    // 👉 Pinta en el chat lo que dijiste, lo que contestó STOCK y los botones (deshacer, WhatsApp…)
+    // 👉 Pinta en el chat lo que dijiste, lo que contestó STOCK y el botón de deshacer
     function mostrarResultado(r, opcionesExtra = {}) {
       agregarMensaje("usuario", r.transcripcion || opcionesExtra.textoOriginal || "", { imagenUrl: opcionesExtra.imagenUrl });
-      agregarMensaje("bot", r.respuesta || "Listo.", { acciones: r.acciones || [], whatsapp_url: r.whatsapp_url, lote_id: r.lote_id });
+      agregarMensaje("bot", r.respuesta || "Listo.", { acciones: r.acciones || [], lote_id: r.lote_id });
       if (r.presupuesto) {
         $("inputPresupuesto").value = r.presupuesto.presupuesto;
         mostrarPresupuesto(r.presupuesto, $("resultadoPresupuesto"));
@@ -1373,16 +1364,6 @@
           (b) => deshacerLote(extra.lote_id, b)));
       }
 
-      if (esWhatsappSeguro(extra.whatsapp_url)) {
-        const a = document.createElement("a");
-        a.href = extra.whatsapp_url;
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        a.className = "inline-flex items-center gap-1.5 mt-2.5 px-3 py-1.5 rounded-lg bg-whatsapp text-white font-bold text-xs hover:brightness-95 transition";
-        a.textContent = "📲 Abrir pedido en WhatsApp";
-        wrap.appendChild(a);
-      }
-
       chat.prepend(wrap);
       while (chat.children.length > 8) chat.lastChild.remove();
     }
@@ -1452,12 +1433,9 @@
 
       // 4. Lista de surtido por proveedor
       const contProv = $("listaProveedores");
-      const btnWa = $("btnWhatsapp");
       if (!lista.por_proveedor.length) {
         contProv.innerHTML = `<p class="text-sm text-[#6b7280] py-1">${tiendaEnCeros() ? "Cuando tengas productos y ventas, aquí aparece tu pedido armado por proveedor." : "No hay compras urgentes por ahora."}</p>`;
         $("totalCompras").textContent = "";
-        btnWa.classList.add("opacity-40", "pointer-events-none");
-        btnWa.href = "#";
       } else {
         contProv.innerHTML = lista.por_proveedor.map((g) => `
           <div class="rounded-xl border border-[#e5e7eb] bg-slate-50/70 p-3">
@@ -1466,8 +1444,6 @@
                 <strong class="text-sm font-bold text-[#1f2328]">${escapeHtml(g.proveedor)}</strong>
                 <span class="text-xs font-semibold text-[#6b7280] ml-1.5">· ${fmtDinero(g.subtotal_estimado)}</span>
               </div>
-              <a href="${escapeHtml(hrefWhatsapp(g.whatsapp_url))}" target="_blank" rel="noopener noreferrer"
-                class="px-2.5 py-1 rounded-lg bg-whatsapp hover:brightness-95 text-white font-bold text-xs transition shrink-0">WhatsApp</a>
             </div>
             <ul class="divide-y divide-[#e5e7eb]">
               ${g.items.map((i) => `
@@ -1478,8 +1454,6 @@
             </ul>
           </div>`).join("");
         $("totalCompras").textContent = `Efectivo estimado para surtido: ${fmtDinero(lista.total_estimado)}`;
-        btnWa.href = hrefWhatsapp(lista.whatsapp_url);
-        btnWa.classList.remove("opacity-40", "pointer-events-none");
       }
 
       // Avisos en la barra de sectores y en Inicio
@@ -1759,8 +1733,6 @@
           <p class="text-sm flex justify-between text-ok"><span>Te sobran</span><strong class="tabular-nums">${fmtDinero(r.sobrante)}</strong></p>
           ${pendientes ? `<p class="text-xs text-[#6b7280] mt-2">⏳ Para después: ${pendientes}</p>` : ""}
           ${noComprar ? `<p class="text-xs text-bajo mt-1">🧊 Aunque el preventista insista, NO compres: ${noComprar}</p>` : ""}
-          <a href="${escapeHtml(hrefWhatsapp(r.whatsapp_url))}" target="_blank" rel="noopener noreferrer"
-            class="mt-2.5 flex items-center justify-center w-full py-2.5 rounded-xl bg-whatsapp text-white font-bold text-sm">📲 Mandar este pedido por WhatsApp</a>
         </div>`;
     }
 
@@ -1950,7 +1922,7 @@
       else if (accion === "legal") abrirLector("privacidad");
       else if (accion === "planes") confirmar({ titulo: "💎 Planes de STOCK", soloAceptar: true, si: "Entendido",
         texto: "🏘️ Barrio · $0 al mes\nInventario, semáforo, lista de surtido y 5 comandos de voz al día. Con anuncios locales.\n\n"
-          + "⭐ Tiendita · $169 al mes (menos de $6 al día)\nSin anuncios ni límites: voz, fotos, facturas, predicción, WhatsApp y escudo anti-inflación. 🎁 1 tarjeta NFC.\n\n"
+          + "⭐ Tiendita · $169 al mes (menos de $6 al día)\nSin anuncios ni límites: voz, fotos, facturas, predicción, pedido por proveedor y escudo anti-inflación. 🎁 1 tarjeta NFC.\n\n"
           + "🏪 Negocio Pro · $329 al mes\nTodo lo anterior + IA avanzada, resumen para el contador y soporte prioritario. 🎁 2 tarjetas NFC.\n\n"
           + "🚀 Ultra · $649 al mes\nPara minisúpers y cadenas: IA de mayor capacidad, 5× peticiones, sucursales, reportes y soporte dedicado. 🎁 3 tarjetas NFC.\n\n"
           + "Durante el lanzamiento STOCK es gratis. Sin plazos forzosos: cancelas cuando quieras." });
@@ -2005,7 +1977,7 @@
       semaforo: `<div class="ta-semaforo"><span></span><span></span><span></span></div><div class="ta-col"><span class="ta-chip alerta" style="animation-delay:.6s">Huevo: se acaba mañana</span></div>`,
       presupuesto: `<div class="ta-col"><span class="ta-chip mas" style="animation-delay:.1s;font-size:.9rem">💵 $1,000</span></div><span class="ta-flecha">➜</span>
             <div class="ta-barras"><span style="height:90%;animation-delay:.5s"></span><span style="height:65%;animation-delay:.65s"></span><span style="height:45%;animation-delay:.8s"></span><span style="height:25%;animation-delay:.95s"></span></div>`,
-      whatsapp: `<div class="ta-col"><span class="ta-chip menos" style="animation-delay:.1s">Coca · 48 pzas</span><span class="ta-chip menos" style="animation-delay:.3s">Leche · 12 pzas</span></div><span class="ta-flecha">➜</span><span class="ta-wa">📲 WhatsApp</span>`,
+      pedido: `<div class="ta-col"><span class="ta-chip menos" style="animation-delay:.1s">Coca · 48 pzas</span><span class="ta-chip menos" style="animation-delay:.3s">Leche · 12 pzas</span></div><span class="ta-flecha">➜</span><span class="ta-chip mas" style="animation-delay:.6s">🛍️ Pedido por proveedor</span>`,
       hielo: `<span class="ta-hielo">🧊</span><div class="ta-col"><span class="ta-tachar">Volver a pedir Jabón Zote</span><span class="ta-chip mas" style="animation-delay:1.3s">🔥 Promo 2×$30</span></div>`,
       inventario: `<div class="ta-col" style="width:100%"><div class="flex items-center gap-2 w-full"><span class="w-3 h-3 rounded-full bg-[#16a34a]"></span><span class="text-xs text-white flex-1">Coca-Cola 600 ml</span><span class="ta-deshacer">−</span><span class="ta-chip mas" style="animation-delay:.4s">28</span><span class="ta-deshacer">+</span></div>
             <div class="flex items-center gap-2 w-full"><span class="w-3 h-3 rounded-full bg-[#dc2626]"></span><span class="text-xs text-white flex-1">Huevo</span><span class="ta-chip alerta" style="animation-delay:.7s">✏️ Corregir</span></div></div>`,
@@ -2039,8 +2011,8 @@
         texto: "Lo que ya llegó a su mínimo o se agotó, y el día en que se te va a terminar según cómo vendes. Verde va bien, amarillo ojo, rojo urge." },
       { vista: "surtir", el: "#cajaPresupuesto", anim: "presupuesto", titulo: "🛍️ ¿Cuánto efectivo tienes hoy?",
         texto: "Escribe cuánto traes para surtir y STOCK lo reparte en lo más urgente primero, sin pasarse ni un peso." },
-      { vista: "surtir", el: "#listaProveedores", anim: "whatsapp", titulo: "Tu pedido, ya armado",
-        texto: "La lista de lo que hay que comprar, agrupada por proveedor y con cuánto pedir. Un toque y se la mandas por WhatsApp." },
+      { vista: "surtir", el: "#listaProveedores", anim: "pedido", titulo: "Tu pedido, ya armado",
+        texto: "La lista de lo que hay que comprar, agrupada por proveedor y con cuánto pedir. Llévala contigo cuando venga el preventista." },
       { vista: "parado", el: "#secParado", anim: "hielo", titulo: "🧊 Dinero parado",
         texto: "Lo que casi no se vende y te tiene el dinero atorado. No lo vuelvas a pedir: STOCK te arma una promo para sacarlo hoy." },
       { vista: "inventario", el: "#secInventario", anim: "inventario", titulo: "📦 Tu inventario",

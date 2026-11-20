@@ -72,4 +72,4 @@ En total, durante todas las pruebas se encontraron y corrigieron **19 fallas** (
 - [ ] Para la demo: ⋯ → *Cargar tienda de ejemplo* (pide el PIN); al final, ⋯ → *Empezar de cero*.
 - [ ] Tener el APK instalado en 1 Android y la app instalada (PWA) en 1 iPhone.
 - [ ] Probar el micrófono en el iPhone real.
-- [ ] Demo sugerida: voz → factura de ejemplo (mostrar el aviso 🔒 del escudo y la alerta 🚨) → "Tengo $1,000" → WhatsApp → Deshacer.
+- [ ] Demo sugerida: voz → factura de ejemplo (mostrar el aviso 🔒 del escudo y la alerta 🚨) → "Tengo $1,000" → Deshacer.

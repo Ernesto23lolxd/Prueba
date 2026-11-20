@@ -619,7 +619,7 @@
                       </button>
                     </div>
 
-                    <!-- PESTAÑA 4: PEDIDO LISTO PARA WHATSAPP -->
+                    <!-- PESTAÑA 4: PEDIDO LISTO POR PROVEEDOR -->
                     <div id="phoneTab-profile" class="hidden space-y-3 py-1">
                       <div class="flex items-center justify-between">
                         <div>
@@ -634,10 +634,6 @@
                         <p id="pedidoCuenta" class="text-[10px] text-zinc-300">0 productos</p>
                       </div>
                       <div id="pedidoLista" class="space-y-1.5 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-xs"></div>
-                      <a id="pedidoWhatsapp" href="#" target="_blank" rel="noopener noreferrer"
-                        class="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#25d366] py-2.5 text-xs font-extrabold text-white transition hover:brightness-95">
-                        📲 Enviar pedido por WhatsApp
-                      </a>
                       <div class="flex items-center justify-between rounded-2xl border border-sky-500/25 bg-sky-500/[0.06] p-3 text-xs">
                         <span class="text-zinc-300">🧊 Dinero congelado (no resurtir)</span>
                         <span id="pedidoCongelado" class="font-black text-sky-300">$0</span>
@@ -697,7 +693,7 @@
                         data-tab="profile"
                         onclick="switchPhoneTab('profile')"
                         class="phone-nav-btn relative flex flex-col items-center justify-center py-1 text-zinc-400 transition hover:text-zinc-200"
-                        aria-label="Pedido por WhatsApp"
+                        aria-label="Pedido listo"
                       >
                         <span class="tab-indicator absolute -top-2 hidden h-[2.5px] w-7 rounded-full bg-stockCyan"></span>
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
@@ -1110,7 +1106,7 @@
         </div>`).join('');
     }
 
-    // Pestaña "Pedido": lista de compras lista para WhatsApp
+    // Pestaña "Pedido": lista de compras agrupada por proveedor
     function renderPedido() {
       const lista = state.tablero?.lista;
       if (!lista) return;
@@ -1120,10 +1116,6 @@
         <div class="flex items-center justify-between"><span class="truncate text-zinc-300">${esc(i.nombre)}</span>
         <span class="shrink-0 font-black text-white">${num(i.cantidad)} ${uni(i.unidad)}</span></div>`).join('')
         + (lista.items.length > 5 ? `<p class="text-center text-[10px] text-zinc-500">y ${lista.items.length - 5} más…</p>` : '');
-      const btn = document.getElementById('pedidoWhatsapp');
-      btn.href = String(lista.whatsapp_url || '').startsWith('https://wa.me/') ? lista.whatsapp_url : '#';
-      btn.classList.toggle('pointer-events-none', !lista.items.length);
-      btn.classList.toggle('opacity-40', !lista.items.length);
       document.getElementById('pedidoCongelado').textContent = dinero(state.tablero.resumen.capital_congelado);
     }
 
@@ -1145,7 +1137,7 @@
     const TEXTOS = {
       ES: {
         heroTagline: '<p>LO QUE SEA.</p><p>DONDE SEA.</p><p>CUANDO SEA.</p><p>PARA TODOS.</p>',
-        heroSubcopy: 'Controla el inventario de tu tienda con la voz. STOCK registra lo que vendes, te avisa qué se va a acabar, qué NO volver a pedir y te arma el pedido por WhatsApp.',
+        heroSubcopy: 'Controla el inventario de tu tienda con la voz. STOCK registra lo que vendes, te avisa qué se va a acabar, qué NO volver a pedir y te arma el pedido por proveedor.',
         navHome: 'Inicio', navPillars: 'Cómo funciona', navApp: 'Vista App', navOpenApp: 'Abrir app',
         btnQuickInventory: 'Entrar a la app', btnQuickLocal: 'Ver inventario en vivo', btnQuickQr: 'Cómo funciona',
         heroScrollLink: 'Descubre así funciona STOCK',
@@ -1154,13 +1146,13 @@
         card1Link: 'Probar el inventario en el iPhone →',
         card2Desc: 'En Durango el 95% de los negocios son micro y solo 1 de cada 100 usa IA. STOCK les avisa qué se va a acabar y cuánto dinero tienen congelado en producto que no se vende.',
         card2Link: 'Entrar a la app →',
-        card3Desc: 'Toma foto al ticket del proveedor, trae tu inventario desde Excel y recibe la lista de compras agrupada por proveedor, lista para mandar por WhatsApp.',
+        card3Desc: 'Toma foto al ticket del proveedor, trae tu inventario desde Excel y recibe la lista de compras agrupada por proveedor, con cuánto pedir de cada cosa.',
         card3Link: 'Ver el pedido listo →',
         footerRights: '&copy; 2026 STOCK · Hackatón Tecno 2026 · Durango, México.'
       },
       EN: {
         heroTagline: '<p>ANYTHING.</p><p>ANYWHERE.</p><p>ANYTIME.</p><p>FOR ANYONE.</p>',
-        heroSubcopy: 'Run your store inventory with your voice. STOCK records what you sell, warns you what will run out, what NOT to reorder, and builds your WhatsApp order.',
+        heroSubcopy: 'Run your store inventory with your voice. STOCK records what you sell, warns you what will run out, what NOT to reorder, and builds your order by supplier.',
         navHome: 'Home', navPillars: 'How it works', navApp: 'App View', navOpenApp: 'Open app',
         btnQuickInventory: 'Open the app', btnQuickLocal: 'Live inventory', btnQuickQr: 'How it works',
         heroScrollLink: 'Discover how STOCK works',
@@ -1169,7 +1161,7 @@
         card1Link: 'Try the inventory on the iPhone →',
         card2Desc: 'In Durango 95% of businesses are micro and only 1 in 100 uses AI. STOCK warns what will run out and how much money is frozen in slow products.',
         card2Link: 'Open the app →',
-        card3Desc: 'Snap the supplier receipt, import your Excel inventory and get the shopping list grouped by supplier, ready for WhatsApp.',
+        card3Desc: 'Snap the supplier receipt, import your Excel inventory and get the shopping list grouped by supplier, with how much to order.',
         card3Link: 'See the ready order →',
         footerRights: '&copy; 2026 STOCK · Hackatón Tecno 2026 · Durango, Mexico.'
       }

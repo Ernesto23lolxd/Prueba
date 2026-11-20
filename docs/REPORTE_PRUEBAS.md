@@ -7,7 +7,7 @@
 
 | Suite (archivo en `backend/`) | Qué prueba | Local | Nube |
 |---|---|---|---|
-| `prueba_completa.py` | Voz real, texto, predicción, lista y WhatsApp, Excel y CSV, facturas, deshacer, optimizador, promo, resumen del mes, reinicio | **32/32** | **32/32** ¹ |
+| `prueba_completa.py` | Voz real, texto, predicción, lista por proveedor, Excel y CSV, facturas, deshacer, optimizador, promo, resumen del mes, reinicio | **32/32** | **32/32** ¹ |
 | `prueba_auditoria.py` | Ciberseguridad y robustez: 20 ataques y entradas raras + 5 del PIN de acceso + documentos legales (S26) | **26/26** | **25/25** (S26 y HSTS se verificaron después) |
 | `prueba_legal.py` | Registro: leer y aceptar el aviso y los términos es obligatorio; versión nueva → aceptar otra vez; páginas en celular | — | **3/3** |
 | `prueba_privacidad.py` | Escudo de privacidad: nada sensible (RFC, nombres, domicilio, folio, sellos…) llega a la IA | **2/2** | (no usa servidor) |

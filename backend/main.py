@@ -529,7 +529,7 @@ def aplicar_acciones(acciones: list, texto_original: str, lote_id: str | None = 
             tipo = a["tipo"]
             nombre = a.get("producto") or ""
             cantidad = float(a.get("cantidad") or 0)
-            if tipo in ("consultar", "enviar_lista", "optimizar_presupuesto") or not nombre:
+            if tipo in ("consultar", "optimizar_presupuesto") or not nombre:
                 continue
             p = buscar_producto(con, nombre)
             if p is not None:  # relee y bloquea el renglón (Postgres: SELECT ... FOR UPDATE)
@@ -622,10 +622,8 @@ Tipos de acción posibles:
 - "minimo": define la cantidad mínima antes de avisar.
 - "precio": cambia el precio.
 - "consultar": solo pregunta (cuánto queda, qué se acaba, qué debo comprar, cuánto vale el inventario).
-- "enviar_lista": pide mandar/compartir la lista de compras o el pedido por WhatsApp o al proveedor
-  (ej. "mándale la lista al proveedor", "pásame el pedido por WhatsApp"). No lleva producto.
-  TÚ NO PUEDES ENVIAR MENSAJES: di que dejaste el pedido listo y que toque el botón verde para mandarlo
-  por WhatsApp (ej. "Te dejé listo el pedido con 9 productos, toca el botón verde para mandarlo").
+  Si pide mandar la lista o el pedido al proveedor, usa "consultar": TÚ NO PUEDES ENVIAR MENSAJES; dile
+  que su pedido ya está armado por proveedor en la sección "Surtir" (ej. "Tu pedido ya está listo en Surtir").
 - "optimizar_presupuesto": dice cuánto dinero tiene para surtir ("tengo 1,000 pesos, ¿qué compro?",
   "nomás traigo 500"). Pon el monto en "cantidad" y deja "producto" vacío. NO hagas tú las cuentas:
   el sistema arma la compra exacta.
@@ -794,7 +792,6 @@ def procesar(resultado_ia: dict, texto_original: str, origen: str = "texto",
             if a["tipo"] not in ("entrada", "alta"):
                 a["tipo"] = "entrada"
             a.pop("precio", None)  # lo de una factura es COSTO de compra, nunca el precio al público
-    quiere_lista = any(a["tipo"] == "enviar_lista" for a in acciones)
     presupuesto = next((a["cantidad"] for a in acciones if a["tipo"] == "optimizar_presupuesto"), None)
 
     lote_id = None
@@ -825,13 +822,11 @@ def procesar(resultado_ia: dict, texto_original: str, origen: str = "texto",
         "acciones": aplicadas,
         "lote_id": lote_id,
         "inventario": listar_productos(),
-        "whatsapp_url": armar_lista_compras()["whatsapp_url"] if quiere_lista else None,
     }
     if presupuesto:
         compra = optimizar_compra(presupuesto)
         resultado["presupuesto"] = compra
         resultado["respuesta"] = compra["resumen_hablado"]
-        resultado["whatsapp_url"] = compra["whatsapp_url"]
     return resultado
 
 
@@ -886,9 +881,9 @@ def prediccion():
 
 
 # ---------------------------------------------------------------- Lista de compras y KPIs
-# 👉 🛍️ La lista de surtido agrupada por proveedor + el mensaje listo para WhatsApp
+# 👉 🛍️ La lista de surtido agrupada por proveedor (cada categoría suele ser un proveedor distinto)
 def armar_lista_compras(todas: bool = False) -> dict:
-    """Lista de compras a partir de la predicción + mensaje listo para WhatsApp."""
+    """Lista de compras a partir de la predicción, agrupada por proveedor."""
     items = [
         {"producto_id": p["id"], "nombre": p["nombre"], "cantidad": p["comprar"], "unidad": p["unidad"],
          "categoria": p["categoria"], "urgencia": p["urgencia"], "se_acaba": p["se_acaba_texto"],
@@ -896,32 +891,19 @@ def armar_lista_compras(todas: bool = False) -> dict:
         for p in calcular_prediccion()
         if p["comprar"] > 0 and (todas or p["urgencia"] in ("alta", "media"))
     ]
-    fecha = f"📅 {datetime.now():%d/%m/%Y}"
-    linea = lambda i: f"• {i['cantidad']:g} {'kg' if i['unidad'] == 'kg' else 'pzas'} — {i['nombre']}"  # noqa: E731
-
     # Agrupado por categoría (cada categoría suele tener su propio proveedor: Coca, Bimbo, Lala, tortillería...)
     grupos: dict[str, list] = {}
     for i in items:
         grupos.setdefault(i["categoria"] or "General", []).append(i)
-    por_proveedor, lineas = [], ["🛒 *Pedido de surtido*", fecha, ""]
-    for proveedor in sorted(grupos):
-        lista_p = grupos[proveedor]
-        msg_p = "\n".join([f"🛒 *Pedido — {proveedor}*", fecha, "", *map(linea, lista_p), "", "Enviado con STOCK 📦"])
-        por_proveedor.append({
-            "proveedor": proveedor,
-            "items": lista_p,
-            "subtotal_estimado": round(sum(i["costo_estimado"] for i in lista_p), 2),
-            "whatsapp_url": "https://wa.me/?text=" + quote(msg_p),
-        })
-        lineas += [f"*{proveedor}:*", *map(linea, lista_p), ""]
-    lineas.append("Enviado con STOCK 📦")
-    mensaje = "\n".join(lineas)
+    por_proveedor = [
+        {"proveedor": prov, "items": grupos[prov],
+         "subtotal_estimado": round(sum(i["costo_estimado"] for i in grupos[prov]), 2)}
+        for prov in sorted(grupos)
+    ]
     return {
         "items": items,
         "por_proveedor": por_proveedor,
         "total_estimado": round(sum(i["costo_estimado"] for i in items), 2),
-        "mensaje": mensaje,
-        "whatsapp_url": "https://wa.me/?text=" + quote(mensaje),
     }
 
 
@@ -1035,10 +1017,6 @@ def optimizar_compra(presupuesto: float) -> dict:
                    "unidad": p["unidad"]} for p in pred if p["baja_rotacion"]]
 
     u = lambda i: "kg" if i["unidad"] == "kg" else "pzas"  # noqa: E731
-    lineas = [f"🛒 *Pedido ajustado a {pesos(presupuesto)}*", f"📅 {datetime.now():%d/%m/%Y}", ""]
-    lineas += [f"• {i['cantidad']:g} {u(i)} — {i['nombre']}" for i in comprar]
-    lineas += ["", f"Total aprox.: {pesos(total)}", "Enviado con STOCK 📦"]
-    whatsapp_url = "https://wa.me/?text=" + quote("\n".join(lineas))
 
     if comprar:
         top = ", ".join(f"{i['cantidad']:g} {u(i)} de {i['nombre']}" for i in comprar[:4])
@@ -1053,7 +1031,7 @@ def optimizar_compra(presupuesto: float) -> dict:
         hablado += " Aunque el preventista insista, no le compres " + ", ".join(n["nombre"] for n in no_comprar[:3]) + "."
 
     return {"presupuesto": round(presupuesto, 2), "comprar": comprar, "total": total, "sobrante": sobrante,
-            "pendientes": pendientes, "no_comprar": no_comprar, "whatsapp_url": whatsapp_url,
+            "pendientes": pendientes, "no_comprar": no_comprar,
             "resumen_hablado": hablado}
 
 
@@ -1547,7 +1525,6 @@ def procesar_factura_xml(contenido: bytes, nombre_archivo: str) -> dict:
             "respuesta": ("Esta factura es de un servicio, no de mercancía para vender, así que no cambié tu "
                           "inventario. 👍"),
             "acciones": [], "lote_id": None, "alertas_precio": [], "inventario": listar_productos(),
-            "whatsapp_url": None,
             "factura": {"uuid": f["uuid"], "proveedor": f["proveedor"], "total": f["total"],
                         "forma_pago": f["forma_pago"], "partidas": len(f["conceptos"]), "tipo": "xml",
                         "solo_servicios": True},
