@@ -15,6 +15,8 @@ from defusedxml import DefusedXmlException
 from defusedxml.ElementTree import ParseError, fromstring
 
 _PELIGROSO = re.compile(rb"<!\s*(DOCTYPE|ENTITY)", re.IGNORECASE)
+# Claves de unidad del SAT que indican servicio, no mercancía (E48 = unidad de servicio, ACT = actividad)
+CLAVES_SERVICIO = {"E48", "ACT"}
 
 
 def _local(tag: str) -> str:
@@ -60,10 +62,15 @@ def leer_cfdi(contenido: bytes) -> dict:
         elif nombre == "TimbreFiscalDigital":
             timbre = el
         elif nombre == "Concepto":
+            clave_unidad = (_attr(el, "ClaveUnidad") or "").strip().upper()
+            unidad = (_attr(el, "Unidad") or clave_unidad or "")[:20]
             conceptos.append({
                 "partida": len(conceptos) + 1,
                 "cantidad": _num(_attr(el, "Cantidad"), 1),
-                "unidad": (_attr(el, "Unidad") or _attr(el, "ClaveUnidad") or "")[:20],
+                "unidad": unidad,
+                "clave_unidad": clave_unidad,
+                # Servicios (fletes, estadías, rentas, comisiones…) no son mercancía para el inventario
+                "es_servicio": clave_unidad in CLAVES_SERVICIO or "servicio" in unidad.lower(),
                 "descripcion": (_attr(el, "Descripcion") or "").strip()[:150],
                 "valor_unitario": _num(_attr(el, "ValorUnitario")),
                 "importe": _num(_attr(el, "Importe")),
@@ -89,10 +96,10 @@ def leer_cfdi(contenido: bytes) -> dict:
     }
 
 
-def partidas_para_ia(factura: dict) -> str:
+def partidas_para_ia(factura: dict, conceptos: list | None = None) -> str:
     """Texto limpio de las partidas para que la IA convierta unidades y empareje productos."""
     lineas = [f"Factura del proveedor {factura['proveedor']}:"]
-    for c in factura["conceptos"]:
+    for c in conceptos if conceptos is not None else factura["conceptos"]:
         lineas.append(
             f"Partida {c['partida']}: {c['cantidad']:g} {c['unidad']} de \"{c['descripcion']}\" "
             f"(precio por {c['unidad'] or 'unidad'}: ${c['valor_unitario']:,.2f}, importe ${c['importe']:,.2f})"

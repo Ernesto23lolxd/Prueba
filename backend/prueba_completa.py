@@ -306,6 +306,21 @@ def _():
     return f"Sabritas +{sab:g}, Atún +{atun:g}, Huevo +{huevo:g} kg; repetido → 409"
 
 
+@prueba("21b. Factura de puro servicio (flete/estadía) → no toca el inventario")
+def _():
+    xml = (b'<?xml version="1.0" encoding="UTF-8"?><cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" '
+           b'xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Total="1160.00" FormaPago="03">'
+           b'<cfdi:Emisor Rfc="FLE010101AA1" Nombre="FLETES DE EJEMPLO"/><cfdi:Conceptos>'
+           b'<cfdi:Concepto Cantidad="1" ClaveUnidad="E48" Unidad="Unidad de servicio" Descripcion="FLETE LOCAL" '
+           b'ValorUnitario="1000.00" Importe="1000.00"/></cfdi:Conceptos><cfdi:Complemento>'
+           b'<tfd:TimbreFiscalDigital UUID="00000000-0000-4000-8000-SERVICIO0001"/></cfdi:Complemento></cfdi:Comprobante>')
+    antes = inv()
+    codigo, d = pedir("POST", "/api/cfdi", archivos={"archivo": ("flete.xml", xml, "text/xml")})
+    assert codigo == 200 and not d["acciones"] and d["factura"]["solo_servicios"], (codigo, d)
+    assert inv() == antes, "una factura de servicio no debe cambiar el inventario"
+    return d["respuesta"]
+
+
 @prueba("22. Seguridad: XXE, archivos falsos, tamaño máximo y cabeceras")
 def _():
     xxe = (b'<?xml version="1.0"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>'

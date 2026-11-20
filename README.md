@@ -34,7 +34,7 @@ backend/   Python + FastAPI + SQLite + Gemini (IA)
   cfdi.py             lectura segura de facturas XML (CFDI 3.3 y 4.0) con defusedxml
   importar.py         importación de Excel / CSV
   demo_cfdi.xml       factura de ejemplo (proveedor ficticio) con un aumento de precio para la demo
-  prueba_completa.py  30 pruebas de punta a punta
+  prueba_completa.py  31 pruebas de punta a punta
 app/       inicio.html (portada) · index.html (la app) · clasico.html (respaldo)
 demo/      Excel/CSV, audios y factura PDF de ejemplo para probar
 docs/      SEGURIDAD.md (medidas de ciberseguridad)
@@ -100,6 +100,7 @@ El navegador solo deja usar el micrófono en **localhost** o con **HTTPS**. Para
   (importe ÷ piezas) lo calcula Python.
 - **PDF (respaldo):** el PDF se manda a Gemini, que lee las partidas y hace la misma conversión.
 - **Sin duplicados:** el folio fiscal se guarda en `cfdi_procesados`; si vuelves a subir la misma, no se suma.
+- **Servicios fuera:** fletes, estadías o rentas (clave de unidad E48/ACT) no se suman al inventario.
 - **Avisos amables, nunca regaños:** sobreprecio del proveedor, margen bajo o compra de más de $2,000 en efectivo.
   Sin lenguaje contable ni cálculos de impuestos.
 
