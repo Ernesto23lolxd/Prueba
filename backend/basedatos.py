@@ -209,4 +209,9 @@ def crear_esquema(con: Conexion, reset: bool = False):
         for columna, tipo in COLUMNAS_MOVIMIENTOS.items():
             if columna not in cols_mov:
                 con.execute(f"ALTER TABLE movimientos ADD COLUMN {columna} {tipo}")  # lista fija
+    # Huella (SHA-256) del archivo de la factura: detecta el mismo archivo aunque la IA lea distinto el folio
+    if con.es_postgres:
+        con.execute("ALTER TABLE cfdi_procesados ADD COLUMN IF NOT EXISTS huella TEXT")
+    elif "huella" not in {c["name"] for c in con.execute("PRAGMA table_info(cfdi_procesados)").fetchall()}:
+        con.execute("ALTER TABLE cfdi_procesados ADD COLUMN huella TEXT")
     con.script(INDICES)

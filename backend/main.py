@@ -9,6 +9,7 @@ Ejecutar (desde la carpeta backend):
 Abrir: http://localhost:8000 (portada) · http://localhost:8000/app (la app)
 """
 import csv
+import hashlib
 import difflib
 import io
 import json
@@ -1254,18 +1255,26 @@ MARGEN_MINIMO = 0.15     # te quedas con menos del 15 % de ganancia
 MARGEN_OBJETIVO = 0.20   # precio sugerido para volver a ganar ~20 %
 
 
-def _factura_ya_cargada(uuid: str) -> bool:
+def huella_archivo(contenido: bytes) -> str:
+    return hashlib.sha256(contenido).hexdigest()
+
+
+def _factura_ya_cargada(uuid: str | None, huella: str | None = None) -> bool:
+    """Por folio fiscal o por huella del archivo (el mismo PDF subido dos veces, aunque la IA lea otro folio)."""
     con = db()
-    existe = con.execute("SELECT 1 FROM cfdi_procesados WHERE uuid=?", (uuid,)).fetchone() is not None
+    existe = con.execute("SELECT 1 FROM cfdi_procesados WHERE uuid=? OR (huella IS NOT NULL AND huella=?)",
+                         (uuid or "", huella or "")).fetchone() is not None
     con.close()
     return existe
 
 
-def _guardar_factura(uuid: str, proveedor: str, total: float, forma_pago: str | None, archivo: str):
+def _guardar_factura(uuid: str, proveedor: str, total: float, forma_pago: str | None, archivo: str,
+                     huella: str | None = None):
     con = db()
     con.execute(
-        "INSERT INTO cfdi_procesados (uuid, proveedor, total, forma_pago, fecha, archivo) VALUES (?,?,?,?,?,?)",
-        (uuid, proveedor, total, forma_pago, datetime.now().isoformat(timespec="seconds"), archivo),
+        "INSERT INTO cfdi_procesados (uuid, proveedor, total, forma_pago, fecha, archivo, huella) "
+        "VALUES (?,?,?,?,?,?,?)",
+        (uuid, proveedor, total, forma_pago, datetime.now().isoformat(timespec="seconds"), archivo, huella),
     )
     con.commit()
     con.close()
@@ -1332,7 +1341,7 @@ def escudo_antiinflacion(acciones_aplicadas: list, importes: dict, lote_id: str 
 
 
 def _cerrar_factura(resultado: dict, uuid: str, proveedor: str, total: float, forma_pago, archivo: str,
-                    tipo: str, importes: dict, partidas: int) -> dict:
+                    tipo: str, importes: dict, partidas: int, huella: str | None = None) -> dict:
     alertas = escudo_antiinflacion(resultado["acciones"], importes, resultado["lote_id"])
     extras = []
     if alertas:
@@ -1343,7 +1352,7 @@ def _cerrar_factura(resultado: dict, uuid: str, proveedor: str, total: float, fo
         extras.append(tip)
     if extras:
         resultado["respuesta"] = f"{resultado['respuesta']} {' '.join(extras)}"
-    _guardar_factura(uuid, proveedor, total, forma_pago, archivo)
+    _guardar_factura(uuid, proveedor, total, forma_pago, archivo, huella)
     resultado["alertas_precio"] = alertas
     resultado["factura"] = {"uuid": uuid, "proveedor": proveedor, "total": total, "forma_pago": forma_pago,
                             "partidas": partidas, "tipo": tipo}
@@ -1357,7 +1366,8 @@ def procesar_factura_xml(contenido: bytes, nombre_archivo: str) -> dict:
     except ValueError as e:
         mensaje = str(e)
         raise HTTPException(400, mensaje if mensaje.startswith("Este XML es") else f"No pude leer la factura: {mensaje}")
-    if _factura_ya_cargada(f["uuid"]):
+    huella = huella_archivo(contenido)
+    if _factura_ya_cargada(f["uuid"], huella):
         raise HTTPException(409, MSG_FACTURA_REPETIDA)
 
     # Los servicios (fletes, estadías, rentas…) no son mercancía: se separan sin preguntarle a la IA
@@ -1392,15 +1402,18 @@ def procesar_factura_xml(contenido: bytes, nombre_archivo: str) -> dict:
     importes = {c["partida"]: c["importe"] if (c["importe"] or c.get("descuento")) else c["valor_unitario"] * c["cantidad"]
                 for c in mercancia}
     return _cerrar_factura(resultado, f["uuid"], f["proveedor"], f["total"], f["forma_pago"], nombre_archivo,
-                           "xml", importes, len(f["conceptos"]))
+                           "xml", importes, len(f["conceptos"]), huella)
 
 
 def procesar_factura_pdf(contenido: bytes, nombre_archivo: str) -> dict:
+    huella = huella_archivo(contenido)
+    if _factura_ya_cargada(None, huella):  # el mismo archivo: ni siquiera se le pregunta a la IA
+        raise HTTPException(409, MSG_FACTURA_REPETIDA)
     ia = preguntar_a_gemini(imagen=contenido, mime="application/pdf", modo_foto="factura")
     info = ia.get("factura") if isinstance(ia.get("factura"), dict) else {}
     uuid = re.sub(r"[^A-Za-z0-9\-]", "", str(info.get("uuid") or "")).upper()[:64]
     if len(uuid) < 30:  # sin folio fiscal legible: identificador por archivo y hora
-        uuid = f"PDF-{nombre_archivo[:40]}-{datetime.now():%Y%m%d%H%M%S}"
+        uuid = f"PDF-{huella[:32].upper()}"
     elif _factura_ya_cargada(uuid):
         raise HTTPException(409, MSG_FACTURA_REPETIDA)
     proveedor = str(info.get("proveedor") or "Proveedor")[:120]
@@ -1415,7 +1428,7 @@ def procesar_factura_pdf(contenido: bytes, nombre_archivo: str) -> dict:
     if not resultado["lote_id"]:
         return resultado
     return _cerrar_factura(resultado, uuid, proveedor, total, forma_pago, nombre_archivo, "pdf", {},
-                           len(resultado["acciones"]))
+                           len(resultado["acciones"]), huella)
 
 
 @app.post("/api/cfdi")
