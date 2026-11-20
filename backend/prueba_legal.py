@@ -25,11 +25,11 @@ def prueba(nombre, f):
     print(f"{'✅' if ok else '❌'} {nombre}: {det}", flush=True)
 
 
-def simular(page, configurado: bool, enviados: list):
+def simular(page, configurado: bool, enviados: list, sesion: bool = False, aceptado: bool = False):
     def responder(route, request):
         ruta = request.url.split("/api/acceso/")[1].split("?")[0]
         if ruta == "estado":
-            cuerpo = {"configurado": configurado, "sesion": False, "legal_version": VERSION, "legal_aceptado": False}
+            cuerpo = {"configurado": configurado, "sesion": sesion, "legal_version": VERSION, "legal_aceptado": aceptado}
         else:
             enviados.append((ruta, json.loads(request.post_data or "{}")))
             cuerpo = {"ok": True}
@@ -106,6 +106,31 @@ with sync_playwright() as pw:
         ctx.close()
         return "una tienda existente debe aceptar la versión nueva antes de entrar"
 
+    def dispositivo_nuevo():
+        # La tienda YA aceptó y hasta hay sesión, pero este celular nunca los ha visto: al tocar "Probar app"
+        # lo primero debe ser el aviso legal (antes de la bienvenida), y solo una vez por dispositivo.
+        ctx = nav.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, bypass_csp=True)
+        page = ctx.new_page()
+        simular(page, configurado=True, enviados=[], sesion=True, aceptado=True)
+        page.goto(BASE + "/", wait_until="domcontentloaded", timeout=120000)
+        page.goto(BASE + "/app", wait_until="networkidle", timeout=120000)
+        page.wait_for_selector("#pantallaLegal:not(.hidden)", timeout=20000)
+        assert "Antes de empezar" in page.inner_text("#legalTitulo")
+        assert page.locator("#bienvenida").is_hidden(), "la bienvenida salió antes del aviso legal"
+        page.click("#legalNo")
+        assert page.locator("a[href='/']", has_text="Regresar a la portada").is_visible(), "falta regresar a la portada"
+        page.check("#legalCheck")
+        page.click("#legalAceptar")
+        page.wait_for_selector("#bienvenida:not(.hidden)", timeout=10000)
+        guardado = json.loads(page.evaluate("localStorage.getItem('stock_legal_aceptado')"))
+        assert guardado["version"] == VERSION and guardado["fecha"], guardado
+        page.evaluate("localStorage.setItem('stock_bienvenida','1')")
+        page.reload(wait_until="networkidle")
+        page.wait_for_timeout(1500)
+        assert page.locator("#pantallaLegal").is_hidden(), "volvió a pedir aceptar en el mismo dispositivo"
+        ctx.close()
+        return "un celular nuevo ve primero el aviso y los términos (aunque la tienda ya los aceptó) y solo una vez"
+
     def menu_legal():
         ctx = nav.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, bypass_csp=True)
         ctx.add_init_script("localStorage.setItem('stock_bienvenida','1')")
@@ -120,7 +145,8 @@ with sync_playwright() as pw:
 
     prueba("L1. Registro nuevo: leer y aceptar es obligatorio antes de crear el PIN", registro_nuevo)
     prueba("L2. Documentos nuevos: la tienda existente los acepta antes de entrar", documentos_nuevos)
-    prueba("L3. Páginas públicas del aviso y los términos en celular", menu_legal)
+    prueba("L3. Dispositivo nuevo: el aviso legal sale antes que todo, una vez por celular", dispositivo_nuevo)
+    prueba("L4. Páginas públicas del aviso y los términos en celular", menu_legal)
     nav.close()
 
 fallas = sum(not ok for ok, *_ in resultados)

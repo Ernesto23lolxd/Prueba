@@ -101,6 +101,11 @@ def probar_dispositivo(pw_navegador, nombre, ancho, alto, escala, movil, ua):
 
         # 2. Bienvenida (primera vez)
         page.goto(BASE + "/app", wait_until="networkidle")
+        page.wait_for_selector("#pantallaLegal:not(.hidden)", timeout=8000)  # lo primero: aceptar aviso y términos
+        assert page.locator("#bienvenida").is_hidden(), "la bienvenida salió antes del aviso legal"
+        sin_desborde(page, "aviso legal")
+        page.check("#legalCheck")
+        page.click("#legalAceptar")
         page.wait_for_selector("#bienvenida:not(.hidden)", timeout=8000)
         sin_desborde(page, "bienvenida")
         page.fill("#bvNombre", "Abarrotes Lupita")

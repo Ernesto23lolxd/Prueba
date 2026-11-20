@@ -62,6 +62,10 @@ def service_worker_http():
 
 
 entrar(httpx.Client(base_url=BASE, timeout=90))  # crea el PIN de prueba si la tienda no tiene
+VERSION_LEGAL = httpx.get(BASE + "/api/acceso/estado", timeout=90).json()["legal_version"]
+# Este "celular" ya aceptó el aviso y los términos (eso se prueba en prueba_legal.py)
+YA_ACEPTO = ("localStorage.setItem('stock_bienvenida','1');"
+             f"localStorage.setItem('stock_legal_aceptado', JSON.stringify({{version: '{VERSION_LEGAL}', fecha: '2026-11-20'}}))")
 
 with sync_playwright() as pw:
     nav = pw.chromium.launch(channel="msedge", headless=True)
@@ -69,7 +73,7 @@ with sync_playwright() as pw:
     def android():
         ctx = nav.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2.6, is_mobile=True,
                               has_touch=True, user_agent=ANDROID, locale="es-MX")
-        ctx.add_init_script("localStorage.setItem('stock_bienvenida','1')")
+        ctx.add_init_script(YA_ACEPTO)
         page = ctx.new_page()
         errores = []
         page.on("pageerror", lambda e: errores.append(str(e)))
@@ -100,7 +104,7 @@ with sync_playwright() as pw:
     def iphone():
         ctx = nav.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=3, is_mobile=True,
                               has_touch=True, user_agent=IPHONE, locale="es-MX")
-        ctx.add_init_script("localStorage.setItem('stock_bienvenida','1')")
+        ctx.add_init_script(YA_ACEPTO)
         page = ctx.new_page()
         page.goto(BASE + "/app", wait_until="networkidle", timeout=120000)
         escribir_pin(page)

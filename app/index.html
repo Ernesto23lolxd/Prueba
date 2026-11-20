@@ -442,7 +442,8 @@
         <button type="button" id="legalAceptar" disabled
           class="w-full mt-4 py-3.5 rounded-xl bg-stock-gradient text-[#0d0e11] font-extrabold text-base active:scale-[.98] transition cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed">Aceptar y continuar</button>
         <button type="button" id="legalNo" class="w-full mt-2 py-2.5 text-sm font-semibold text-[#a1a1aa] hover:text-white cursor-pointer">No acepto</button>
-        <p id="legalAviso" role="alert" class="hidden text-center text-xs text-amber-300 mt-1">Sin aceptarlos no podemos crear tu tienda ni guardar tu información.</p>
+        <p id="legalAviso" role="alert" class="hidden text-center text-xs text-amber-300 mt-1">Sin aceptarlos no podemos crear tu tienda ni guardar tu información.
+          <a href="/" class="block mt-1.5 underline text-[#d4d4d8] hover:text-white">Regresar a la portada</a></p>
       </div>
     </div>
   </div>
@@ -2363,9 +2364,9 @@
       let estado;
       try { estado = await api("/api/acceso/estado"); } catch (err) { mostrarToast(err.message, "error"); return false; }
       legalVigente = estado.legal_version;
+      // Cada celular/navegador acepta el aviso y los términos (no basta con que la tienda ya los haya aceptado)
+      if (!(await aceptacionDelDispositivo(estado))) return false;
       if (!estado.sesion) {
-        // Registrar la tienda, o documentos nuevos: primero se leen y aceptan el aviso y los términos
-        if (!estado.legal_aceptado && !(await pedirAceptacionLegal(estado.configurado))) return false;
         const ok = await abrirPin(estado.configurado ? "entrar" : "crear");
         if (!ok) return false;
       }
@@ -2377,7 +2378,7 @@
     let accesoEnCurso = false;
     // 👉 Si el servidor dice 'falta PIN', arrancamos el flujo de acceso
     function pedirAcceso() {
-      if (accesoEnCurso || pinResolver || !$("bienvenida").classList.contains("hidden")) return;
+      if (accesoEnCurso || pinResolver || legalResolver || !$("bienvenida").classList.contains("hidden")) return;
       accesoEnCurso = true;
       asegurarAcceso().finally(() => { accesoEnCurso = false; });
     }
@@ -2385,6 +2386,19 @@
     // ---------- Aviso de Privacidad y Términos: leerlos y aceptarlos ----------
     // 👉 Versión vigente del aviso/términos y la que aceptó el tendero
     let legalVigente = null, legalAceptado = null, legalResolver = null;
+    // 👉 Aquí guarda cada dispositivo qué versión aceptó y cuándo
+    const CLAVE_LEGAL = "stock_legal_aceptado";
+    // 👉 Si este dispositivo no ha aceptado la versión vigente, pide aceptarla (aunque ya haya sesión)
+    async function aceptacionDelDispositivo(estado) {
+      let previa = null;
+      try { previa = JSON.parse(leerLS(CLAVE_LEGAL) || "null"); } catch (_) {}
+      if (!previa || previa.version !== estado.legal_version) {
+        const actualizado = Boolean(previa) || (estado.configurado && !estado.legal_aceptado);
+        if (!(await pedirAceptacionLegal(actualizado))) return false;
+      }
+      legalAceptado = estado.legal_version;  // se manda al servidor al crear o escribir el PIN (constancia)
+      return true;
+    }
     // 👉 📜 Pantalla 'Antes de empezar': hay que leer y marcar la casilla para seguir
     function pedirAceptacionLegal(actualizado = false) {
       return new Promise((resolver) => {
@@ -2404,7 +2418,10 @@
     function cerrarLegal(ok) {
       $("pantallaLegal").classList.add("hidden");
       document.body.style.overflow = "";
-      if (ok) legalAceptado = legalVigente;
+      if (ok) {
+        legalAceptado = legalVigente;
+        guardarLS(CLAVE_LEGAL, JSON.stringify({ version: legalVigente, fecha: new Date().toISOString() }));
+      }
       const r = legalResolver; legalResolver = null;
       if (r) r(ok);
     }
@@ -2464,10 +2481,19 @@
       if (await abrirPin("entrar")) await entrarALaApp();
     }
 
-    // Arranque: bienvenida la primera vez; después, PIN (crear o entrar) y la tienda
+    // Arranque: aviso legal (cada dispositivo) → bienvenida la primera vez → PIN (crear o entrar) → la tienda
     pintarNombreTienda();
-    if (leerLS("stock_bienvenida") !== "1") mostrarBienvenida();
-    else asegurarAcceso();
+    (async () => {
+      // 1) Al abrir la app, lo primero es leer y aceptar el aviso de privacidad y los términos
+      try {
+        const estado = await api("/api/acceso/estado");
+        legalVigente = estado.legal_version;
+        if (!(await aceptacionDelDispositivo(estado))) return;
+      } catch (err) { mostrarToast(err.message, "error"); return; }
+      // 2) Bienvenida la primera vez; 3) después, el PIN de la tienda
+      if (leerLS("stock_bienvenida") !== "1") mostrarBienvenida();
+      else asegurarAcceso();
+    })();
   </script>
 </body>
 </html>

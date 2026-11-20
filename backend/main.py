@@ -1879,11 +1879,11 @@ def acceso_entrar(body: PeticionPin, request: Request):
     verificar_pin(body.pin, request)
     con = db()
     try:
-        if not acceso.legal_aceptado(con):  # documentos nuevos o nunca aceptados: hay que aceptarlos para entrar
-            if body.acepto_legal != acceso.LEGAL_VERSION:
-                raise HTTPException(428, MSG_LEGAL)
+        if body.acepto_legal == acceso.LEGAL_VERSION:  # cada dispositivo que acepta deja constancia (fecha UTC)
             acceso.guardar_aceptacion(con)
             con.commit()
+        elif not acceso.legal_aceptado(con):  # documentos nuevos o nunca aceptados: hay que aceptarlos para entrar
+            raise HTTPException(428, MSG_LEGAL)
     finally:
         con.close()
     return _respuesta_con_sesion(request, {"ok": True})
