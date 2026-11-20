@@ -218,13 +218,20 @@ CSP = (
 )
 
 
+# El service worker guarda copia de Tailwind y las fuentes para abrir sin señal: solo él puede pedirlas
+CSP_SERVICE_WORKER = (
+    "default-src 'self'; connect-src 'self' https://cdn.tailwindcss.com https://fonts.googleapis.com "
+    "https://fonts.gstatic.com; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+)
+
+
 class CabecerasSeguridad(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         respuesta = await call_next(request)
         respuesta.headers["X-Content-Type-Options"] = "nosniff"
         respuesta.headers["X-Frame-Options"] = "DENY"
         respuesta.headers["Referrer-Policy"] = "no-referrer"
-        respuesta.headers["Content-Security-Policy"] = CSP
+        respuesta.headers.setdefault("Content-Security-Policy", CSP)  # una ruta puede traer la suya (ej. /sw.js)
         respuesta.headers["Permissions-Policy"] = "microphone=(self), camera=(self), geolocation=()"
         return respuesta
 

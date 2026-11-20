@@ -2,8 +2,17 @@
 <html lang="es-MX">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>STOCK · Inventario por voz para tu tienda</title>
+  <!-- App instalable en el celular (PWA) -->
+  <meta name="theme-color" content="#121316">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/static/iconos/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="STOCK">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23121316'/%3E%3Cpath d='M14 24 32 15l18 9-18 9z' fill='%230095E8'/%3E%3Cpath d='M14 24v18l18 9V33z' fill='%233BB2D0'/%3E%3Cpath d='M50 24v18l-18 9V33z' fill='%23F6C58E'/%3E%3C/svg%3E">
   <!-- Fuente Inter para legibilidad limpia en móvil y escritorio -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -90,6 +99,19 @@
     /* Listas: una sola columna que nunca se ensancha más que la pantalla (nombres largos se cortan con …) */
     #inventario, #alertas, #noPedir, #listaProveedores, #chat { grid-template-columns: minmax(0, 1fr); min-width: 0; }
     #chat > * { min-width: 0; overflow-wrap: anywhere; }
+
+    /* ===== Celular: muesca, barra de gestos y teclado ===== */
+    html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+    body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+    header.sticky { padding-top: env(safe-area-inset-top); }
+    @media (max-width: 639px) {
+      .nav-stock { padding-bottom: env(safe-area-inset-bottom); }
+      body { padding-bottom: calc(7rem + env(safe-area-inset-bottom)) !important; }
+      #toastContainer { bottom: calc(6rem + env(safe-area-inset-bottom)) !important; }
+      /* iPhone hace zoom al escribir en campos de menos de 16 px */
+      input, select, textarea { font-size: 16px !important; }
+    }
+    #avisoSinRed { padding-top: calc(.4rem + env(safe-area-inset-top)); }
 
     /* ===== Menú ⋯ ===== */
     .menu-item { display: block; width: 100%; text-align: left; padding: .6rem .75rem; border-radius: .75rem; color: #e4e4e7; cursor: pointer; }
@@ -286,6 +308,7 @@
             class="hidden absolute right-0 mt-2 w-64 rounded-2xl border border-white/10 bg-[#1a1c22] shadow-2xl p-1.5 text-sm z-50">
             <button type="button" role="menuitem" data-menu="tutorial" class="menu-item">❔ Ver tutorial</button>
             <button type="button" role="menuitem" data-menu="bienvenida" class="menu-item">👋 Ver bienvenida</button>
+            <button type="button" role="menuitem" data-menu="instalar" id="menuInstalar" class="menu-item">📲 Instalar en mi celular</button>
             <div class="h-px bg-white/10 my-1"></div>
             <button type="button" role="menuitem" data-menu="factura-demo" class="menu-item">⚡ Probar con una factura de ejemplo</button>
             <button type="button" role="menuitem" data-menu="demo" class="menu-item">🧪 Cargar tienda de ejemplo</button>
@@ -388,6 +411,11 @@
         <button id="confSi" type="button" class="px-4 py-2 rounded-xl text-sm font-extrabold cursor-pointer"></button>
       </div>
     </div>
+  </div>
+
+  <!-- Aviso cuando el celular se queda sin señal -->
+  <div id="avisoSinRed" role="status" class="hidden fixed top-0 inset-x-0 z-[95] bg-amber-500 text-[#0d0e11] text-center text-xs sm:text-sm font-bold px-3 pb-1.5">
+    📶 Sin internet. Lo que ves es lo último guardado; para registrar ventas o facturas se necesita señal.
   </div>
 
   <!-- Toast discreto de notificaciones (sin alert/confirm) -->
@@ -727,7 +755,9 @@
       try {
         res = await fetch(API + ruta, opciones);
       } catch (_) {
-        throw new Error("No hay conexión con el servidor de STOCK. ¿Está encendido?");
+        throw new Error(navigator.onLine === false
+          ? "Sin internet: revisa tu señal o tu wifi y vuelve a intentarlo."
+          : "No pude conectarme con STOCK. Intenta de nuevo en un momento.");
       }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -1702,14 +1732,16 @@
       $("subtituloTienda").textContent = n ? `${n} · inventario por voz` : "Tu inventario por voz y foto";
     }
 
-    function confirmar({ titulo, texto, si, peligro = false }) {
+    function confirmar({ titulo, texto, si, peligro = false, soloAceptar = false }) {
       return new Promise((resolver) => {
         $("confTitulo").textContent = titulo;
         $("confTexto").textContent = texto;
+        $("confTexto").style.whiteSpace = "pre-line";
         const bSi = $("confSi");
         bSi.textContent = si;
         bSi.className = `px-4 py-2 rounded-xl text-sm font-extrabold cursor-pointer ${peligro ? "bg-red-600 text-white hover:bg-red-500" : "bg-stock-gradient text-[#0d0e11]"}`;
         const caja = $("confirmar");
+        $("confNo").classList.toggle("hidden", soloAceptar);
         caja.classList.remove("hidden");
         $("confNo").focus();
         const cerrar = (r) => { caja.classList.add("hidden"); bSi.onclick = null; $("confNo").onclick = null; resolver(r); };
@@ -1732,6 +1764,7 @@
       const accion = item.dataset.menu;
       if (accion === "tutorial") iniciarTutorial();
       else if (accion === "bienvenida") mostrarBienvenida();
+      else if (accion === "instalar") instalarApp();
       else if (accion === "factura-demo") { mostrarVista("inicio"); enviarFactura(null); }
       else if (accion === "demo") {
         if (await confirmar({ titulo: "¿Cargar la tienda de ejemplo?", texto: "Se borra lo que tengas y se carga una tiendita de Durango con 20 productos y 2 semanas de ventas, para ver todas las funciones.", si: "Cargar ejemplo" })) reiniciarTienda("demo");
@@ -1829,7 +1862,7 @@
       { vista: "mes", el: "#secMovs", anim: "historial", titulo: "Todo queda anotado",
         texto: "Cada venta, entrada y cambio aparece aquí. Si algo salió mal, lo regresas como estaba con ↩️ Deshacer." },
       { vista: "inicio", el: "#btnTutorial", anim: "ayuda", titulo: "¿Se te olvidó algo?",
-        texto: "Con este botón ? repites el tutorial cuando quieras. En ⋯ hay más opciones, como empezar de cero." },
+        texto: "Con este botón ? repites el tutorial cuando quieras. En ⋯ puedes instalar STOCK en tu celular como una app o empezar de cero." },
       { vista: "inicio", anim: "fin", titulo: "¡Listo para empezar!", final: true,
         texto: "Da de alta tus productos como te acomode: dicta “Llegaron 24 Cocas de 600 a 22 pesos”, sube la factura de tu proveedor o trae tu Excel." },
     ];
@@ -1935,7 +1968,7 @@
           width: `${Math.max(0, right - left)}px`, height: `${Math.max(0, bottom - top)}px` });
       } else if (tourDestino && tourDestino.getClientRects().length) {  // también sirve para la barra fija de abajo
         if (tourLado === "arriba") { tarjeta.style.top = `${sep}px`; tarjeta.style.bottom = "auto"; }
-        else { tarjeta.style.top = "auto"; tarjeta.style.bottom = `${sep}px`; }
+        else { tarjeta.style.top = "auto"; tarjeta.style.bottom = `calc(${sep}px + env(safe-area-inset-bottom))`; }
         const libreArriba = tourLado === "arriba" ? hT + sep * 2 : 4;
         const libreAbajo = tourLado === "arriba" ? alto - 4 : alto - hT - sep * 2;
         const r = tourDestino.getBoundingClientRect();
@@ -1974,6 +2007,44 @@
       else if (e.key === "ArrowRight") moverTutorial(1);
       else if (e.key === "ArrowLeft") moverTutorial(-1);
     });
+
+    // =========================================================================
+    // 10. APP EN EL CELULAR (PWA): instalar, service worker y aviso sin señal
+    // =========================================================================
+    let avisoInstalar = null;  // Android/Chrome/Edge: el navegador nos deja mostrar su ventana de instalar
+    const yaInstalada = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); avisoInstalar = e; });
+    window.addEventListener("appinstalled", () => {
+      avisoInstalar = null;
+      $("menuInstalar").classList.add("hidden");
+      mostrarToast("¡Listo! STOCK ya está en tu pantalla de inicio", "ok");
+    });
+    if (yaInstalada()) $("menuInstalar").classList.add("hidden");
+
+    async function instalarApp() {
+      if (avisoInstalar) {
+        avisoInstalar.prompt();
+        try { await avisoInstalar.userChoice; } catch (_) {}
+        avisoInstalar = null;
+        return;
+      }
+      const ua = navigator.userAgent;
+      const esIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      const texto = esIOS
+        ? "En Safari:\n1. Toca el botón Compartir (el cuadrito con la flecha ⬆️).\n2. Elige “Agregar a pantalla de inicio”.\n3. Toca “Agregar”.\n\nSTOCK aparecerá con su ícono, como cualquier app."
+        : /Android/i.test(ua)
+          ? "En Chrome:\n1. Toca el menú ⋮ (arriba a la derecha).\n2. Elige “Instalar app” o “Agregar a la pantalla principal”.\n3. Confirma.\n\nSTOCK aparecerá con su ícono, como cualquier app."
+          : "En Chrome o Edge: busca el ícono de instalar (una pantallita con flecha) a la derecha de la barra de direcciones, o en el menú ⋮ elige “Instalar STOCK”.";
+      confirmar({ titulo: "📲 Instala STOCK en tu celular", texto, si: "Entendido", soloAceptar: true });
+    }
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => { navigator.serviceWorker.register("/sw.js").catch(() => {}); });
+    }
+    function pintarRed() { $("avisoSinRed").classList.toggle("hidden", navigator.onLine !== false); }
+    window.addEventListener("online", () => { pintarRed(); cargarTablero(); mostrarToast("Volvió el internet 👍", "ok"); });
+    window.addEventListener("offline", pintarRed);
+    pintarRed();
 
     // Arranque: muestra el inventario guardado (no lo reinicia) y la bienvenida la primera vez
     pintarNombreTienda();

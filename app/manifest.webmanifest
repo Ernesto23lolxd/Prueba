@@ -1,0 +1,30 @@
+{
+  "id": "/app",
+  "name": "STOCK · Inventario por voz",
+  "short_name": "STOCK",
+  "description": "El inventario de tu tiendita por voz: le hablas y STOCK lleva la cuenta, te dice qué se acaba y arma tu pedido por WhatsApp.",
+  "lang": "es-MX",
+  "dir": "ltr",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#121316",
+  "theme_color": "#121316",
+  "categories": ["business", "productivity", "shopping"],
+  "icons": [
+    { "src": "/static/iconos/icono-96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
+    { "src": "/static/iconos/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/static/iconos/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/static/iconos/icono-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Surtir", "short_name": "Surtir", "description": "Tu pedido armado por proveedor", "url": "/app#surtir",
+      "icons": [{ "src": "/static/iconos/icono-96.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Se acaba", "short_name": "Se acaba", "description": "Lo que se te está terminando", "url": "/app#alertas",
+      "icons": [{ "src": "/static/iconos/icono-96.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Inventario", "short_name": "Inventario", "description": "Todos tus productos", "url": "/app#inventario",
+      "icons": [{ "src": "/static/iconos/icono-96.png", "sizes": "96x96", "type": "image/png" }] }
+  ]
+}

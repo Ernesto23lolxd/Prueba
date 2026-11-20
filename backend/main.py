@@ -1619,6 +1619,21 @@ def portada():
     return FileResponse(APP_DIR / "inicio.html")
 
 
+@app.get("/sw.js")
+def service_worker():
+    """Service worker en la raíz para que controle toda la app instalada en el celular."""
+    return FileResponse(APP_DIR / "sw.js", media_type="application/javascript",
+                        headers={"Cache-Control": "no-cache", "Service-Worker-Allowed": "/",
+                                 "Content-Security-Policy": seguridad.CSP_SERVICE_WORKER})
+
+
+@app.get("/manifest.webmanifest")
+def manifiesto():
+    """Datos para instalar STOCK como app (nombre, ícono, colores)."""
+    return FileResponse(APP_DIR / "manifest.webmanifest", media_type="application/manifest+json",
+                        headers={"Cache-Control": "no-cache"})
+
+
 @app.get("/app")
 def aplicacion():
     """La app de inventario."""
